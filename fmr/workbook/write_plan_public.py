@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 from typing import Any
@@ -15,7 +16,9 @@ def compile_workbook_write_plan(
     realization_plan: dict[str, Any],
     write_context: dict[str, Any],
 ) -> dict[str, Any]:
-    payload = _compile_unordered(realization_plan, write_context)
+    normalized_realization = _normalize_deferred_bindings(realization_plan)
+    payload = _compile_unordered(normalized_realization, write_context)
+    payload["realization_plan_sha256"] = _digest(realization_plan)
     sequence = 0
     for phase in payload["phases"]:
         for record in phase["records"]:
@@ -47,6 +50,23 @@ def validate_workbook_write_plan_payload(
             if payload != expected:
                 issues.append("write plan does not match deterministic recomputation")
     return tuple(dict.fromkeys(issues))
+
+
+def _normalize_deferred_bindings(realization_plan: dict[str, Any]) -> dict[str, Any]:
+    normalized = copy.deepcopy(realization_plan)
+    for operation in normalized.get("operation_realizations", []):
+        for slot in operation.get("slots", []):
+            formula = slot.get("formula_binding")
+            if not isinstance(formula, dict):
+                continue
+            for dependency in formula.get("dependencies", []):
+                if (
+                    isinstance(dependency, dict)
+                    and dependency.get("binding_type") == "period_context"
+                    and dependency.get("target") is None
+                ):
+                    dependency["target"] = {}
+    return normalized
 
 
 def _validate_source(value: Any, issues: list[str]) -> None:
@@ -87,32 +107,32 @@ def _validate_phase_payloads(value: Any, issues: list[str]) -> None:
             if not isinstance(record, dict):
                 continue
             context = f"phases[{phase_index}].records[{record_index}]"
-            payload = record.get("payload")
-            if not isinstance(payload, dict):
+            record_payload = record.get("payload")
+            if not isinstance(record_payload, dict):
                 continue
             write_kind = record.get("write_kind")
             if write_kind == "ensure_sheet":
-                _expect_keys(payload, {"mode", "position"}, context, issues)
-                if payload.get("mode") != "ensure":
+                _expect_keys(record_payload, {"mode", "position"}, context, issues)
+                if record_payload.get("mode") != "ensure":
                     issues.append(f"{context}.payload.mode must be ensure")
-                if not isinstance(payload.get("position"), int):
+                if not isinstance(record_payload.get("position"), int):
                     issues.append(f"{context}.payload.position must be an integer")
             elif write_kind == "write_value":
-                _expect_keys(payload, {"value_type", "value"}, context, issues)
-                if payload.get("value_type") != "string" or not isinstance(payload.get("value"), str):
+                _expect_keys(record_payload, {"value_type", "value"}, context, issues)
+                if record_payload.get("value_type") != "string" or not isinstance(record_payload.get("value"), str):
                     issues.append(f"{context}.payload must contain a string value")
             elif write_kind == "reserve_input":
-                _expect_keys(payload, {"value_type", "editable"}, context, issues)
-                if payload != {"value_type": "blank", "editable": True}:
+                _expect_keys(record_payload, {"value_type", "editable"}, context, issues)
+                if record_payload != {"value_type": "blank", "editable": True}:
                     issues.append(f"{context}.payload must reserve a blank editable input")
             elif write_kind == "write_formula":
                 _expect_keys(
-                    payload,
+                    record_payload,
                     {"formula", "formula_identifier", "output_type", "sign_convention"},
                     context,
                     issues,
                 )
-                formula = payload.get("formula")
+                formula = record_payload.get("formula")
                 if isinstance(formula, str):
                     lowered = formula.lower()
                     if any(marker in formula for marker in ("[", "]", "{{", "}}")):
@@ -120,11 +140,11 @@ def _validate_phase_payloads(value: Any, issues: list[str]) -> None:
                     if any(marker in lowered for marker in ("http://", "https://", "file://", "dde(")):
                         issues.append(f"{context}.payload.formula contains an external reference")
                 for field in ("formula_identifier", "output_type", "sign_convention"):
-                    if not isinstance(payload.get(field), str) or not payload.get(field):
+                    if not isinstance(record_payload.get(field), str) or not record_payload.get(field):
                         issues.append(f"{context}.payload.{field} must be a non-empty string")
             elif write_kind == "apply_style":
-                _expect_keys(payload, {"style"}, context, issues)
-                if not isinstance(payload.get("style"), dict):
+                _expect_keys(record_payload, {"style"}, context, issues)
+                if not isinstance(record_payload.get("style"), dict):
                     issues.append(f"{context}.payload.style must be an object")
 
 
