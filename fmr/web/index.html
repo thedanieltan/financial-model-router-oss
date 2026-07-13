@@ -11,7 +11,7 @@
     <div>
       <p class="eyebrow">Financial Model Router</p>
       <h1>Developer Workbench</h1>
-      <p>Test routing, workbook planning, copy-only XLSX execution and calculated-output acceptance locally.</p>
+      <p>Test routing, workbook planning, copy-only XLSX execution, governed input population and calculated-output acceptance locally.</p>
     </div>
     <nav>
       <a href="/docs">API docs</a>
@@ -50,8 +50,22 @@
 
       <div class="panel-heading">
         <div>
+          <h2>Governed input population</h2>
+          <p>Compile explicit numeric or boolean CSV rows into a pinned input set, then populate only reserved input cells in the executed copy.</p>
+        </div>
+      </div>
+      <div class="workbook-control">
+        <input id="input-csv-file" type="file" accept=".csv,text/csv">
+        <button id="compile-input-csv-button" type="button" class="secondary" disabled>Compile input CSV</button>
+        <button id="populate-inputs-button" type="button" disabled>Populate reserved inputs</button>
+      </div>
+      <textarea id="input-set-editor" spellcheck="false" aria-label="Workbook input set JSON"></textarea>
+      <p id="input-population-status" class="status" aria-live="polite"></p>
+
+      <div class="panel-heading">
+        <div>
           <h2>Calculated-output acceptance</h2>
-          <p>Fill the editable cells in the downloaded copy, then select it here for recalculation and validation.</p>
+          <p>The governed populated copy is used automatically. A separately selected workbook takes precedence for external-engine acceptance.</p>
         </div>
       </div>
       <div class="workbook-control">
@@ -110,13 +124,14 @@
 
   <footer>
     <span id="health-indicator">Checking local service…</span>
-    <span>Patch execution is not included in planning. The selected source is never overwritten, and calculated values are not written to receipts.</span>
+    <span>Patch execution is not included in planning. The selected source is never overwritten, and input or calculated values are not written to receipts.</span>
   </footer>
 
   <script src="/assets/app.js" defer></script>
   <script src="/assets/realization.js" defer></script>
   <script src="/assets/write_plan.js" defer></script>
   <script src="/assets/execution.js" defer></script>
+  <script src="/assets/input_population.js" defer></script>
   <script src="/assets/calculation.js" defer></script>
 </body>
 </html>
