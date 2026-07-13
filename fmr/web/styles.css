@@ -1,0 +1,47 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f4f5f7;
+  color: #15181d;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; }
+header, footer, main { width: min(1440px, calc(100% - 32px)); margin-inline: auto; }
+header { display: flex; justify-content: space-between; gap: 24px; align-items: end; padding: 40px 0 24px; }
+header h1 { margin: 2px 0 6px; font-size: clamp(2rem, 4vw, 3.2rem); letter-spacing: -0.04em; }
+header p { margin: 0; color: #5b6470; }
+.eyebrow { font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #344054; }
+nav { display: flex; gap: 14px; }
+a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+.panel { background: #fff; border: 1px solid #d9dde4; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(16, 24, 40, .05); }
+.panel-heading { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 18px 20px; border-bottom: 1px solid #e6e8ec; }
+.panel-heading h2 { margin: 0 0 3px; font-size: 1rem; }
+.panel-heading p { margin: 0; font-size: .88rem; color: #68717d; }
+.fixture-control { display: grid; gap: 5px; min-width: 180px; }
+label { font-size: .72rem; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: .06em; }
+select, button, textarea { font: inherit; }
+select { border: 1px solid #cbd0d8; border-radius: 7px; padding: 8px 10px; background: #fff; }
+textarea { width: 100%; min-height: 520px; resize: vertical; border: 0; padding: 18px 20px; font-family: "SFMono-Regular", Consolas, monospace; font-size: .86rem; line-height: 1.55; outline: none; background: #fbfcfd; }
+.actions { display: flex; flex-wrap: wrap; gap: 9px; padding: 14px 20px; border-top: 1px solid #e6e8ec; }
+button { border: 1px solid #111827; border-radius: 7px; padding: 9px 13px; background: #111827; color: #fff; font-weight: 650; cursor: pointer; }
+button:hover { opacity: .88; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+button.secondary { background: #fff; color: #111827; }
+button.quiet { background: transparent; color: #475467; border-color: #cbd0d8; }
+.status { min-height: 22px; margin: 0; padding: 0 20px 14px; color: #b42318; font-size: .86rem; }
+.summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 16px 20px; border-bottom: 1px solid #e6e8ec; }
+.summary.empty { display: block; color: #68717d; }
+.card { border: 1px solid #e1e4e9; border-radius: 8px; padding: 12px; background: #fafbfc; }
+.card span { display: block; color: #667085; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+.card strong { font-size: .94rem; overflow-wrap: anywhere; }
+pre { margin: 0; min-height: 390px; max-height: 650px; overflow: auto; padding: 18px 20px; background: #111827; color: #e5e7eb; font: .82rem/1.55 "SFMono-Regular", Consolas, monospace; }
+footer { display: flex; justify-content: space-between; gap: 20px; padding: 18px 0 36px; color: #667085; font-size: .82rem; }
+.health-ok { color: #027a48; }
+.health-error { color: #b42318; }
+@media (max-width: 900px) {
+  header { align-items: start; flex-direction: column; }
+  main { grid-template-columns: 1fr; }
+  textarea { min-height: 420px; }
+}
