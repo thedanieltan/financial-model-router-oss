@@ -22,14 +22,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: python -m pip install -e .
+      - run: python -m pip install -e ".[dev-ui,test-ui]"
       - run: python -m unittest discover -s tests -v
       - run: python -m compileall -q fmr
       - run: python -m fmr route tests/fixtures/request-dcf-ready.json
       - run: python -m fmr plan tests/fixtures/request-debt-blocked.json
+      - run: python -m fmr serve --help
 
   package:
-    name: Build package
+    name: Build package and smoke-test workbench
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -39,9 +40,42 @@ jobs:
       - run: python -m pip install --upgrade build twine
       - run: python -m build
       - run: python -m twine check dist/*
-      - run: |
+      - name: Install wheel and verify packaged assets
+        run: |
           python -m venv /tmp/fmr-package-test
-          /tmp/fmr-package-test/bin/pip install dist/*.whl
+          WHEEL="$(ls dist/*.whl)"
+          /tmp/fmr-package-test/bin/pip install "${WHEEL}[dev-ui,test-ui]"
           cd /tmp
           /tmp/fmr-package-test/bin/fmr --help
-          /tmp/fmr-package-test/bin/python -c 'from importlib.resources import files; assert files("fmr.contracts").joinpath("transformation-plan.v1.schema.json").is_file()'
+          /tmp/fmr-package-test/bin/python - <<'PY'
+          from importlib.resources import files
+          assert files("fmr.contracts").joinpath("transformation-plan.v1.schema.json").is_file()
+          assert files("fmr.web").joinpath("index.html").is_file()
+          assert files("fmr.web").joinpath("app.js").is_file()
+          assert files("fmr.fixtures").joinpath("dcf-ready.json").is_file()
+          PY
+      - name: Start local server and check health
+        run: |
+          /tmp/fmr-package-test/bin/fmr serve --port 8765 >/tmp/fmr-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
+          /tmp/fmr-package-test/bin/python - <<'PY'
+          import json
+          import time
+          import urllib.request
+
+          url = "http://127.0.0.1:8765/health"
+          last_error = None
+          for _ in range(30):
+              try:
+                  with urllib.request.urlopen(url, timeout=1) as response:
+                      payload = json.load(response)
+                  assert payload["status"] == "ok"
+                  assert payload["service"] == "financial-model-router"
+                  break
+              except Exception as exc:
+                  last_error = exc
+                  time.sleep(0.2)
+          else:
+              raise SystemExit(f"server did not become ready: {last_error}")
+          PY
