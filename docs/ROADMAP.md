@@ -54,12 +54,19 @@ Planning remains deterministic and does not open a workbook for writing.
 
 ## 0.4.1 — calculated-output acceptance
 
-- add an optional external calculation adapter;
-- reopen the recalculated workbook in data-only mode;
-- verify balance, cash-flow, formula and error checks against accepted specifications;
-- distinguish implementation acceptance from live spreadsheet-engine acceptance; and
-- retain the current executor when no calculation engine is installed.
+- discover an optional LibreOffice or `soffice` calculation engine;
+- run the engine headlessly with an isolated temporary profile and bounded timeout;
+- accept workbooks recalculated by an external spreadsheet engine;
+- verify populated input ranges and immutable write records before calculation;
+- verify immutable records and populated inputs remain intact after calculation;
+- reopen the calculated workbook in formula and data-only modes;
+- reject missing cached results, spreadsheet errors, output-type mismatches and sign violations;
+- scan every workbook formula, not only FMR-generated formulas;
+- emit `workbook-calculation-acceptance.v1` without input or calculated values;
+- publish calculated workbook bytes only when acceptance passes;
+- expose Python, CLI, local HTTP and browser interfaces; and
+- separate engine-independent contract tests from live LibreOffice acceptance.
 
 ## Later
 
-Additional model families will be added only with deterministic specifications and acceptance tests.
+Additional model families and calculation-engine adapters will be added only with deterministic specifications and acceptance tests.
