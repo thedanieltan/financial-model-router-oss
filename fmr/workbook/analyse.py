@@ -30,6 +30,21 @@ class WorkbookAnalysis:
             "transformation_plan": self.transformation_plan.to_dict(),
         }
 
+    @classmethod
+    def from_mapping(cls, data: Any) -> "WorkbookAnalysis":
+        if not isinstance(data, dict):
+            raise ValueError("workbook analysis must be an object")
+        if data.get("contract_version") != "workbook-analysis.v1":
+            raise ValueError("unsupported workbook-analysis contract_version")
+        workbook_map = WorkbookMap.from_mapping(data.get("workbook_map"))
+        original_request = ModelRequest.from_mapping(data.get("original_request"))
+        expected = analyse_workbook_map(workbook_map, original_request)
+        if data != expected.to_dict():
+            raise ValueError(
+                "workbook-analysis payload does not match deterministic recomputation"
+            )
+        return expected
+
 
 def analyse_workbook_map(
     workbook_map: WorkbookMap,
