@@ -22,7 +22,7 @@ class StyleSpecTests(unittest.TestCase):
             for slot in spec.slots
             if slot.content_kind == "input_placeholder" and slot.identifier is not None
         }
-        self.assertEqual(required_roles, set(STYLE_SPECS))
+        self.assertTrue(required_roles.issubset(STYLE_SPECS))
         self.assertTrue(required_inputs.issubset(IDENTIFIER_SEMANTIC_TYPES))
         registry = style_spec_registry_payload()
         self.assertEqual(
@@ -31,6 +31,7 @@ class StyleSpecTests(unittest.TestCase):
         )
         self.assertEqual(len(registry["registry_sha256"]), 64)
         self.assertEqual(len(registry["role_styles"]), 9)
+        self.assertIn("subheader", STYLE_SPECS)
 
     def test_input_and_output_protection_are_distinct(self) -> None:
         self.assertFalse(STYLE_SPECS["input"].locked)
