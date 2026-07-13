@@ -18,6 +18,18 @@ class ModelRequestPayload(BaseModel):
     assumptions: list[str] = Field(default_factory=list)
 
 
+class WorkbookAnalysisRequestPayload(BaseModel):
+    """Composite request for evidence-backed workbook analysis."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    contract_version: Literal["workbook-analysis-request.v1"] = (
+        "workbook-analysis-request.v1"
+    )
+    workbook_map: dict[str, Any]
+    model_request: ModelRequestPayload
+
+
 class ValidationResultPayload(BaseModel):
     valid: bool
     issues: list[str]
