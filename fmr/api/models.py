@@ -39,6 +39,28 @@ class WorkbookPatchReceiptValidationPayload(BaseModel):
     patch: dict[str, Any] | None = None
 
 
+class WorkbookTargetResolutionRequestPayload(BaseModel):
+    """Workbook analysis and patch used for semantic target resolution."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    contract_version: Literal["workbook-target-resolution-request.v1"] = (
+        "workbook-target-resolution-request.v1"
+    )
+    workbook_analysis: dict[str, Any]
+    workbook_patch: dict[str, Any]
+
+
+class WorkbookTargetResolutionValidationPayload(BaseModel):
+    """Resolution plus source contracts for deterministic validation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    target_resolution: dict[str, Any]
+    workbook_analysis: dict[str, Any]
+    workbook_patch: dict[str, Any]
+
+
 class ValidationResultPayload(BaseModel):
     valid: bool
     issues: list[str]
