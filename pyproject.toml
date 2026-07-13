@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "financial-model-router"
-version = "0.3.3"
-description = "Deterministic financial-model routing, workbook inspection, analysis, patch, target, coordinate and content planning"
+version = "0.3.4"
+description = "Deterministic financial-model routing and non-mutating workbook planning through formula and style realization"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
