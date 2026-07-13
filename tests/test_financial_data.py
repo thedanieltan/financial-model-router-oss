@@ -39,7 +39,11 @@ class FinancialDataIntakeTests(unittest.TestCase):
         self.assertEqual(validate_financial_data_package(package), ())
         self.assertEqual(package["entity"]["currency"], "USD")
         self.assertEqual(len(package["periods"]), 7)
-        self.assertEqual(len(package["rows"]), 3)
+        self.assertEqual(len(package["rows"]), 21)
+        self.assertEqual(
+            len({row["source_ref"] for row in package["rows"]}),
+            21,
+        )
         self.assertTrue(
             all(
                 isinstance(value["amount"], str)
