@@ -45,8 +45,8 @@ from fmr.workbook.patch_validation import (
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
 )
-from fmr.workbook.realization_plan import (
-    plan_workbook_realization,
+from fmr.workbook.realization_plan import plan_workbook_realization
+from fmr.workbook.realization_validation import (
     validate_workbook_realization_plan_payload,
 )
 from fmr.workbook.style_specs import (
