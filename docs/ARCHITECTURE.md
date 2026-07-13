@@ -32,56 +32,35 @@ workbook-map.v1
 workbook-analysis.v1
       |
       v
-source and plan digest pinning
-      |
-      v
-approved additive operation mapping
-      |
-      v
 workbook-patch.v1
       |
       + workbook-operation-spec-registry.v1
       v
-deterministic semantic target resolution
-      |
-      v
 workbook-target-resolution.v1
       |
       + workbook-coordinate-rule-registry.v1
-      + explicit layout parameters
-      v
-collision and Excel-bound checks
-      |
       v
 workbook-coordinate-plan.v1
       |
       + workbook-content-spec-registry.v1
-      v
-symbolic content slot placement
-      |
       v
 workbook-content-plan.v1
       |
       + workbook-formula-spec-registry.v1
       + workbook-style-spec-registry.v1
       v
-dependency binding, cycle checks and style resolution
-      |
-      v
 workbook-realization-plan.v1
       |
       + workbook-write-context.v1
       v
-Excel A1 compilation and ordered dry-run phases
-      |
-      v
 workbook-write-plan.v1
       |
+      + source XLSX hash and size verification
       v
-future executor
+transactional copy-only executor
       |
-      +--> output workbook
-      +--> workbook-patch-receipt.v1
+      +--> completed XLSX
+      +--> workbook-execution-receipt.v1
 ```
 
 ## Core modules
@@ -106,23 +85,39 @@ future executor
 - `fmr.workbook.realization_plan`: dependency binding, cycle detection and style realization.
 - `fmr.workbook.write_plan`: Excel formula compilation and dry-run write record construction.
 - `fmr.workbook.write_plan_public`: phase normalization and deterministic public validation.
+- `fmr.workbook.executor`: low-level XLSX record application and verification.
+- `fmr.workbook.executor_public`: source verification, transactional output and receipt construction.
 - `fmr.contracts`: packaged JSON schemas.
 
-The deterministic core uses only the Python standard library.
+The planning core uses only the Python standard library. Workbook execution is an optional `openpyxl` adapter installed through the `executor` extra.
 
 ## Interfaces
 
 ```text
 CLI ---------+
-Python API --+--> deterministic core
+Python API --+--> deterministic planning core
 HTTP API ----+
 Browser UI --HTTP API
+                 |
+                 v
+          optional executor
 ```
 
-The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding, style-resolution or write-compilation rules.
+The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding, style-resolution, write-compilation or workbook-mutation rules.
 
-## Control boundary
+## Execution boundary
 
-The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. Patch compilation emits additive operation intents. Target resolution identifies workbook targets. Coordinate planning reserves ranges. Content planning places symbolic slots. Realization planning binds those slots to restricted FMR expression templates and declarative styles.
+The executor:
 
-Write planning converts accepted expressions and explicit context bindings into ordered Excel A1 formula, value, input, sheet and style records. It still does not open, edit, calculate, serialize or emit a workbook. Those actions remain inside the future executor and output-validation boundary.
+1. validates the accepted write plan;
+2. verifies the source hash and size;
+3. rejects external links and unsupported workbook features;
+4. opens the source in memory;
+5. applies records only to accepted sheets and coordinates;
+6. refuses occupied targets unless the value is already identical;
+7. saves and reopens the output;
+8. verifies every record;
+9. writes a temporary output and publishes it atomically; and
+10. emits a content-free receipt using before and after state hashes.
+
+The executor does not calculate Excel formulas. It marks the output for full recalculation when opened by a spreadsheet engine. Calculated-output acceptance remains a separate boundary.
