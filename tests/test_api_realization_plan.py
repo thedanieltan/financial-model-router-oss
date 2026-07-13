@@ -96,7 +96,7 @@ class RealizationPlanApiTests(unittest.TestCase):
             for slot in operation["slots"]
             if slot.get("formula_binding")
         )
-        first_formula["formula_binding"]["sign_convention"] = "neutral"
+        first_formula["formula_binding"]["expression_template"] += " "
         invalid = self.client.post(
             "/api/v1/workbooks/realization-plans/validate",
             json={
