@@ -1,0 +1,191 @@
+name: Write plan CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Write planning Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e ".[dev-ui,test-ui]"
+      - name: Run write planning tests
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest \
+            tests.test_write_plan \
+            tests.test_cli_write_plan \
+            tests.test_api_write_plan \
+            tests.test_write_plan_workbench -v 2>&1 | tee write-plan-test-output.txt
+      - name: Preserve failure output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: write-plan-test-output-python-${{ matrix.python-version }}
+          path: write-plan-test-output.txt
+          if-no-files-found: error
+          retention-days: 7
+      - run: python -m compileall -q fmr
+      - run: python -m fmr plan-writes --help
+      - run: python -m fmr validate-write-plan --help
+
+  package:
+    name: Build wheel and smoke-test write planning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - name: Install wheel in a clean environment
+        run: |
+          python -m venv /tmp/fmr-write-plan-test
+          WHEEL="$(ls dist/*.whl)"
+          /tmp/fmr-write-plan-test/bin/pip install "${WHEEL}[dev-ui,test-ui]"
+      - name: Verify packaged contracts and browser modules
+        run: |
+          cd /tmp
+          /tmp/fmr-write-plan-test/bin/python - <<'PY'
+          from importlib.resources import files
+
+          for name in (
+              "workbook-write-context.v1.schema.json",
+              "workbook-write-plan-request.v1.schema.json",
+              "workbook-write-plan.v1.schema.json",
+          ):
+              assert files("fmr.contracts").joinpath(name).is_file(), name
+          for name in ("realization.js", "write_plan.js"):
+              assert files("fmr.web").joinpath(name).is_file(), name
+          PY
+      - name: Compile and validate a write plan with the installed wheel
+        env:
+          FMR_REPO: ${{ github.workspace }}
+        run: |
+          cd /tmp
+          /tmp/fmr-write-plan-test/bin/python - <<'PY'
+          import os
+          import sys
+
+          sys.path.insert(0, os.path.join(os.environ["FMR_REPO"], "tests"))
+          from xlsx_factory import financial_workbook
+
+          from fmr.types import ModelRequest
+          from fmr.workbook import (
+              analyse_workbook_map,
+              compile_workbook_patch,
+              compile_workbook_write_plan,
+              inspect_workbook_bytes,
+              plan_workbook_content,
+              plan_workbook_coordinates,
+              plan_workbook_realization,
+              resolve_workbook_patch_targets,
+              validate_workbook_write_plan_payload,
+          )
+
+          workbook_map = inspect_workbook_bytes(financial_workbook(), filename="synthetic.xlsx")
+          request = ModelRequest(
+              objective="build a budget forecast",
+              role="finance_manager",
+              available_data=(
+                  "balance_sheet_history",
+                  "revenue_drivers",
+                  "operating_cost_drivers",
+              ),
+              workbook_capabilities=(),
+              assumptions=("forecast_horizon",),
+          )
+          analysis = analyse_workbook_map(workbook_map, request)
+          patch = compile_workbook_patch(analysis).to_dict()
+          resolution = resolve_workbook_patch_targets(analysis, patch).to_dict()
+          coordinates = plan_workbook_coordinates(
+              analysis,
+              patch,
+              resolution,
+              forecast_period_count=5,
+          )
+          content = plan_workbook_content(coordinates)
+          realization = plan_workbook_realization(content)
+          bindings = {}
+          for operation in realization["operation_realizations"]:
+              for slot in operation["slots"]:
+                  formula = slot.get("formula_binding")
+                  if not formula:
+                      continue
+                  for dependency in formula["dependencies"]:
+                      if dependency["binding_type"] in {"content_slot", "period_context"}:
+                          continue
+                      bindings[dependency["identifier"]] = {
+                          "binding_type": "constant",
+                          "value": True if dependency["binding_type"] == "validation_context" else 1,
+                      }
+          context = {
+              "contract_version": "workbook-write-context.v1",
+              "period_labels": [f"P{index}" for index in range(1, 13)],
+              "bindings": bindings,
+          }
+          write_plan = compile_workbook_write_plan(realization, context)
+          assert write_plan["contract_version"] == "workbook-write-plan.v1"
+          assert write_plan["formula_language"] == "excel-a1.v1"
+          assert write_plan["ready_for_executor"] is True
+          assert write_plan["execution_supported_by_this_release"] is False
+          assert write_plan["write_record_count"] > 0
+          records = [record for phase in write_plan["phases"] for record in phase["records"]]
+          assert [record["sequence"] for record in records] == list(range(1, len(records) + 1))
+          formulas = [
+              record["payload"]["formula"]
+              for record in records
+              if record["write_kind"] == "write_formula"
+          ]
+          assert formulas
+          assert all(item.startswith("=") and "{{" not in item for item in formulas)
+          assert validate_workbook_write_plan_payload(
+              write_plan,
+              realization_plan=realization,
+              write_context=context,
+          ) == ()
+          PY
+      - name: Start composed local service and check assets
+        run: |
+          /tmp/fmr-write-plan-test/bin/fmr serve --port 8766 >/tmp/fmr-write-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
+          /tmp/fmr-write-plan-test/bin/python - <<'PY'
+          import time
+          import urllib.request
+
+          urls = (
+              "http://127.0.0.1:8766/health",
+              "http://127.0.0.1:8766/assets/realization.js",
+              "http://127.0.0.1:8766/assets/write_plan.js",
+          )
+          last_error = None
+          for _ in range(30):
+              try:
+                  for url in urls:
+                      with urllib.request.urlopen(url, timeout=1) as response:
+                          assert response.status == 200
+                  break
+              except Exception as exc:
+                  last_error = exc
+                  time.sleep(0.2)
+          else:
+              raise SystemExit(f"service did not become ready: {last_error}")
+          PY
