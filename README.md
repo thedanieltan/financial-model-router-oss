@@ -1,8 +1,8 @@
 # Financial Model Router
 
-Financial Model Router (FMR) is an open-source Python toolkit for selecting a financial-model architecture, checking whether the available inputs are sufficient, inspecting XLSX workbook structure, and producing controlled transformation, patch, target, coordinate, content, realization and write plans.
+Financial Model Router (FMR) is an open-source Python toolkit for selecting a financial-model architecture, checking whether the available inputs are sufficient, inspecting XLSX workbook structure, producing controlled workbook plans, and applying an accepted plan to a copied workbook.
 
-FMR does not provide accounting, tax, or investment advice. It does not modify workbooks in the current release. The core is deterministic and runs locally.
+FMR does not provide accounting, tax, or investment advice. The deterministic core runs locally.
 
 ## Current scope
 
@@ -17,24 +17,30 @@ Given a JSON request, FMR returns the selected model family, reasons, readiness 
 
 FMR can inspect an `.xlsx` workbook and return `workbook-map.v1`. It can derive evidence-backed inputs, merge them with an explicit `model-request.v1`, and return `workbook-analysis.v1`.
 
-A valid analysis can be compiled into `workbook-patch.v1`. The patch pins the source and analysis hashes, maps approved additive operations, defines rollback receipt requirements and lists output checks.
+A valid analysis can be compiled through versioned patch, target, coordinate, content, formula, style and write contracts. `workbook-write-plan.v1` contains explicit Excel A1 formulas and ordered sheet, value, input and style records.
 
-FMR publishes versioned operation, coordinate, content, formula and style registries. It resolves patch operations to workbook targets in `workbook-target-resolution.v1`, reserves collision-checked ranges in `workbook-coordinate-plan.v1`, assigns labels and symbolic identifiers in `workbook-content-plan.v1`, binds formula dependencies and declarative styles in `workbook-realization-plan.v1`, then compiles an ordered dry-run `workbook-write-plan.v1`.
-
-The write plan contains explicit Excel A1 formula records, value and input records, style records and idempotent sheet setup records. It requires explicit period labels and external source or validation bindings. It does not execute those records or emit workbook bytes.
+FMR 0.4 can apply an accepted write plan to a copied `.xlsx` workbook. It validates the source hash, refuses to overwrite the source or an existing output, reopens and verifies the completed workbook, and emits `workbook-execution-receipt.v1` without cell values or workbook bytes.
 
 Derived evidence never creates assumptions and never overrides explicit user input.
 
-## Install the core
+## Install
+
+Planning core:
 
 ```bash
 python -m pip install -e .
 ```
 
-## Run the developer workbench
+Workbook execution:
 
 ```bash
-python -m pip install -e ".[dev-ui]"
+python -m pip install -e ".[executor]"
+```
+
+Developer workbench with execution:
+
+```bash
+python -m pip install -e ".[dev-ui,executor]"
 fmr serve
 ```
 
@@ -62,16 +68,21 @@ fmr plan-content coordinate-plan.json --output content-plan.json
 fmr formula-specs --output formula-specs.json
 fmr style-specs --output style-specs.json
 fmr plan-realization content-plan.json --output realization-plan.json
-fmr validate-realization-plan realization-plan.json \
-  --content-plan content-plan.json
 fmr plan-writes realization-plan.json write-context.json \
   --output write-plan.json
 fmr validate-write-plan write-plan.json \
   --realization-plan realization-plan.json \
   --write-context write-context.json
+fmr execute-writes source.xlsx write-plan.json \
+  --output completed.xlsx \
+  --receipt execution-receipt.json
+fmr validate-execution-receipt execution-receipt.json \
+  --write-plan write-plan.json
 ```
 
-Only `.xlsx` files are accepted. Every command above is non-mutating.
+Only `.xlsx` files are accepted.
+
+All commands through `validate-write-plan` are non-mutating. `execute-writes` is explicit and writes only to a new output path.
 
 ## Design rules
 
@@ -80,21 +91,23 @@ Only `.xlsx` files are accepted. Every command above is non-mutating.
 - Workbook classification includes evidence and confidence.
 - Workbook-derived inputs require medium or high confidence and sufficient period evidence.
 - Assumptions are never inferred from workbook labels.
-- Existing workbook formulas are read as text and never executed.
+- Existing workbook formulas are read as text and never executed during inspection.
 - Patch operations are additive, closed-vocabulary intents.
 - Every plan pins its source contracts and registries.
 - Ambiguous semantic targets and dependency bindings are blocked.
 - Coordinate ranges are checked against source occupancy, prior allocations and Excel bounds.
-- Variable forecast width and write-period labels must be supplied explicitly.
+- Variable forecast width, period labels and external bindings must be supplied explicitly.
 - Formula templates use declared FMR dependencies and forbid raw cell references and circularity.
-- Write plans contain resolved Excel formulas but do not execute them.
+- Write plans contain resolved Excel formulas but remain dry runs.
 - Style and number-format rules are separate from financial-model logic.
 - Input slots are editable; generated output and control slots are locked.
-- Workbook execution requires a separate accepted executor and output-validation gate.
-- Public fixtures are synthetic and generated during tests.
+- Execution verifies source identity, applies only an accepted write plan and publishes atomically.
+- Formula results are not calculated by FMR; recalculation is requested when Excel opens the output.
+- Execution receipts contain hashes and statuses, not cell values.
+- Public fixtures and workbooks are synthetic and generated during tests.
 - CLI, Python and HTTP interfaces call the same deterministic functions.
 
-See [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/WORKBOOK_ANALYSIS.md](docs/WORKBOOK_ANALYSIS.md), [docs/WORKBOOK_PATCH.md](docs/WORKBOOK_PATCH.md), [docs/SEMANTIC_TARGET_RESOLUTION.md](docs/SEMANTIC_TARGET_RESOLUTION.md), [docs/COORDINATE_PLANNING.md](docs/COORDINATE_PLANNING.md), [docs/CONTENT_PLANNING.md](docs/CONTENT_PLANNING.md), [docs/FORMULA_STYLE_SPECIFICATIONS.md](docs/FORMULA_STYLE_SPECIFICATIONS.md), [docs/WRITE_PLANNING.md](docs/WRITE_PLANNING.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
+See [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/WORKBOOK_ANALYSIS.md](docs/WORKBOOK_ANALYSIS.md), [docs/WORKBOOK_PATCH.md](docs/WORKBOOK_PATCH.md), [docs/SEMANTIC_TARGET_RESOLUTION.md](docs/SEMANTIC_TARGET_RESOLUTION.md), [docs/COORDINATE_PLANNING.md](docs/COORDINATE_PLANNING.md), [docs/CONTENT_PLANNING.md](docs/CONTENT_PLANNING.md), [docs/FORMULA_STYLE_SPECIFICATIONS.md](docs/FORMULA_STYLE_SPECIFICATIONS.md), [docs/WRITE_PLANNING.md](docs/WRITE_PLANNING.md), [docs/WORKBOOK_EXECUTION.md](docs/WORKBOOK_EXECUTION.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
 
 ## Licence
 
