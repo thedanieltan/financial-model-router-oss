@@ -1,4 +1,4 @@
-"""Deterministic XLSX inspection, analysis and non-mutating workbook planning."""
+"""Deterministic XLSX inspection, planning and transactional execution."""
 
 from fmr.workbook.analyse import WorkbookAnalysis, analyse_workbook_map
 from fmr.workbook.content_plan import (
@@ -22,6 +22,12 @@ from fmr.workbook.coordinate_rules import (
     coordinate_rule_registry_payload,
 )
 from fmr.workbook.evidence import EvidenceItem, WorkbookEvidence, derive_workbook_evidence
+from fmr.workbook.executor_public import (
+    WorkbookExecutionResult,
+    execute_workbook_write_plan_bytes,
+    execute_workbook_write_plan_file,
+    validate_workbook_execution_receipt_payload,
+)
 from fmr.workbook.formula_specs import (
     FORMULA_SPECS,
     FormulaDependency,
@@ -97,6 +103,7 @@ __all__ = [
     "WorkbookContentSpec",
     "WorkbookCoordinateRule",
     "WorkbookEvidence",
+    "WorkbookExecutionResult",
     "WorkbookFormulaSpec",
     "WorkbookMap",
     "WorkbookOperationSpec",
@@ -109,6 +116,8 @@ __all__ = [
     "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
     "derive_workbook_evidence",
+    "execute_workbook_write_plan_bytes",
+    "execute_workbook_write_plan_file",
     "formula_spec_registry_payload",
     "inspect_workbook",
     "inspect_workbook_bytes",
@@ -122,6 +131,7 @@ __all__ = [
     "style_spec_registry_payload",
     "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",
+    "validate_workbook_execution_receipt_payload",
     "validate_workbook_patch_payload",
     "validate_workbook_patch_receipt_payload",
     "validate_workbook_realization_plan_payload",

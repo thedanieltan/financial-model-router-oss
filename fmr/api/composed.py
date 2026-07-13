@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from importlib.resources import files
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import Response
 
 from fmr.api.app import create_app as create_base_app
+from fmr.api.execution_routes import router as execution_router
 from fmr.api.write_routes import router as write_router
+
+_EXECUTION_PATH = "/api/v1/workbooks/executions"
 
 
 def _asset(name: str) -> str:
@@ -16,6 +19,17 @@ def _asset(name: str) -> str:
 def create_app() -> FastAPI:
     application = create_base_app()
     application.include_router(write_router)
+    application.include_router(execution_router)
+
+    @application.middleware("http")
+    async def execution_request_limit_override(request: Request, call_next):  # type: ignore[no-untyped-def]
+        if request.url.path == _EXECUTION_PATH:
+            request.scope["headers"] = [
+                (name, value)
+                for name, value in request.scope.get("headers", [])
+                if name.lower() != b"content-length"
+            ]
+        return await call_next(request)
 
     @application.get("/assets/realization.js", include_in_schema=False)
     def realization_javascript() -> Response:
@@ -24,6 +38,10 @@ def create_app() -> FastAPI:
     @application.get("/assets/write_plan.js", include_in_schema=False)
     def write_plan_javascript() -> Response:
         return Response(_asset("write_plan.js"), media_type="application/javascript")
+
+    @application.get("/assets/execution.js", include_in_schema=False)
+    def execution_javascript() -> Response:
+        return Response(_asset("execution.js"), media_type="application/javascript")
 
     return application
 

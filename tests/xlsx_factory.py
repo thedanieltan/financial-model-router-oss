@@ -120,7 +120,11 @@ def build_xlsx(
     return output.getvalue()
 
 
-def financial_workbook(*, external_link: bool = False) -> bytes:
+def financial_workbook(
+    *,
+    external_link: bool = False,
+    include_chart: bool = True,
+) -> bytes:
     formula = "[Source.xlsx]Sheet1!A1" if external_link else "C3*1.10"
     return build_xlsx(
         [
@@ -167,7 +171,7 @@ def financial_workbook(*, external_link: bool = False) -> bytes:
         ],
         defined_names=("ForecastStart",),
         external_link=external_link,
-        include_chart=True,
+        include_chart=include_chart,
     )
 
 

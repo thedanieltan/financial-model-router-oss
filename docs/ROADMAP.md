@@ -25,72 +25,40 @@
 - return `workbook-analysis.v1` with recommendation and transformation plan;
 - never infer assumptions or mutate the workbook.
 
-## 0.3 — workbook patch contracts
+## 0.3 — governed workbook planning
 
-- compile `workbook-analysis.v1` into `workbook-patch.v1`;
-- pin source, analysis and transformation-plan hashes;
-- map approved high-level operations into additive patch intents;
-- define preconditions, rollback order and output checks;
-- validate `workbook-patch-receipt.v1` execution and rollback records;
-- do not execute patch operations.
+Delivered contracts:
 
-## 0.3.1 — operation specifications and target resolution
+- `workbook-patch.v1` and rollback-receipt requirements;
+- versioned operation specifications and semantic target resolution;
+- collision-checked coordinate planning;
+- FMR-owned content specifications;
+- restricted formula and style realization; and
+- explicit dry-run write planning.
 
-- publish one versioned specification for every approved operation;
-- resolve semantic roles to existing, new, planned or set targets;
-- block ambiguous targets and missing required statement roles;
-- pin the operation registry and patch hashes;
-- return `workbook-target-resolution.v1`;
-- do not assign write coordinates or modify the workbook.
+Planning remains deterministic and does not open a workbook for writing.
 
-## 0.3.2 — coordinate planning
+## 0.4 — transactional workbook executor
 
-- publish one versioned coordinate rule for every approved operation;
-- require an explicit forecast-period count for variable-width extensions;
-- reserve new-sheet, appended-section and right-extension ranges;
-- treat source used ranges and prior allocations as occupied;
-- block collisions and Excel row or column overflow;
-- return `workbook-coordinate-plan.v1`;
-- do not emit values, formulas or workbook writes.
+- install execution separately through the `executor` package extra;
+- verify the source workbook SHA-256 and size;
+- reject blocked write plans, external links and unsupported workbook features;
+- apply only accepted sheet, value, input, formula and style records;
+- refuse source overwrite and existing output paths;
+- write to a temporary file and publish the output atomically;
+- reopen and verify every accepted record;
+- request full recalculation when Excel next opens the output;
+- return `workbook-execution-receipt.v1` with state hashes rather than cell values;
+- expose Python, CLI, local HTTP and browser interfaces; and
+- generate all acceptance workbooks at test runtime.
 
-## 0.3.3 — content planning
+## 0.4.1 — calculated-output acceptance
 
-- publish one versioned content specification for every approved operation;
-- assign FMR-owned labels and input placeholders to reserved ranges;
-- assign symbolic formula, period, reference and validation identifiers;
-- assign semantic format roles;
-- keep every slot inside its coordinate allocation;
-- return `workbook-content-plan.v1`;
-- do not emit values, formula expressions or workbook writes.
-
-## 0.3.4 — formula and style realization
-
-- publish `workbook-formula-spec-registry.v1` using `fmr-expression.v1`;
-- declare formula dependencies, output types, sign conventions and fill policies;
-- forbid workbook-specific references, volatile functions and circular dependencies;
-- publish `workbook-style-spec-registry.v1` with an original FMR palette, protection rules and number formats;
-- bind content slots to formula dependencies and declarative styles;
-- return `workbook-realization-plan.v1`;
-- do not compile Excel formulas or modify a workbook.
-
-## 0.3.5 — dry-run write planning
-
-- require explicit `workbook-write-context.v1` period labels and external bindings;
-- compile accepted FMR expressions into explicit Excel A1 formula records;
-- resolve content-slot, source, validation and period dependencies without guessing;
-- emit deterministic sheet-setup, value, input, formula and style phases;
-- pin the realization plan and write context by SHA-256;
-- return `workbook-write-plan.v1`;
-- validate the complete write set without opening or editing a workbook.
-
-## 0.4 — workbook executor
-
-- copy the source workbook;
-- apply only an accepted write plan;
-- emit operation receipts;
-- verify formulas, styles, links and source hashes;
-- support rollback;
-- reopen and validate the output.
+- add an optional external calculation adapter;
+- reopen the recalculated workbook in data-only mode;
+- verify balance, cash-flow, formula and error checks against accepted specifications;
+- distinguish implementation acceptance from live spreadsheet-engine acceptance; and
+- retain the current executor when no calculation engine is installed.
 
 ## Later
 

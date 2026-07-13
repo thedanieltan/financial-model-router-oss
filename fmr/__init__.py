@@ -9,6 +9,8 @@ from fmr.workbook import (
     content_spec_registry_payload,
     coordinate_rule_registry_payload,
     derive_workbook_evidence,
+    execute_workbook_write_plan_bytes,
+    execute_workbook_write_plan_file,
     formula_spec_registry_payload,
     inspect_workbook,
     inspect_workbook_bytes,
@@ -20,6 +22,7 @@ from fmr.workbook import (
     style_spec_registry_payload,
     validate_workbook_content_plan_payload,
     validate_workbook_coordinate_plan_payload,
+    validate_workbook_execution_receipt_payload,
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
     validate_workbook_realization_plan_payload,
@@ -36,6 +39,8 @@ __all__ = [
     "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
     "derive_workbook_evidence",
+    "execute_workbook_write_plan_bytes",
+    "execute_workbook_write_plan_file",
     "formula_spec_registry_payload",
     "inspect_workbook",
     "inspect_workbook_bytes",
@@ -48,6 +53,7 @@ __all__ = [
     "style_spec_registry_payload",
     "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",
+    "validate_workbook_execution_receipt_payload",
     "validate_workbook_patch_payload",
     "validate_workbook_patch_receipt_payload",
     "validate_workbook_realization_plan_payload",
@@ -55,4 +61,4 @@ __all__ = [
     "validate_workbook_write_context_payload",
     "validate_workbook_write_plan_payload",
 ]
-__version__ = "0.3.5"
+__version__ = "0.4.0"
