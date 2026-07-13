@@ -30,6 +30,15 @@ class WorkbookAnalysisRequestPayload(BaseModel):
     model_request: ModelRequestPayload
 
 
+class WorkbookPatchReceiptValidationPayload(BaseModel):
+    """Receipt with an optional patch for cross-contract validation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    receipt: dict[str, Any]
+    patch: dict[str, Any] | None = None
+
+
 class ValidationResultPayload(BaseModel):
     valid: bool
     issues: list[str]

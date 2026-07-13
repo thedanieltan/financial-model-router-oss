@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-patch.v1.schema.json",
+  "title": "FMR workbook patch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "patch_id",
+    "source",
+    "analysis_sha256",
+    "transformation_plan_sha256",
+    "model_family",
+    "ready_for_executor",
+    "execution_supported_by_this_release",
+    "blockers",
+    "preconditions",
+    "operations",
+    "rollback_plan",
+    "output_validation",
+    "controls"
+  ],
+  "properties": {
+    "contract_version": {"const": "workbook-patch.v1"},
+    "patch_id": {"type": "string", "pattern": "^fmrp_[0-9a-f]{24}$"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "size_bytes"],
+      "properties": {
+        "filename": {"type": "string", "minLength": 1, "pattern": "\\.xlsx$"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "analysis_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "transformation_plan_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "model_family": {"type": "string", "minLength": 1},
+    "ready_for_executor": {"type": "boolean"},
+    "execution_supported_by_this_release": {"const": false},
+    "blockers": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/check"},
+      "minItems": 7,
+      "maxItems": 7
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/operation"}
+    },
+    "rollback_plan": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/rollback"}
+    },
+    "output_validation": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/check"},
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "controls": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "additive_operations_only",
+          "approved_operations_only",
+          "do_not_execute_macros",
+          "do_not_overwrite_source_workbook",
+          "executor_not_included",
+          "formulas_require_separate_specification"
+        ]
+      },
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check", "expected"],
+      "properties": {
+        "check": {"type": "string", "minLength": 1},
+        "expected": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "integer"},
+            {"type": "boolean"}
+          ]
+        }
+      }
+    },
+    "operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "operation_id",
+        "action",
+        "source_operation",
+        "mode",
+        "target",
+        "parameters",
+        "preconditions",
+        "rollback",
+        "validations"
+      ],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "operation_id": {"type": "string", "pattern": "^op-[0-9]{3}$"},
+        "action": {
+          "enum": [
+            "add_control",
+            "add_scenario",
+            "add_sensitivity",
+            "append_periods",
+            "ensure_section",
+            "ensure_sheet",
+            "link_components"
+          ]
+        },
+        "source_operation": {
+          "enum": [
+            "create_assumptions_section",
+            "add_forecast_periods",
+            "create_revenue_schedule",
+            "create_operating_cost_schedule",
+            "create_working_capital_schedule",
+            "create_capital_expenditure_schedule",
+            "create_debt_schedule",
+            "create_interest_schedule",
+            "create_cash_sweep_schedule",
+            "create_covenant_schedule",
+            "create_refinancing_scenarios",
+            "link_financial_statements",
+            "extend_operating_forecast",
+            "create_free_cash_flow_schedule",
+            "create_discount_factor_schedule",
+            "create_terminal_value_section",
+            "create_enterprise_to_equity_bridge",
+            "add_valuation_sensitivity",
+            "add_integrity_checks",
+            "add_balance_checks",
+            "add_cash_flow_checks",
+            "add_liquidity_checks"
+          ]
+        },
+        "mode": {"const": "additive"},
+        "target": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["scope", "semantic_role"],
+          "properties": {
+            "scope": {"const": "workbook"},
+            "semantic_role": {"type": "string", "minLength": 1}
+          }
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["specification_ref", "conflict_policy"],
+          "properties": {
+            "specification_ref": {
+              "type": "string",
+              "pattern": "^fmr://workbook-operations/[a-z0-9_-]+/v1$"
+            },
+            "conflict_policy": {"const": "reuse_matching_or_fail"}
+          }
+        },
+        "preconditions": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/check"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "rollback": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["strategy", "receipt_key", "required_fields"],
+          "properties": {
+            "strategy": {"const": "operation_receipt"},
+            "receipt_key": {
+              "type": "string",
+              "pattern": "^operations\\.op-[0-9]{3}$"
+            },
+            "required_fields": {
+              "const": [
+                "before_state_sha256",
+                "after_state_sha256",
+                "affected_parts"
+              ]
+            }
+          }
+        },
+        "validations": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/check"},
+          "minItems": 1,
+          "maxItems": 1
+        }
+      }
+    },
+    "rollback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sequence",
+        "operation_id",
+        "action",
+        "receipt_key",
+        "required_receipt_fields"
+      ],
+      "properties": {
+        "sequence": {"type": "integer", "minimum": 1},
+        "operation_id": {"type": "string", "pattern": "^op-[0-9]{3}$"},
+        "action": {"const": "restore_operation_receipt"},
+        "receipt_key": {
+          "type": "string",
+          "pattern": "^operations\\.op-[0-9]{3}$"
+        },
+        "required_receipt_fields": {
+          "const": [
+            "before_state_sha256",
+            "after_state_sha256",
+            "affected_parts"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -30,6 +30,24 @@ class WorkbookAnalysis:
             "transformation_plan": self.transformation_plan.to_dict(),
         }
 
+    @classmethod
+    def from_mapping(cls, data: Any) -> "WorkbookAnalysis":
+        if not isinstance(data, dict):
+            raise ValueError("workbook analysis must be an object")
+        if data.get("contract_version") != "workbook-analysis.v1":
+            raise ValueError("unsupported workbook-analysis contract_version")
+        original_payload = data.get("original_request")
+        if not isinstance(original_payload, dict):
+            raise ValueError("workbook-analysis original_request must be an object")
+        workbook_map = WorkbookMap.from_mapping(data.get("workbook_map"))
+        original_request = _model_request_from_serialized(original_payload)
+        expected = analyse_workbook_map(workbook_map, original_request)
+        if data != expected.to_dict():
+            raise ValueError(
+                "workbook-analysis payload does not match deterministic recomputation"
+            )
+        return expected
+
 
 def analyse_workbook_map(
     workbook_map: WorkbookMap,
@@ -60,4 +78,24 @@ def analyse_workbook_map(
         derived_evidence=evidence,
         recommendation=recommendation,
         transformation_plan=plan,
+    )
+
+
+def _model_request_from_serialized(data: dict[str, Any]) -> ModelRequest:
+    validated = ModelRequest.from_mapping(data)
+    ordered: dict[str, tuple[str, ...]] = {}
+    for field in ("available_data", "workbook_capabilities", "assumptions"):
+        raw = data.get(field, [])
+        if not isinstance(raw, list):
+            raise ValueError(f"{field} must be an array of strings")
+        cleaned = tuple(item.strip() for item in raw if isinstance(item, str) and item.strip())
+        if len(cleaned) != len(raw) or len(set(cleaned)) != len(cleaned):
+            raise ValueError(f"{field} must contain unique non-empty strings")
+        ordered[field] = cleaned
+    return ModelRequest(
+        objective=validated.objective,
+        role=validated.role,
+        available_data=ordered["available_data"],
+        workbook_capabilities=ordered["workbook_capabilities"],
+        assumptions=ordered["assumptions"],
     )

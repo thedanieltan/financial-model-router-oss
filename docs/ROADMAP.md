@@ -25,10 +25,21 @@
 - return `workbook-analysis.v1` with recommendation and transformation plan;
 - never infer assumptions or mutate the workbook.
 
-## 0.3 — workbook writing
+## 0.3 — workbook patch contracts
+
+- compile `workbook-analysis.v1` into `workbook-patch.v1`;
+- pin source, analysis and transformation-plan hashes;
+- map approved high-level operations into additive patch intents;
+- define preconditions, rollback order and output checks;
+- validate `workbook-patch-receipt.v1` execution and rollback records;
+- do not execute patch operations.
+
+## 0.4 — workbook executor
 
 - copy the source workbook;
-- apply additive patches;
+- resolve exact targets against the approved operation specifications;
+- apply additive patch operations;
+- emit operation receipts;
 - verify formulas and links;
 - support rollback;
 - reopen and validate the output.

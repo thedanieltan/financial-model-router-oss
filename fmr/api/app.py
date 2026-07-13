@@ -12,13 +12,22 @@ from fmr.api.models import (
     ModelRequestPayload,
     ValidationResultPayload,
     WorkbookAnalysisRequestPayload,
+    WorkbookPatchReceiptValidationPayload,
 )
 from fmr.fixtures import list_fixtures, load_fixture
 from fmr.model_specs import MODEL_DEFINITIONS
 from fmr.plan import build_plan, validate_plan_payload
 from fmr.router import route_request
 from fmr.types import ModelRequest
-from fmr.workbook import WorkbookMap, analyse_workbook_map, inspect_workbook_bytes
+from fmr.workbook import (
+    WorkbookAnalysis,
+    WorkbookMap,
+    analyse_workbook_map,
+    compile_workbook_patch,
+    inspect_workbook_bytes,
+    validate_workbook_patch_payload,
+    validate_workbook_patch_receipt_payload,
+)
 
 MAX_REQUEST_BYTES = 1_048_576
 MAX_WORKBOOK_MAP_REQUEST_BYTES = 5 * 1024 * 1024
@@ -68,7 +77,8 @@ def create_app() -> FastAPI:
         version=__version__,
         description=(
             "Local developer interface for deterministic model routing, readiness "
-            "assessment, transformation planning and XLSX inspection."
+            "assessment, transformation planning, XLSX inspection, workbook analysis "
+            "and static workbook patch compilation."
         ),
         docs_url="/docs",
         redoc_url="/redoc",
@@ -87,7 +97,10 @@ def create_app() -> FastAPI:
                 )
             if request.url.path == "/api/v1/workbooks/inspect":
                 limit = MAX_WORKBOOK_REQUEST_BYTES
-            elif request.url.path == "/api/v1/workbooks/analyse":
+            elif request.url.path in {
+                "/api/v1/workbooks/analyse",
+                "/api/v1/workbooks/patches",
+            }:
                 limit = MAX_WORKBOOK_MAP_REQUEST_BYTES
             else:
                 limit = MAX_REQUEST_BYTES
@@ -185,6 +198,45 @@ def create_app() -> FastAPI:
                     "message": str(exc),
                 },
             ) from exc
+
+    @application.post("/api/v1/workbooks/patches")
+    def compile_patch(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+        try:
+            analysis = WorkbookAnalysis.from_mapping(payload)
+            patch = compile_workbook_patch(analysis).to_dict()
+            issues = validate_workbook_patch_payload(patch)
+            if issues:
+                raise ValueError(f"compiled patch is invalid: {'; '.join(issues)}")
+            return patch
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_workbook_patch_request",
+                    "message": str(exc),
+                },
+            ) from exc
+
+    @application.post(
+        "/api/v1/workbooks/patches/validate",
+        response_model=ValidationResultPayload,
+    )
+    def validate_patch(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
+        issues = validate_workbook_patch_payload(payload)
+        return {"valid": not issues, "issues": list(issues)}
+
+    @application.post(
+        "/api/v1/workbooks/patch-receipts/validate",
+        response_model=ValidationResultPayload,
+    )
+    def validate_patch_receipt(
+        payload: WorkbookPatchReceiptValidationPayload,
+    ) -> dict[str, Any]:
+        issues = validate_workbook_patch_receipt_payload(
+            payload.receipt,
+            patch=payload.patch,
+        )
+        return {"valid": not issues, "issues": list(issues)}
 
     return application
 

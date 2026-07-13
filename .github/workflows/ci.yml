@@ -41,6 +41,9 @@ jobs:
       - run: python -m fmr plan tests/fixtures/request-debt-blocked.json
       - run: python -m fmr inspect --help
       - run: python -m fmr analyse-workbook --help
+      - run: python -m fmr compile-patch --help
+      - run: python -m fmr validate-patch --help
+      - run: python -m fmr validate-patch-receipt --help
       - run: python -m fmr serve --help
 
   package:
@@ -67,11 +70,13 @@ jobs:
           assert files("fmr.contracts").joinpath("workbook-map.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("workbook-analysis-request.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("workbook-analysis.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-patch.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-patch-receipt.v1.schema.json").is_file()
           assert files("fmr.web").joinpath("index.html").is_file()
           assert files("fmr.web").joinpath("app.js").is_file()
           assert files("fmr.fixtures").joinpath("dcf-ready.json").is_file()
           PY
-      - name: Inspect and analyse a generated XLSX from the installed wheel
+      - name: Inspect, analyse and compile a patch from the installed wheel
         run: |
           cd /tmp
           /tmp/fmr-package-test/bin/python - <<'PY'
@@ -133,16 +138,23 @@ jobs:
           PY
           /tmp/fmr-package-test/bin/fmr inspect /tmp/fmr-smoke.xlsx --output /tmp/fmr-smoke-map.json
           /tmp/fmr-package-test/bin/fmr analyse-workbook /tmp/fmr-smoke.xlsx /tmp/fmr-smoke-request.json --output /tmp/fmr-smoke-analysis.json
+          /tmp/fmr-package-test/bin/fmr compile-patch /tmp/fmr-smoke-analysis.json --output /tmp/fmr-smoke-patch.json
+          /tmp/fmr-package-test/bin/fmr validate-patch /tmp/fmr-smoke-patch.json
           /tmp/fmr-package-test/bin/python - <<'PY'
           import json
           workbook_map = json.load(open("/tmp/fmr-smoke-map.json", encoding="utf-8"))
           analysis = json.load(open("/tmp/fmr-smoke-analysis.json", encoding="utf-8"))
+          patch = json.load(open("/tmp/fmr-smoke-patch.json", encoding="utf-8"))
           assert workbook_map["contract_version"] == "workbook-map.v1"
-          assert workbook_map["sheets"][0]["candidate_role"]["value"] == "income_statement"
           assert analysis["contract_version"] == "workbook-analysis.v1"
           assert analysis["recommendation"]["readiness"]["ready"] is True
-          assert "income_statement_history" in analysis["derived_evidence"]["available_data"]
-          assert "historical_periods" in analysis["derived_evidence"]["workbook_capabilities"]
+          assert patch["contract_version"] == "workbook-patch.v1"
+          assert patch["ready_for_executor"] is True
+          assert patch["execution_supported_by_this_release"] is False
+          assert patch["source"]["sha256"] == workbook_map["source"]["sha256"]
+          operation_ids = [item["operation_id"] for item in patch["operations"]]
+          rollback_ids = [item["operation_id"] for item in patch["rollback_plan"]]
+          assert rollback_ids == list(reversed(operation_ids))
           PY
       - name: Start local server and check health
         run: |

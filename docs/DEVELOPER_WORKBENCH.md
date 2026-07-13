@@ -29,8 +29,22 @@ Defaults:
 | POST | `/api/v1/plan` | build a transformation plan |
 | POST | `/api/v1/validate-plan` | validate a plan payload |
 | POST | `/api/v1/workbooks/inspect?filename=...` | inspect an XLSX workbook |
+| POST | `/api/v1/workbooks/analyse` | combine a workbook map and model request |
+| POST | `/api/v1/workbooks/patches` | compile `workbook-analysis.v1` into a patch manifest |
+| POST | `/api/v1/workbooks/patches/validate` | validate a patch manifest |
+| POST | `/api/v1/workbooks/patch-receipts/validate` | validate a receipt, optionally against its patch |
 
-The workbook endpoint accepts raw request bytes rather than multipart form data. This keeps the optional interface small and avoids retaining temporary files.
+The inspection endpoint accepts raw workbook bytes rather than multipart form data. The analysis and patch endpoints accept JSON contracts. Nothing is retained.
+
+## Browser sequence
+
+1. Select and inspect an `.xlsx` workbook.
+2. Edit or load a model request.
+3. Analyse the workbook with the request.
+4. Compile the resulting analysis into a patch manifest.
+5. Inspect or copy the JSON.
+
+The browser does not execute the patch.
 
 ## Boundary
 
@@ -39,8 +53,9 @@ The interface:
 - stores no requests or workbooks;
 - enables no cross-origin access;
 - applies separate JSON and workbook request-size limits;
-- makes no external calls; and
-- contains no financial-model or workbook-classification logic of its own.
+- makes no external calls;
+- contains no financial-model, workbook-classification or patch-mapping rules of its own; and
+- exposes no workbook executor.
 
 ## Test it
 
