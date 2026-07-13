@@ -26,8 +26,8 @@ from fmr.workbook import (
 from tests.xlsx_factory import financial_workbook
 
 
-def execution_case() -> tuple[bytes, dict]:
-    source_bytes = financial_workbook()
+def execution_case(*, include_chart: bool = False) -> tuple[bytes, dict]:
+    source_bytes = financial_workbook(include_chart=include_chart)
     workbook_map = inspect_workbook_bytes(source_bytes, filename="synthetic.xlsx")
     request = ModelRequest(
         objective="build a budget forecast",
@@ -151,6 +151,16 @@ class WorkbookExecutorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "hash does not match"):
             execute_workbook_write_plan_bytes(
                 altered,
+                filename="synthetic.xlsx",
+                output_filename="completed.xlsx",
+                write_plan=write_plan,
+            )
+
+    def test_detected_chart_is_rejected(self) -> None:
+        source_bytes, write_plan = execution_case(include_chart=True)
+        with self.assertRaisesRegex(ValueError, "unsupported_feature:charts"):
+            execute_workbook_write_plan_bytes(
+                source_bytes,
                 filename="synthetic.xlsx",
                 output_filename="completed.xlsx",
                 write_plan=write_plan,
