@@ -13,21 +13,44 @@
       <h1>Developer Workbench</h1>
       <p>Test routing, planning and workbook inspection against the local engine.</p>
     </div>
-    <nav><a href="/docs">API docs</a><a href="/redoc">ReDoc</a></nav>
+    <nav>
+      <a href="/docs">API docs</a>
+      <a href="/redoc">ReDoc</a>
+    </nav>
   </header>
+
   <main>
     <section class="panel input-panel">
-      <div class="panel-heading"><div><h2>Workbook inspection</h2><p>Select an XLSX file. It is inspected in memory and not retained.</p></div></div>
+      <div class="panel-heading">
+        <div>
+          <h2>Workbook inspection</h2>
+          <p>Select an XLSX file. It is inspected in memory and not retained.</p>
+        </div>
+      </div>
+
       <div class="workbook-control">
-        <input id="workbook-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <input
+          id="workbook-file"
+          type="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        >
         <button id="inspect-button" type="button">Inspect workbook</button>
       </div>
       <p id="workbook-status" class="status" aria-live="polite"></p>
+
       <div class="panel-heading">
-        <div><h2>Model request</h2><p>Edit JSON or load a bundled synthetic fixture.</p></div>
-        <div class="fixture-control"><label for="fixture-select">Fixture</label><select id="fixture-select"></select></div>
+        <div>
+          <h2>Model request</h2>
+          <p>Edit JSON or load a bundled synthetic fixture.</p>
+        </div>
+        <div class="fixture-control">
+          <label for="fixture-select">Fixture</label>
+          <select id="fixture-select"></select>
+        </div>
       </div>
+
       <textarea id="request-editor" spellcheck="false" aria-label="Model request JSON"></textarea>
+
       <div class="actions">
         <button id="route-button" type="button">Route</button>
         <button id="plan-button" type="button">Build plan</button>
@@ -36,13 +59,26 @@
       </div>
       <p id="request-status" class="status" aria-live="polite"></p>
     </section>
+
     <section class="panel result-panel">
-      <div class="panel-heading"><div><h2>Result</h2><p id="result-kind">No request has been run.</p></div><button id="copy-button" type="button" class="quiet" disabled>Copy JSON</button></div>
+      <div class="panel-heading">
+        <div>
+          <h2>Result</h2>
+          <p id="result-kind">No request has been run.</p>
+        </div>
+        <button id="copy-button" type="button" class="quiet" disabled>Copy JSON</button>
+      </div>
+
       <div id="summary" class="summary empty">Run a request or inspect a workbook.</div>
       <pre id="result-output">{}</pre>
     </section>
   </main>
-  <footer><span id="health-indicator">Checking local service…</span><span>No data leaves this process.</span></footer>
+
+  <footer>
+    <span id="health-indicator">Checking local service…</span>
+    <span>No data leaves this process.</span>
+  </footer>
+
   <script src="/assets/app.js" defer></script>
 </body>
 </html>

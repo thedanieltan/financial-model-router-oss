@@ -37,6 +37,8 @@ def validate_archive(archive: zipfile.ZipFile) -> set[str]:
             raise ValueError("workbook archive contains an invalid compressed entry")
         if info.compress_size and info.file_size / info.compress_size > 1_000:
             raise ValueError("workbook archive contains an excessive compression ratio")
+        if info.filename in names:
+            raise ValueError("workbook archive contains duplicate entries")
         names.add(info.filename)
 
     required = {"[Content_Types].xml", "xl/workbook.xml", "xl/_rels/workbook.xml.rels"}

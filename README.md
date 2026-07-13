@@ -13,7 +13,15 @@ FMR supports four model families:
 - operating-company discounted cash-flow valuation; and
 - debt-capacity and refinancing analysis.
 
-It can also inspect an `.xlsx` workbook and return `workbook-map.v1`, including sheet structure, formulas and hardcodes, candidate sheet roles, detected periods, candidate financial metrics, hidden sheets, defined names and external-link indicators.
+Given a JSON request, FMR returns:
+
+- the selected model family;
+- the reasons for the selection;
+- available and missing inputs;
+- readiness blockers; and
+- a machine-readable transformation plan.
+
+FMR can also inspect an `.xlsx` workbook and return `workbook-map.v1`, including sheet structure, formulas and hardcodes, candidate sheet roles, detected periods, candidate financial metrics, hidden sheets, defined names and external-link indicators.
 
 ## Install the core
 
@@ -42,6 +50,35 @@ fmr inspect model.xlsx --output workbook-map.json
 ```
 
 Only `.xlsx` files are accepted for inspection. The source file is hashed before and after inspection and is never modified.
+
+## Input example
+
+```json
+{
+  "contract_version": "model-request.v1",
+  "objective": "value an operating company using a DCF",
+  "role": "finance_manager",
+  "available_data": [
+    "income_statement_history",
+    "balance_sheet_history",
+    "cash_flow_history",
+    "revenue_drivers",
+    "capital_expenditure_schedule",
+    "working_capital_schedule",
+    "net_debt"
+  ],
+  "workbook_capabilities": [
+    "historical_periods",
+    "assumptions_section"
+  ],
+  "assumptions": [
+    "forecast_horizon",
+    "tax_rate",
+    "discount_rate",
+    "terminal_value_assumption"
+  ]
+}
+```
 
 ## Design rules
 

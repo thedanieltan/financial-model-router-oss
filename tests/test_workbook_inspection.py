@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import hashlib
+import io
+import warnings
+import zipfile
 import tempfile
 import unittest
 from pathlib import Path
@@ -53,6 +56,20 @@ class WorkbookInspectionTests(unittest.TestCase):
     def test_rejects_unsupported_extension(self) -> None:
         with self.assertRaisesRegex(ValueError, "only .xlsx"):
             inspect_workbook_bytes(financial_workbook(), filename="model.xlsm")
+
+
+    def test_rejects_duplicate_archive_entries(self) -> None:
+        source = financial_workbook()
+        original = zipfile.ZipFile(io.BytesIO(source))
+        output = io.BytesIO()
+        with original, zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as target:
+            for info in original.infolist():
+                target.writestr(info.filename, original.read(info.filename))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", UserWarning)
+                target.writestr("xl/workbook.xml", original.read("xl/workbook.xml"))
+        with self.assertRaisesRegex(ValueError, "duplicate entries"):
+            inspect_workbook_bytes(output.getvalue(), filename="duplicate.xlsx")
 
     def test_rejects_malformed_archive(self) -> None:
         with self.assertRaisesRegex(ValueError, "valid XLSX archive"):
