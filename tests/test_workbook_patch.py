@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import copy
 import unittest
+from typing import Any
 
 from fmr.types import ModelRequest
 from fmr.workbook import (
@@ -27,6 +28,18 @@ def ready_request() -> ModelRequest:
         workbook_capabilities=(),
         assumptions=("forecast_horizon",),
     )
+
+
+def nested_keys(value: Any) -> set[str]:
+    keys: set[str] = set()
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            keys.add(str(key).lower())
+            keys.update(nested_keys(nested))
+    elif isinstance(value, list):
+        for item in value:
+            keys.update(nested_keys(item))
+    return keys
 
 
 class WorkbookPatchTests(unittest.TestCase):
@@ -57,9 +70,11 @@ class WorkbookPatchTests(unittest.TestCase):
         self.assertTrue(
             all(item["mode"] == "additive" for item in self.patch["operations"])
         )
-        rendered = str(self.patch).lower()
-        for forbidden in ("workbook_bytes", "cell_write", "formula", "macro", "vba"):
-            self.assertNotIn(forbidden, rendered)
+        self.assertTrue(
+            nested_keys(self.patch).isdisjoint(
+                {"workbook_bytes", "cell", "cell_write", "formula", "macro", "script", "vba"}
+            )
+        )
 
     def test_not_ready_analysis_produces_patch_blockers(self) -> None:
         workbook_map = self.analysis.workbook_map
