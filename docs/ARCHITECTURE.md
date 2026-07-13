@@ -70,8 +70,12 @@ dependency binding, cycle checks and style resolution
       v
 workbook-realization-plan.v1
       |
+      + workbook-write-context.v1
       v
-future write-plan compiler
+Excel A1 compilation and ordered dry-run phases
+      |
+      v
+workbook-write-plan.v1
       |
       v
 future executor
@@ -100,6 +104,8 @@ future executor
 - `fmr.workbook.formula_specs`: restricted expression templates, dependencies and formula controls.
 - `fmr.workbook.style_specs`: palette, style roles, protection and number formats.
 - `fmr.workbook.realization_plan`: dependency binding, cycle detection and style realization.
+- `fmr.workbook.write_plan`: Excel formula compilation and dry-run write record construction.
+- `fmr.workbook.write_plan_public`: phase normalization and deterministic public validation.
 - `fmr.contracts`: packaged JSON schemas.
 
 The deterministic core uses only the Python standard library.
@@ -113,10 +119,10 @@ HTTP API ----+
 Browser UI --HTTP API
 ```
 
-The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding or style-resolution rules.
+The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding, style-resolution or write-compilation rules.
 
 ## Control boundary
 
 The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. Patch compilation emits additive operation intents. Target resolution identifies workbook targets. Coordinate planning reserves ranges. Content planning places symbolic slots. Realization planning binds those slots to restricted FMR expression templates and declarative styles.
 
-`fmr-expression.v1` is not an Excel formula language. Realization plans contain no A1 formula strings, cell values, write ordering, workbook serialization or mutation. Those remain separate write-plan and executor acceptance boundaries.
+Write planning converts accepted expressions and explicit context bindings into ordered Excel A1 formula, value, input, sheet and style records. It still does not open, edit, calculate, serialize or emit a workbook. Those actions remain inside the future executor and output-validation boundary.
