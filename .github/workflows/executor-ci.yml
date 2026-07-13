@@ -1,0 +1,223 @@
+name: Executor CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Executor Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e ".[dev-ui,test-ui,executor]"
+      - name: Run executor tests
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest \
+            tests.test_executor \
+            tests.test_cli_executor \
+            tests.test_api_executor \
+            tests.test_executor_workbench -v 2>&1 | tee executor-test-output.txt
+      - name: Preserve executor failure output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: executor-test-output-python-${{ matrix.python-version }}
+          path: executor-test-output.txt
+          if-no-files-found: error
+          retention-days: 7
+      - run: python -m compileall -q fmr
+      - run: python -m fmr execute-writes --help
+      - run: python -m fmr validate-execution-receipt --help
+      - name: Confirm no workbook binaries are committed
+        run: |
+          if find . -type f \( -iname '*.xlsx' -o -iname '*.xlsm' -o -iname '*.xlsb' -o -iname '*.xls' -o -iname '*.xltx' -o -iname '*.xltm' -o -iname '*.ods' \) -print -quit | grep -q .; then
+            echo "Workbook binary found in repository" >&2
+            exit 1
+          fi
+
+  package:
+    name: Build wheel and execute runtime-generated workbook
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - name: Install wheel in a clean environment
+        run: |
+          python -m venv /tmp/fmr-executor-test
+          WHEEL="$(ls dist/*.whl)"
+          /tmp/fmr-executor-test/bin/pip install "${WHEEL}[dev-ui,test-ui,executor]"
+      - name: Verify packaged contracts and browser asset
+        run: |
+          cd /tmp
+          /tmp/fmr-executor-test/bin/python - <<'PY'
+          from importlib.resources import files
+
+          for name in (
+              "workbook-execution-request.v1.schema.json",
+              "workbook-execution-result.v1.schema.json",
+              "workbook-execution-receipt.v1.schema.json",
+          ):
+              assert files("fmr.contracts").joinpath(name).is_file(), name
+          assert files("fmr.web").joinpath("execution.js").is_file()
+          PY
+      - name: Build source and write plan with installed wheel
+        env:
+          FMR_REPO: ${{ github.workspace }}
+        run: |
+          cd /tmp
+          /tmp/fmr-executor-test/bin/python - <<'PY'
+          import json
+          import os
+          import sys
+          from pathlib import Path
+
+          sys.path.insert(0, os.path.join(os.environ["FMR_REPO"], "tests"))
+          from xlsx_factory import financial_workbook
+
+          from fmr.types import ModelRequest
+          from fmr.workbook import (
+              analyse_workbook_map,
+              compile_workbook_patch,
+              compile_workbook_write_plan,
+              inspect_workbook_bytes,
+              plan_workbook_content,
+              plan_workbook_coordinates,
+              plan_workbook_realization,
+              resolve_workbook_patch_targets,
+          )
+
+          source_bytes = financial_workbook()
+          Path("/tmp/source.xlsx").write_bytes(source_bytes)
+          workbook_map = inspect_workbook_bytes(source_bytes, filename="source.xlsx")
+          request = ModelRequest(
+              objective="build a budget forecast",
+              role="finance_manager",
+              available_data=(
+                  "balance_sheet_history",
+                  "revenue_drivers",
+                  "operating_cost_drivers",
+              ),
+              workbook_capabilities=(),
+              assumptions=("forecast_horizon",),
+          )
+          analysis = analyse_workbook_map(workbook_map, request)
+          patch = compile_workbook_patch(analysis).to_dict()
+          resolution = resolve_workbook_patch_targets(analysis, patch).to_dict()
+          coordinates = plan_workbook_coordinates(
+              analysis,
+              patch,
+              resolution,
+              forecast_period_count=5,
+          )
+          content = plan_workbook_content(coordinates)
+          realization = plan_workbook_realization(content)
+          bindings = {}
+          for operation in realization["operation_realizations"]:
+              for slot in operation["slots"]:
+                  formula = slot.get("formula_binding")
+                  if not formula:
+                      continue
+                  for dependency in formula["dependencies"]:
+                      if dependency["binding_type"] in {"content_slot", "period_context"}:
+                          continue
+                      bindings[dependency["identifier"]] = {
+                          "binding_type": "constant",
+                          "value": True if dependency["binding_type"] == "validation_context" else 1,
+                      }
+          context = {
+              "contract_version": "workbook-write-context.v1",
+              "period_labels": [f"P{index}" for index in range(1, 13)],
+              "bindings": bindings,
+          }
+          write_plan = compile_workbook_write_plan(realization, context)
+          Path("/tmp/write-plan.json").write_text(json.dumps(write_plan), encoding="utf-8")
+          PY
+      - name: Execute and validate with installed CLI
+        run: |
+          cd /tmp
+          /tmp/fmr-executor-test/bin/fmr execute-writes \
+            /tmp/source.xlsx /tmp/write-plan.json \
+            --output /tmp/completed.xlsx \
+            --receipt /tmp/execution-receipt.json
+          /tmp/fmr-executor-test/bin/fmr validate-execution-receipt \
+            /tmp/execution-receipt.json \
+            --write-plan /tmp/write-plan.json
+          /tmp/fmr-executor-test/bin/python - <<'PY'
+          import hashlib
+          import json
+          from openpyxl import load_workbook
+
+          source = open("/tmp/source.xlsx", "rb").read()
+          output = open("/tmp/completed.xlsx", "rb").read()
+          receipt = json.load(open("/tmp/execution-receipt.json", encoding="utf-8"))
+          write_plan = json.load(open("/tmp/write-plan.json", encoding="utf-8"))
+
+          assert source != output
+          assert hashlib.sha256(source).hexdigest() == receipt["source"]["sha256"]
+          assert hashlib.sha256(output).hexdigest() == receipt["output"]["sha256"]
+          assert receipt["status"] == "completed"
+          assert receipt["verification"]["failed_record_ids"] == []
+          assert receipt["verification"]["verified_record_count"] == write_plan["write_record_count"]
+          assert all("value" not in key for record in receipt["records"] for key in record)
+
+          workbook = load_workbook("/tmp/completed.xlsx", data_only=False)
+          try:
+              formula_records = [
+                  record
+                  for phase in write_plan["phases"]
+                  for record in phase["records"]
+                  if record["write_kind"] == "write_formula"
+              ]
+              assert formula_records
+              first = formula_records[0]
+              cell = workbook[first["sheet_name"]][first["coordinate"].split(":", 1)[0]]
+              assert cell.value == first["payload"]["formula"]
+          finally:
+              workbook.close()
+          PY
+      - name: Start local service and check executor asset
+        run: |
+          /tmp/fmr-executor-test/bin/fmr serve --port 8767 >/tmp/fmr-executor-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
+          /tmp/fmr-executor-test/bin/python - <<'PY'
+          import time
+          import urllib.request
+
+          urls = (
+              "http://127.0.0.1:8767/health",
+              "http://127.0.0.1:8767/assets/execution.js",
+          )
+          last_error = None
+          for _ in range(30):
+              try:
+                  for url in urls:
+                      with urllib.request.urlopen(url, timeout=1) as response:
+                          assert response.status == 200
+                  break
+              except Exception as exc:
+                  last_error = exc
+                  time.sleep(0.2)
+          else:
+              raise SystemExit(f"service did not become ready: {last_error}")
+          PY
