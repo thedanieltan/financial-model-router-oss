@@ -13,6 +13,8 @@ class ContractTests(unittest.TestCase):
             "model-recommendation.v1.schema.json",
             "transformation-plan.v1.schema.json",
             "workbook-map.v1.schema.json",
+            "workbook-analysis-request.v1.schema.json",
+            "workbook-analysis.v1.schema.json",
         ):
             schema = json.loads(root.joinpath(name).read_text(encoding="utf-8"))
             self.assertTrue(
