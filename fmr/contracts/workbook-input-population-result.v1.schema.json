@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-input-population-result.v1.schema.json",
+  "title": "FMR workbook input population result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "output_filename", "workbook_base64", "receipt"],
+  "properties": {
+    "contract_version": {"const": "workbook-input-population-result.v1"},
+    "output_filename": {"type": "string", "minLength": 1, "pattern": "\\.xlsx$"},
+    "workbook_base64": {"type": "string", "minLength": 1},
+    "receipt": {"type": "object"}
+  }
+}
