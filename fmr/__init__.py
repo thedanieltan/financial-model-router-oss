@@ -5,6 +5,7 @@ from fmr.router import route_request
 from fmr.workbook import (
     analyse_workbook_map,
     compile_workbook_patch,
+    compile_workbook_write_plan,
     content_spec_registry_payload,
     coordinate_rule_registry_payload,
     derive_workbook_evidence,
@@ -23,12 +24,15 @@ from fmr.workbook import (
     validate_workbook_patch_receipt_payload,
     validate_workbook_realization_plan_payload,
     validate_workbook_target_resolution_payload,
+    validate_workbook_write_context_payload,
+    validate_workbook_write_plan_payload,
 )
 
 __all__ = [
     "analyse_workbook_map",
     "build_plan",
     "compile_workbook_patch",
+    "compile_workbook_write_plan",
     "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
     "derive_workbook_evidence",
@@ -48,5 +52,7 @@ __all__ = [
     "validate_workbook_patch_receipt_payload",
     "validate_workbook_realization_plan_payload",
     "validate_workbook_target_resolution_payload",
+    "validate_workbook_write_context_payload",
+    "validate_workbook_write_plan_payload",
 ]
-__version__ = "0.3.4"
+__version__ = "0.3.5"

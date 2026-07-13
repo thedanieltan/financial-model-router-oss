@@ -73,12 +73,14 @@
 - return `workbook-realization-plan.v1`;
 - do not compile Excel formulas or modify a workbook.
 
-## 0.3.5 — write-plan compilation
+## 0.3.5 — dry-run write planning
 
-- translate accepted FMR expressions into explicit Excel formula records;
-- resolve deferred source, period and reference dependencies;
-- emit an ordered, collision-checked write set;
-- define merge, style and protection records;
+- require explicit `workbook-write-context.v1` period labels and external bindings;
+- compile accepted FMR expressions into explicit Excel A1 formula records;
+- resolve content-slot, source, validation and period dependencies without guessing;
+- emit deterministic sheet-setup, value, input, formula and style phases;
+- pin the realization plan and write context by SHA-256;
+- return `workbook-write-plan.v1`;
 - validate the complete write set without opening or editing a workbook.
 
 ## 0.4 — workbook executor

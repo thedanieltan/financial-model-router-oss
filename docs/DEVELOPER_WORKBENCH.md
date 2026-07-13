@@ -46,6 +46,8 @@ Defaults:
 | POST | `/api/v1/workbooks/content-plans/validate` | recompute and validate a content plan |
 | POST | `/api/v1/workbooks/realization-plans` | bind formula dependencies and declarative styles |
 | POST | `/api/v1/workbooks/realization-plans/validate` | recompute and validate a realization plan |
+| POST | `/api/v1/workbooks/write-plans` | compile explicit, ordered dry-run write records |
+| POST | `/api/v1/workbooks/write-plans/validate` | recompute and validate a dry-run write plan |
 
 The inspection endpoint accepts raw workbook bytes rather than multipart form data. The remaining workbook endpoints accept JSON contracts. Nothing is retained.
 
@@ -60,9 +62,13 @@ The inspection endpoint accepts raw workbook bytes rather than multipart form da
 7. Plan collision-checked coordinates.
 8. Assign labels, placeholders and symbolic identifiers to the reserved ranges.
 9. Bind formula dependencies, style roles, protection and number formats.
-10. Validate or copy the JSON.
+10. Review or replace the visible synthetic write context.
+11. Compile ordered sheet, value, input, formula and style records.
+12. Validate or copy the JSON.
 
-The browser does not execute the patch, compile Excel formulas or write to the workbook.
+The synthetic write context is generated only for local testing. It is visible in the editor and never treated as a production binding source.
+
+The browser does not execute the write plan or modify the workbook.
 
 ## Boundary
 
@@ -70,9 +76,9 @@ The interface:
 
 - stores no requests or workbooks;
 - enables no cross-origin access;
-- applies separate JSON and workbook request-size limits;
+- applies request-size limits;
 - makes no external calls;
-- contains no financial-model, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding or style-resolution rules of its own; and
+- contains no financial-model, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding, style-resolution or write-compilation rules of its own; and
 - exposes no workbook executor.
 
 ## Test it

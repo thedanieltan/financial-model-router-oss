@@ -67,6 +67,11 @@ from fmr.workbook.target_resolution import (
     validate_workbook_target_resolution_payload,
 )
 from fmr.workbook.types import Classification, SheetMap, WorkbookMap
+from fmr.workbook.write_plan_public import (
+    compile_workbook_write_plan,
+    validate_workbook_write_context_payload,
+    validate_workbook_write_plan_payload,
+)
 
 __all__ = [
     "CONTENT_SPECS",
@@ -100,6 +105,7 @@ __all__ = [
     "WorkbookTargetResolution",
     "analyse_workbook_map",
     "compile_workbook_patch",
+    "compile_workbook_write_plan",
     "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
     "derive_workbook_evidence",
@@ -120,4 +126,6 @@ __all__ = [
     "validate_workbook_patch_receipt_payload",
     "validate_workbook_realization_plan_payload",
     "validate_workbook_target_resolution_payload",
+    "validate_workbook_write_context_payload",
+    "validate_workbook_write_plan_payload",
 ]
