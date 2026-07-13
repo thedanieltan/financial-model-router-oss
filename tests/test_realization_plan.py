@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import hashlib
+import json
 import unittest
 
 from fmr.types import ModelRequest
@@ -43,6 +45,18 @@ def budget_content_plan() -> dict:
         forecast_period_count=5,
     )
     return plan_workbook_content(coordinate_plan)
+
+
+def _reset_plan_id(plan: dict) -> None:
+    candidate = dict(plan)
+    candidate.pop("realization_plan_id", None)
+    rendered = json.dumps(
+        candidate,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    ).encode("utf-8")
+    plan["realization_plan_id"] = f"fmrr_{hashlib.sha256(rendered).hexdigest()[:24]}"
 
 
 class RealizationPlanTests(unittest.TestCase):
@@ -124,6 +138,22 @@ class RealizationPlanTests(unittest.TestCase):
         )
         self.assertIn("realization_plan_id does not match payload", issues)
         self.assertIn("realization plan does not match deterministic recomputation", issues)
+
+    def test_validator_rejects_nested_undeclared_fields_after_id_recalculation(self) -> None:
+        plan = plan_workbook_realization(budget_content_plan())
+        tampered = copy.deepcopy(plan)
+        first_slot = next(
+            slot
+            for operation in tampered["operation_realizations"]
+            for slot in operation["slots"]
+        )
+        first_slot["undeclared"] = True
+        _reset_plan_id(tampered)
+        issues = validate_workbook_realization_plan_payload(tampered)
+        self.assertTrue(
+            any("contains undeclared fields" in issue for issue in issues),
+            issues,
+        )
 
 
 if __name__ == "__main__":
