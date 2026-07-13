@@ -6,11 +6,13 @@ const resultKind = document.querySelector("#result-kind");
 const requestStatus = document.querySelector("#request-status");
 const workbookStatus = document.querySelector("#workbook-status");
 const workbookFile = document.querySelector("#workbook-file");
+const analyseButton = document.querySelector("#analyse-button");
 const copyButton = document.querySelector("#copy-button");
 const healthIndicator = document.querySelector("#health-indicator");
 
 let currentFixture = null;
 let currentResult = null;
+let currentWorkbookMap = null;
 
 function pretty(value) {
   return JSON.stringify(value, null, 2);
@@ -40,23 +42,25 @@ function addSummaryCard(label, value) {
 }
 
 function renderSummary(payload) {
-  const readiness = payload.readiness || {};
-  const workbook = payload.workbook || {};
+  const recommendation = payload.recommendation || payload;
+  const readiness = recommendation.readiness || {};
+  const workbookMap = payload.workbook_map
+    || (payload.contract_version === "workbook-map.v1" ? payload : null);
+  const workbook = workbookMap?.workbook || {};
+  const source = workbookMap?.source || payload.source || {};
+  const plan = payload.transformation_plan || payload;
+  const evidence = payload.derived_evidence || {};
   const cards = [];
 
-  if (payload.model_family) cards.push(["Model family", payload.model_family]);
-  if (payload.title) cards.push(["Title", payload.title]);
-  if (payload.confidence) cards.push(["Confidence", payload.confidence]);
+  if (recommendation.model_family) cards.push(["Model family", recommendation.model_family]);
+  if (recommendation.confidence) cards.push(["Confidence", recommendation.confidence]);
   if (typeof readiness.ready === "boolean") cards.push(["Ready", readiness.ready ? "Yes" : "No"]);
-  if (typeof payload.ready_to_apply === "boolean") cards.push(["Ready to apply", payload.ready_to_apply ? "Yes" : "No"]);
   if (Array.isArray(readiness.blockers)) cards.push(["Blockers", String(readiness.blockers.length)]);
-  if (Array.isArray(payload.unresolved_inputs)) cards.push(["Unresolved inputs", String(payload.unresolved_inputs.length)]);
-  if (Array.isArray(payload.operations)) cards.push(["Operations", String(payload.operations.length)]);
-  if (payload.source?.filename) cards.push(["Workbook", payload.source.filename]);
+  if (typeof plan.ready_to_apply === "boolean") cards.push(["Ready to apply", plan.ready_to_apply ? "Yes" : "No"]);
+  if (Array.isArray(plan.operations)) cards.push(["Operations", String(plan.operations.length)]);
+  if (source.filename) cards.push(["Workbook", source.filename]);
   if (typeof workbook.sheet_count === "number") cards.push(["Sheets", String(workbook.sheet_count)]);
-  if (typeof workbook.external_links_detected === "boolean") {
-    cards.push(["External links", workbook.external_links_detected ? "Detected" : "None"]);
-  }
+  if (Array.isArray(evidence.items)) cards.push(["Derived evidence", String(evidence.items.length)]);
   if (typeof payload.valid === "boolean") cards.push(["Valid", payload.valid ? "Yes" : "No"]);
 
   summary.replaceChildren();
@@ -121,7 +125,33 @@ async function inspectWorkbook() {
         body: file,
       },
     );
+    currentWorkbookMap = result;
+    analyseButton.disabled = false;
     showResult("Workbook map", result);
+  } catch (error) {
+    currentWorkbookMap = null;
+    analyseButton.disabled = true;
+    workbookStatus.textContent = error.message;
+  }
+}
+
+async function analyseWorkbook() {
+  workbookStatus.textContent = "";
+  if (!currentWorkbookMap) {
+    workbookStatus.textContent = "Inspect a workbook first.";
+    return;
+  }
+  try {
+    const result = await requestJson("/api/v1/workbooks/analyse", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contract_version: "workbook-analysis-request.v1",
+        workbook_map: currentWorkbookMap,
+        model_request: parseEditor(),
+      }),
+    });
+    showResult("Workbook analysis", result);
   } catch (error) {
     workbookStatus.textContent = error.message;
   }
@@ -160,13 +190,15 @@ async function initialize() {
 }
 
 document.querySelector("#inspect-button").addEventListener("click", inspectWorkbook);
+analyseButton.addEventListener("click", analyseWorkbook);
 document.querySelector("#route-button").addEventListener("click", () => run("/api/v1/route", "Routing result"));
 document.querySelector("#plan-button").addEventListener("click", () => run("/api/v1/plan", "Transformation plan"));
 document.querySelector("#validate-button").addEventListener("click", async () => {
   setStatus();
   try {
-    const payload = currentResult?.contract_version === "transformation-plan.v1"
-      ? currentResult
+    const candidate = currentResult?.transformation_plan || currentResult;
+    const payload = candidate?.contract_version === "transformation-plan.v1"
+      ? candidate
       : parseEditor();
     const result = await requestJson("/api/v1/validate-plan", {
       method: "POST",
