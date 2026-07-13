@@ -67,6 +67,22 @@ Planning remains deterministic and does not open a workbook for writing.
 - expose Python, CLI, local HTTP and browser interfaces; and
 - separate engine-independent contract tests from live LibreOffice acceptance.
 
+## 0.4.2 — governed input population
+
+- compile explicit UTF-8 CSV rows into `workbook-input-set.v1`;
+- allow only finite numeric and boolean values;
+- require complete, ordered coverage of every `reserve_input` record and cell;
+- pin the write plan, execution receipt and declared source provenance;
+- verify the selected workbook hash and size against the execution output;
+- prove generated workbook records remain immutable and input ranges remain blank;
+- populate only reserved input ranges;
+- reopen and verify exact populated inputs and every immutable record;
+- atomically publish a separate populated workbook;
+- emit `workbook-input-population-receipt.v1` without input values;
+- validate the hash chain from population output into calculation acceptance;
+- expose Python, CLI, local HTTP and browser interfaces; and
+- keep all acceptance workbooks synthetic and runtime-generated.
+
 ## Later
 
-Additional model families and calculation-engine adapters will be added only with deterministic specifications and acceptance tests.
+Additional model families, structured-data adapters and calculation-engine adapters will be added only with deterministic specifications and acceptance tests.

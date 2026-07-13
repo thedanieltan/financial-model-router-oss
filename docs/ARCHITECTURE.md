@@ -22,9 +22,6 @@ XLSX bytes
 archive and XML validation
       |
       v
-sheet, period and metric inspection
-      |
-      v
 workbook-map.v1
       |
       + model-request.v1
@@ -59,18 +56,24 @@ workbook-write-plan.v1
       v
 transactional copy-only executor
       |
-      +--> completed XLSX
+      +--> executed XLSX
       +--> workbook-execution-receipt.v1
                  |
-                 + populated reserved inputs
+                 + workbook-input-set.v1
                  v
+      reserved-input population boundary
+                 |
+                 +--> populated XLSX
+                 +--> workbook-input-population-receipt.v1
+                            |
+                            v
       optional spreadsheet calculation engine
-                 |
-                 v
+                            |
+                            v
       immutable-record and cached-result validation
-                 |
-                 +--> accepted calculated XLSX
-                 +--> workbook-calculation-acceptance.v1
+                            |
+                            +--> accepted calculated XLSX
+                            +--> workbook-calculation-acceptance.v1
 ```
 
 ## Core modules
@@ -90,62 +93,56 @@ transactional copy-only executor
 - `fmr.workbook.coordinate_plan`: range allocation, collision checks and validation.
 - `fmr.workbook.content_specs`: FMR-owned labels, identifiers and format roles.
 - `fmr.workbook.content_plan`: coordinate-bounded symbolic content placement.
-- `fmr.workbook.formula_specs`: restricted expression templates, dependencies and formula controls.
-- `fmr.workbook.style_specs`: palette, style roles, protection and number formats.
+- `fmr.workbook.formula_specs`: restricted expression templates and controls.
+- `fmr.workbook.style_specs`: palette, protection and number formats.
 - `fmr.workbook.realization_plan`: dependency binding, cycle detection and style realization.
-- `fmr.workbook.write_plan`: Excel formula compilation and dry-run write record construction.
-- `fmr.workbook.write_plan_public`: phase normalization and deterministic public validation.
-- `fmr.workbook.executor`: low-level XLSX record application and verification.
-- `fmr.workbook.executor_public`: source verification, transactional output and receipt construction.
-- `fmr.workbook.calculation`: engine discovery, isolated execution, cached-result inspection and acceptance construction.
-- `fmr.workbook.calculation_public`: input/output immutable-record verification and publish-only-on-pass boundary.
+- `fmr.workbook.write_plan`: Excel formula compilation and write-record construction.
+- `fmr.workbook.write_plan_public`: deterministic public write-plan validation.
+- `fmr.workbook.executor`: low-level XLSX application and verification.
+- `fmr.workbook.executor_public`: source verification and transactional execution output.
+- `fmr.workbook.input_population`: CSV compilation, reserved-input population and value-free receipts.
+- `fmr.workbook.input_link`: value-free population-to-calculation hash-chain validation.
+- `fmr.workbook.calculation`: engine execution and cached-result inspection.
+- `fmr.workbook.calculation_public`: immutable verification and publish-only-on-pass boundary.
 - `fmr.contracts`: packaged JSON schemas.
 
-The planning core uses only the Python standard library. Workbook execution and calculated-output validation use the optional `openpyxl` adapter installed through the `executor` extra. Live recalculation requires an external spreadsheet engine; LibreOffice is the first supported adapter.
+The planning core uses only the Python standard library. Workbook execution, input population and calculated-output validation use the optional `openpyxl` adapter installed through the `executor` extra. Live recalculation requires an external spreadsheet engine; LibreOffice is the first supported adapter.
 
 ## Interfaces
 
 ```text
 CLI ---------+
-Python API --+--> deterministic planning core
+Python API --+--> deterministic planning and workbook boundaries
 HTTP API ----+
 Browser UI --HTTP API
                  |
-                 +--> optional executor
+                 +--> optional executor and input population
                  |
                  +--> optional calculation engine
 ```
 
-The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding, style-resolution, write-compilation, workbook-mutation or calculation-acceptance rules.
+The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no financial-model, classification, planning, mutation, input-binding or calculation-acceptance rules of their own.
 
 ## Execution boundary
 
-The executor:
+The executor validates the write plan, verifies source identity, rejects unsupported features, applies only accepted records, reopens and verifies the output, publishes atomically and emits a value-free execution receipt. It does not calculate formulas.
 
-1. validates the accepted write plan;
-2. verifies the source hash and size;
+## Input-population boundary
+
+Input population:
+
+1. validates and pins the write plan, execution receipt and input set;
+2. verifies the selected workbook against the executor output hash and size;
 3. rejects external links and unsupported workbook features;
-4. opens the source in memory;
-5. applies records only to accepted sheets and coordinates;
-6. refuses occupied targets unless the value is already identical;
-7. saves and reopens the output;
-8. verifies every record;
-9. writes a temporary output and publishes it atomically; and
-10. emits a content-free receipt using before and after state hashes.
+4. verifies every generated record and requires every reserved input to remain blank;
+5. writes only numeric or boolean values to `reserve_input` ranges;
+6. requests full recalculation;
+7. reopens the output and verifies exact inputs and every immutable record;
+8. publishes a separate output atomically; and
+9. records hashes, counts and identifiers without input values.
 
-The executor does not calculate Excel formulas. It marks the output for full recalculation.
+`workbook-input-set.v1` is value-bearing. `workbook-input-population-receipt.v1` is deliberately value-free. The link validator proves that a calculation acceptance consumed the exact population output.
 
 ## Calculation-acceptance boundary
 
-Calculated-output acceptance:
-
-1. validates and pins the write plan and execution receipt;
-2. permits user edits only inside reserved input ranges;
-3. verifies immutable records before the spreadsheet engine runs;
-4. runs LibreOffice in a temporary directory and isolated profile, or accepts an externally recalculated workbook;
-5. verifies immutable records and populated inputs after calculation;
-6. opens the output in formula and data-only modes;
-7. validates cached results, declared output types, sign conventions and formula errors;
-8. scans every formula cell for missing caches or spreadsheet error tokens;
-9. records only hashes, identifiers, types, signs and issue codes; and
-10. publishes workbook bytes only when acceptance passes.
+Calculated-output acceptance validates and pins source contracts, verifies immutable records and populated inputs before and after calculation, opens the output in formula and data-only modes, validates cached results and spreadsheet errors, records only hashes/types/signs/statuses, and publishes workbook bytes only when acceptance passes.

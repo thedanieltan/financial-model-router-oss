@@ -8,10 +8,12 @@ from fastapi.responses import Response
 from fmr.api.app import create_app as create_base_app
 from fmr.api.calculation_routes import router as calculation_router
 from fmr.api.execution_routes import router as execution_router
+from fmr.api.input_population_routes import router as input_population_router
 from fmr.api.write_routes import router as write_router
 
 _LARGE_JSON_PATHS = {
     "/api/v1/workbooks/executions",
+    "/api/v1/workbooks/input-populations",
     "/api/v1/workbooks/calculations",
     "/api/v1/workbooks/calculation-acceptances",
 }
@@ -25,6 +27,7 @@ def create_app() -> FastAPI:
     application = create_base_app()
     application.include_router(write_router)
     application.include_router(execution_router)
+    application.include_router(input_population_router)
     application.include_router(calculation_router)
 
     @application.middleware("http")
@@ -48,6 +51,13 @@ def create_app() -> FastAPI:
     @application.get("/assets/execution.js", include_in_schema=False)
     def execution_javascript() -> Response:
         return Response(_asset("execution.js"), media_type="application/javascript")
+
+    @application.get("/assets/input_population.js", include_in_schema=False)
+    def input_population_javascript() -> Response:
+        return Response(
+            _asset("input_population.js"),
+            media_type="application/javascript",
+        )
 
     @application.get("/assets/calculation.js", include_in_schema=False)
     def calculation_javascript() -> Response:

@@ -1,4 +1,4 @@
-"""Deterministic XLSX inspection, planning, execution and calculated acceptance."""
+"""Deterministic XLSX inspection, planning, execution, input population and calculated acceptance."""
 
 from fmr.workbook.analyse import WorkbookAnalysis, analyse_workbook_map
 from fmr.workbook.calculation_public import (
@@ -44,6 +44,15 @@ from fmr.workbook.formula_specs import (
     WorkbookFormulaSpec,
     formula_spec_registry_payload,
     resolve_formula_spec,
+)
+from fmr.workbook.input_link import validate_input_population_calculation_link
+from fmr.workbook.input_population import (
+    WorkbookInputPopulationResult,
+    compile_workbook_input_set_from_csv,
+    populate_workbook_inputs_bytes,
+    populate_workbook_inputs_file,
+    validate_workbook_input_population_receipt_payload,
+    validate_workbook_input_set_payload,
 )
 from fmr.workbook.inspect import inspect_workbook, inspect_workbook_bytes
 from fmr.workbook.operation_specs import (
@@ -117,6 +126,7 @@ __all__ = [
     "WorkbookEvidence",
     "WorkbookExecutionResult",
     "WorkbookFormulaSpec",
+    "WorkbookInputPopulationResult",
     "WorkbookMap",
     "WorkbookOperationSpec",
     "WorkbookPatch",
@@ -127,6 +137,7 @@ __all__ = [
     "calculate_and_accept_workbook_bytes",
     "calculate_and_accept_workbook_file",
     "calculation_engine_status",
+    "compile_workbook_input_set_from_csv",
     "compile_workbook_patch",
     "compile_workbook_write_plan",
     "content_spec_registry_payload",
@@ -142,14 +153,19 @@ __all__ = [
     "plan_workbook_content",
     "plan_workbook_coordinates",
     "plan_workbook_realization",
+    "populate_workbook_inputs_bytes",
+    "populate_workbook_inputs_file",
     "resolve_formula_spec",
     "resolve_workbook_patch_targets",
     "semantic_type_for_slot",
     "style_spec_registry_payload",
+    "validate_input_population_calculation_link",
     "validate_workbook_calculation_acceptance_payload",
     "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",
     "validate_workbook_execution_receipt_payload",
+    "validate_workbook_input_population_receipt_payload",
+    "validate_workbook_input_set_payload",
     "validate_workbook_patch_payload",
     "validate_workbook_patch_receipt_payload",
     "validate_workbook_realization_plan_payload",
