@@ -83,6 +83,27 @@ Planning remains deterministic and does not open a workbook for writing.
 - expose Python, CLI, local HTTP and browser interfaces; and
 - keep all acceptance workbooks synthetic and runtime-generated.
 
+## 0.5 — provider-neutral financial-data intake
+
+- normalize one-entity statement CSVs into `financial-data-package.v1`;
+- preserve source precision as decimal strings and retain row provenance;
+- publish a small versioned financial concept registry;
+- apply exact built-in aliases and explicit account-code or account-name overrides;
+- report unmapped, ambiguous and statement-shape-invalid rows;
+- aggregate accepted account rows by concept and period;
+- bind concepts or explicit constants to semantic workbook slot IDs;
+- emit `workbook-input-binding-plan.v1` with bound and unresolved records;
+- compile `workbook-input-set.v1` only when every reserved numeric or boolean input is covered;
+- expose Python, CLI, local HTTP and browser interfaces; and
+- validate the installed-wheel path from statement CSV to governed input set.
+
 ## Later
 
-Additional model families, structured-data adapters and calculation-engine adapters will be added only with deterministic specifications and acceptance tests.
+- reusable mapping-profile lifecycle and review tooling;
+- provider-neutral trial-balance and XLSX adapters;
+- multi-entity consolidation and currency-conversion contracts;
+- deeper budget and forecast schedules;
+- additional model families; and
+- additional calculation-engine adapters.
+
+Each addition requires deterministic specifications and acceptance tests.
