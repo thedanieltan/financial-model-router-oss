@@ -42,22 +42,27 @@ python -m unittest discover -s tests -v
 ```json
 {
   "contract_version": "model-request.v1",
-  "objective": "value an operating company",
+  "objective": "value an operating company using a DCF",
   "role": "finance_manager",
   "available_data": [
     "income_statement_history",
     "balance_sheet_history",
     "cash_flow_history",
     "revenue_drivers",
-    "tax_rate",
     "capital_expenditure_schedule",
     "working_capital_schedule",
-    "discount_rate",
-    "terminal_value_assumption",
     "net_debt"
   ],
-  "workbook_capabilities": ["historical_periods", "assumptions_section"],
-  "assumptions": ["forecast_horizon"]
+  "workbook_capabilities": [
+    "historical_periods",
+    "assumptions_section"
+  ],
+  "assumptions": [
+    "forecast_horizon",
+    "tax_rate",
+    "discount_rate",
+    "terminal_value_assumption"
+  ]
 }
 ```
 
