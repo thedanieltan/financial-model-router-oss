@@ -53,27 +53,30 @@ def analyse_workbook_map(
     workbook_map: WorkbookMap,
     request: ModelRequest,
 ) -> WorkbookAnalysis:
+    canonical_request = ModelRequest.from_mapping(request.to_dict())
     evidence = derive_workbook_evidence(workbook_map)
     effective = ModelRequest(
-        objective=request.objective,
-        role=request.role,
+        objective=canonical_request.objective,
+        role=canonical_request.role,
         available_data=tuple(
-            sorted(set(request.available_data).union(evidence.available_data))
+            sorted(
+                set(canonical_request.available_data).union(evidence.available_data)
+            )
         ),
         workbook_capabilities=tuple(
             sorted(
-                set(request.workbook_capabilities).union(
+                set(canonical_request.workbook_capabilities).union(
                     evidence.workbook_capabilities
                 )
             )
         ),
-        assumptions=request.assumptions,
+        assumptions=canonical_request.assumptions,
     )
     recommendation = route_request(effective)
     plan = build_plan(effective)
     return WorkbookAnalysis(
         workbook_map=workbook_map,
-        original_request=request,
+        original_request=canonical_request,
         effective_request=effective,
         derived_evidence=evidence,
         recommendation=recommendation,
