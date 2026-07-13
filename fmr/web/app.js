@@ -190,6 +190,11 @@ async function initialize() {
 }
 
 document.querySelector("#inspect-button").addEventListener("click", inspectWorkbook);
+workbookFile.addEventListener("change", () => {
+  currentWorkbookMap = null;
+  analyseButton.disabled = true;
+  workbookStatus.textContent = "";
+});
 analyseButton.addEventListener("click", analyseWorkbook);
 document.querySelector("#route-button").addEventListener("click", () => run("/api/v1/route", "Routing result"));
 document.querySelector("#plan-button").addEventListener("click", () => run("/api/v1/plan", "Transformation plan"));
