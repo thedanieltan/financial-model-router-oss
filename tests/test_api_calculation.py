@@ -84,7 +84,7 @@ class WorkbookCalculationApiTests(unittest.TestCase):
     def test_calculation_browser_asset_is_served(self) -> None:
         response = self.client.get("/assets/calculation.js")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("calculatePopulatedWorkbook", response.text)
+        self.assertIn("calculateOutput", response.text)
 
 
 if __name__ == "__main__":
