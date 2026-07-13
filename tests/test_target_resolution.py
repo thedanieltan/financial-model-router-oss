@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import unittest
 from dataclasses import replace
+from typing import Any
 
 from fmr.model_specs import MODEL_DEFINITIONS
 from fmr.types import ModelRequest
@@ -56,6 +57,16 @@ def dcf_request() -> ModelRequest:
     )
 
 
+def all_keys(value: Any) -> set[str]:
+    if isinstance(value, dict):
+        return set(value).union(
+            *(all_keys(item) for item in value.values()),
+        )
+    if isinstance(value, list):
+        return set().union(*(all_keys(item) for item in value))
+    return set()
+
+
 class TargetResolutionTests(unittest.TestCase):
     def setUp(self) -> None:
         self.workbook_map = inspect_workbook_bytes(
@@ -81,7 +92,7 @@ class TargetResolutionTests(unittest.TestCase):
         self.assertEqual(len(registry["registry_sha256"]), 64)
         self.assertEqual(len(registry["specifications"]), len(required))
 
-    def test_budget_targets_are_resolved_without_cell_instructions(self) -> None:
+    def test_budget_targets_are_resolved_without_executable_fields(self) -> None:
         result = resolve_workbook_patch_targets(
             self.analysis,
             self.patch,
@@ -115,9 +126,18 @@ class TargetResolutionTests(unittest.TestCase):
             by_operation["create_revenue_schedule"]["status"],
             "resolved_new",
         )
-        rendered = str(result).lower()
-        for forbidden in ("cell_address", "cell_write", "formula", "macro", "vba"):
-            self.assertNotIn(forbidden, rendered)
+        self.assertTrue(
+            {
+                "cell",
+                "cell_address",
+                "cell_write",
+                "formula",
+                "macro",
+                "script",
+                "vba",
+                "workbook_bytes",
+            }.isdisjoint(all_keys(result))
+        )
 
     def test_later_operations_reuse_a_sheet_planned_earlier(self) -> None:
         analysis = analyse_workbook_map(self.workbook_map, dcf_request())
