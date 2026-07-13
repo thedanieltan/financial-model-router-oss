@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/model-recommendation.v1.schema.json",
+  "title": "Financial Model Router recommendation",
+  "type": "object",
+  "required": ["contract_version", "model_family", "title", "confidence", "reasons", "readiness"],
+  "properties": {
+    "contract_version": {"const": "model-recommendation.v1"},
+    "model_family": {"type": "string"},
+    "title": {"type": "string"},
+    "confidence": {"enum": ["medium", "high"]},
+    "reasons": {"type": "array", "items": {"type": "string"}},
+    "readiness": {"type": "object"}
+  }
+}

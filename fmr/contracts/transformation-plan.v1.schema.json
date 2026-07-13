@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/transformation-plan.v1.schema.json",
+  "title": "Financial Model Router transformation plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "model_family", "ready_to_apply", "operations", "unresolved_inputs", "controls"],
+  "properties": {
+    "contract_version": {"const": "transformation-plan.v1"},
+    "model_family": {"type": "string"},
+    "ready_to_apply": {"type": "boolean"},
+    "operations": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["sequence", "operation", "target", "rationale"], "properties": {"sequence": {"type": "integer", "minimum": 1}, "operation": {"type": "string"}, "target": {"type": "string"}, "rationale": {"type": "string"}}}},
+    "unresolved_inputs": {"type": "array", "items": {"type": "string"}},
+    "controls": {"type": "array", "items": {"type": "string"}}
+  }
+}
