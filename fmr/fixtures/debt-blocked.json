@@ -1,0 +1,16 @@
+{
+  "contract_version": "model-request.v1",
+  "objective": "Assess debt capacity and refinancing options",
+  "role": "treasury_manager",
+  "available_data": [
+    "income_statement_history",
+    "cash_flow_history"
+  ],
+  "workbook_capabilities": [
+    "historical_periods"
+  ],
+  "assumptions": [
+    "forecast_horizon",
+    "interest_rate_assumption"
+  ]
+}
