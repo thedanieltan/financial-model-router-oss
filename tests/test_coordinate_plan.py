@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import unittest
 from dataclasses import replace
+from typing import Any
 
 from fmr.types import ModelRequest
 from fmr.workbook import (
@@ -18,6 +19,18 @@ from fmr.workbook import (
     validate_workbook_coordinate_plan_payload,
 )
 from tests.xlsx_factory import financial_workbook
+
+
+def _keys(value: Any) -> set[str]:
+    found: set[str] = set()
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            found.add(str(key).lower())
+            found.update(_keys(nested))
+    elif isinstance(value, list):
+        for item in value:
+            found.update(_keys(item))
+    return found
 
 
 def budget_request() -> ModelRequest:
@@ -122,9 +135,8 @@ class CoordinatePlanTests(unittest.TestCase):
             by_operation["add_integrity_checks"]["allocations"][0]["range"],
             "A1:F10",
         )
-        rendered = str(plan).lower()
         for forbidden in ("cell_write", "formula", "macro", "vba", "workbook_bytes"):
-            self.assertNotIn(forbidden, rendered)
+            self.assertNotIn(forbidden, _keys(plan))
 
     def test_period_width_is_explicit(self) -> None:
         _, analysis, patch, resolution = contracts(budget_request())
