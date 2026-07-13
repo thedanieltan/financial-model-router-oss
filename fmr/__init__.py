@@ -1,5 +1,20 @@
 """Financial Model Router public API."""
 
+from fmr.financial_data import (
+    CONCEPTS,
+    build_binding_profile,
+    build_mapping_profile,
+    compile_input_set_from_binding_plan,
+    concept_registry_payload,
+    import_statement_csv,
+    map_financial_data,
+    plan_financial_input_bindings,
+    validate_binding_plan,
+    validate_binding_profile,
+    validate_financial_data_package,
+    validate_mapping_profile,
+    validate_mapping_result,
+)
 from fmr.plan import build_plan
 from fmr.router import route_request
 from fmr.workbook import (
@@ -44,15 +59,20 @@ from fmr.workbook import (
 )
 
 __all__ = [
+    "CONCEPTS",
     "accept_calculated_workbook_bytes",
     "analyse_workbook_map",
+    "build_binding_profile",
+    "build_mapping_profile",
     "build_plan",
     "calculate_and_accept_workbook_bytes",
     "calculate_and_accept_workbook_file",
     "calculation_engine_status",
+    "compile_input_set_from_binding_plan",
     "compile_workbook_input_set_from_csv",
     "compile_workbook_patch",
     "compile_workbook_write_plan",
+    "concept_registry_payload",
     "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
     "derive_workbook_evidence",
@@ -60,9 +80,12 @@ __all__ = [
     "execute_workbook_write_plan_bytes",
     "execute_workbook_write_plan_file",
     "formula_spec_registry_payload",
+    "import_statement_csv",
     "inspect_workbook",
     "inspect_workbook_bytes",
+    "map_financial_data",
     "operation_spec_registry_payload",
+    "plan_financial_input_bindings",
     "plan_workbook_content",
     "plan_workbook_coordinates",
     "plan_workbook_realization",
@@ -71,7 +94,12 @@ __all__ = [
     "resolve_workbook_patch_targets",
     "route_request",
     "style_spec_registry_payload",
+    "validate_binding_plan",
+    "validate_binding_profile",
+    "validate_financial_data_package",
     "validate_input_population_calculation_link",
+    "validate_mapping_profile",
+    "validate_mapping_result",
     "validate_workbook_calculation_acceptance_payload",
     "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",
@@ -85,4 +113,4 @@ __all__ = [
     "validate_workbook_write_context_payload",
     "validate_workbook_write_plan_payload",
 ]
-__version__ = "0.4.2"
+__version__ = "0.5.0"
