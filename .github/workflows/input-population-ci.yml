@@ -1,0 +1,203 @@
+name: Input population CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Input population Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e ".[dev-ui,test-ui,executor]"
+      - name: Run governed input population tests
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest \
+            tests.test_input_population \
+            tests.test_cli_input_population \
+            tests.test_api_input_population \
+            tests.test_input_population_workbench \
+            tests.test_contracts -v 2>&1 | tee input-population-test-output.txt
+      - name: Preserve input population failure output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: input-population-test-output-python-${{ matrix.python-version }}
+          path: input-population-test-output.txt
+          if-no-files-found: error
+          retention-days: 7
+      - run: python -m compileall -q fmr
+      - run: python -m fmr compile-input-set-csv --help
+      - run: python -m fmr validate-input-set --help
+      - run: python -m fmr populate-inputs --help
+      - run: python -m fmr validate-input-population-receipt --help
+      - run: python -m fmr validate-input-calculation-link --help
+      - name: Confirm no workbook binaries are committed
+        run: |
+          if find . -type f \( -iname '*.xlsx' -o -iname '*.xlsm' -o -iname '*.xlsb' -o -iname '*.xls' -o -iname '*.xltx' -o -iname '*.xltm' -o -iname '*.ods' \) -print -quit | grep -q .; then
+            echo "Workbook binary found in repository" >&2
+            exit 1
+          fi
+
+  package:
+    name: Build wheel and populate runtime-generated workbook
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - name: Install wheel in a clean environment
+        run: |
+          python -m venv /tmp/fmr-input-population
+          WHEEL="$(ls dist/*.whl)"
+          /tmp/fmr-input-population/bin/pip install "${WHEEL}[dev-ui,test-ui,executor]"
+      - name: Verify packaged contracts, API and browser asset
+        run: |
+          cd /tmp
+          /tmp/fmr-input-population/bin/python - <<'PY'
+          from importlib.resources import files
+          import fmr
+          import fmr.api.input_population_routes  # noqa: F401
+          import fmr.workbook.input_population  # noqa: F401
+
+          assert fmr.__version__ == "0.4.2"
+          for name in (
+              "workbook-input-set-csv-request.v1.schema.json",
+              "workbook-input-set.v1.schema.json",
+              "workbook-input-population-request.v1.schema.json",
+              "workbook-input-population-result.v1.schema.json",
+              "workbook-input-population-receipt.v1.schema.json",
+          ):
+              assert files("fmr.contracts").joinpath(name).is_file(), name
+          assert files("fmr.web").joinpath("input_population.js").is_file()
+          PY
+      - name: Generate execution output and synthetic CSV
+        env:
+          FMR_REPO: ${{ github.workspace }}
+        run: |
+          cd /tmp
+          /tmp/fmr-input-population/bin/python - <<'PY'
+          import json
+          import os
+          import sys
+          from pathlib import Path
+
+          sys.path.insert(0, os.environ["FMR_REPO"])
+          from tests.input_population_case import input_population_case
+
+          executed, write_plan, execution_receipt, _, csv_bytes = input_population_case()
+          Path("/tmp/executed.xlsx").write_bytes(executed)
+          Path("/tmp/write-plan.json").write_text(json.dumps(write_plan), encoding="utf-8")
+          Path("/tmp/execution-receipt.json").write_text(
+              json.dumps(execution_receipt), encoding="utf-8"
+          )
+          Path("/tmp/inputs.csv").write_bytes(csv_bytes)
+          PY
+      - name: Compile, populate and validate through installed CLI
+        run: |
+          cd /tmp
+          /tmp/fmr-input-population/bin/fmr compile-input-set-csv \
+            /tmp/inputs.csv /tmp/write-plan.json /tmp/execution-receipt.json \
+            --output /tmp/input-set.json
+          /tmp/fmr-input-population/bin/fmr validate-input-set \
+            /tmp/input-set.json \
+            --write-plan /tmp/write-plan.json \
+            --execution-receipt /tmp/execution-receipt.json
+          /tmp/fmr-input-population/bin/fmr populate-inputs \
+            /tmp/executed.xlsx /tmp/input-set.json \
+            /tmp/write-plan.json /tmp/execution-receipt.json \
+            --output /tmp/populated.xlsx \
+            --receipt /tmp/population-receipt.json
+          /tmp/fmr-input-population/bin/fmr validate-input-population-receipt \
+            /tmp/population-receipt.json \
+            --input-set /tmp/input-set.json \
+            --write-plan /tmp/write-plan.json \
+            --execution-receipt /tmp/execution-receipt.json
+      - name: Verify populated workbook and value-free receipt
+        run: |
+          /tmp/fmr-input-population/bin/python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+          from openpyxl import load_workbook
+
+          executed = Path("/tmp/executed.xlsx").read_bytes()
+          populated = Path("/tmp/populated.xlsx").read_bytes()
+          receipt = json.loads(Path("/tmp/population-receipt.json").read_text(encoding="utf-8"))
+          input_set = json.loads(Path("/tmp/input-set.json").read_text(encoding="utf-8"))
+
+          assert executed != populated
+          assert hashlib.sha256(executed).hexdigest() == receipt["source"]["sha256"]
+          assert hashlib.sha256(populated).hexdigest() == receipt["output"]["sha256"]
+          assert receipt["status"] == "completed"
+          assert receipt["verification"]["failed_record_ids"] == []
+          forbidden = {"value", "values", "input_value", "before_value", "after_value", "cell_value"}
+          def keys(item):
+              if isinstance(item, dict):
+                  for key, value in item.items():
+                      yield key
+                      yield from keys(value)
+              elif isinstance(item, list):
+                  for value in item:
+                      yield from keys(value)
+          assert forbidden.isdisjoint(set(keys(receipt)))
+          assert any(binding["values"] for binding in input_set["bindings"])
+          workbook = load_workbook("/tmp/populated.xlsx", data_only=False)
+          try:
+              assert workbook.sheetnames
+          finally:
+              workbook.close()
+          PY
+      - name: Start local service and check input population surface
+        run: |
+          /tmp/fmr-input-population/bin/fmr serve --port 8769 >/tmp/fmr-input-population-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
+          /tmp/fmr-input-population/bin/python - <<'PY'
+          import time
+          import urllib.request
+
+          urls = (
+              "http://127.0.0.1:8769/health",
+              "http://127.0.0.1:8769/assets/input_population.js",
+              "http://127.0.0.1:8769/docs",
+          )
+          last_error = None
+          for _ in range(30):
+              try:
+                  for url in urls:
+                      with urllib.request.urlopen(url, timeout=1) as response:
+                          assert response.status == 200
+                  break
+              except Exception as exc:
+                  last_error = exc
+                  time.sleep(0.2)
+          else:
+              raise SystemExit(f"service did not become ready: {last_error}")
+          PY
+      - name: Confirm no workbook binaries are committed
+        run: |
+          cd "${{ github.workspace }}"
+          if find . -type f \( -iname '*.xlsx' -o -iname '*.xlsm' -o -iname '*.xlsb' -o -iname '*.xls' -o -iname '*.xltx' -o -iname '*.xltm' -o -iname '*.ods' \) -print -quit | grep -q .; then
+            echo "Workbook binary found in repository" >&2
+            exit 1
+          fi
