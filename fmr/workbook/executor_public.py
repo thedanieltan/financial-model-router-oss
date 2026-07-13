@@ -52,13 +52,17 @@ def execute_workbook_write_plan_bytes(
     source_map = inspect_workbook_bytes(source_bytes, filename=filename)
     if source_map.external_links_detected:
         raise ValueError("source workbook contains external links")
-    unsafe = [
+    unsupported_findings = [
         item
-        for item in source_map.limitations
-        if any(token in item.lower() for token in ("macro", "encrypted", "unsupported"))
+        for item in source_map.findings
+        if item.startswith("unsupported_feature:")
+        or item.startswith("unsupported_sheet_type:")
     ]
-    if unsafe:
-        raise ValueError("source workbook contains unsupported features: " + "; ".join(unsafe))
+    if unsupported_findings:
+        raise ValueError(
+            "source workbook contains unsupported features: "
+            + "; ".join(unsupported_findings)
+        )
 
     workbook = _load_workbook(source_bytes)
     record_receipts: list[dict[str, Any]] = []
