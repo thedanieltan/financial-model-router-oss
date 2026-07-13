@@ -8,8 +8,11 @@ from fmr.workbook import (
     derive_workbook_evidence,
     inspect_workbook,
     inspect_workbook_bytes,
+    operation_spec_registry_payload,
+    resolve_workbook_patch_targets,
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
+    validate_workbook_target_resolution_payload,
 )
 
 __all__ = [
@@ -19,8 +22,11 @@ __all__ = [
     "derive_workbook_evidence",
     "inspect_workbook",
     "inspect_workbook_bytes",
+    "operation_spec_registry_payload",
+    "resolve_workbook_patch_targets",
     "route_request",
     "validate_workbook_patch_payload",
     "validate_workbook_patch_receipt_payload",
+    "validate_workbook_target_resolution_payload",
 ]
-__version__ = "0.3.0"
+__version__ = "0.3.1"

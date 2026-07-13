@@ -40,6 +40,13 @@ approved additive operation mapping
       v
 workbook-patch.v1
       |
+      + workbook-operation-spec-registry.v1
+      v
+deterministic semantic target resolution
+      |
+      v
+workbook-target-resolution.v1
+      |
       v
 future executor
       |
@@ -56,7 +63,10 @@ future executor
 - `fmr.workbook.inspect`: deterministic XLSX inspection.
 - `fmr.workbook.evidence`: conservative evidence derivation.
 - `fmr.workbook.analyse`: model request enrichment and analysis.
-- `fmr.workbook.patch`: static patch compilation and receipt validation.
+- `fmr.workbook.patch`: static patch compilation.
+- `fmr.workbook.patch_validation`: patch and receipt validation.
+- `fmr.workbook.operation_specs`: versioned operation target policies.
+- `fmr.workbook.target_resolution`: semantic target resolution and validation.
 - `fmr.contracts`: packaged JSON schemas.
 
 The deterministic core uses only the Python standard library.
@@ -70,8 +80,8 @@ HTTP API ----+
 Browser UI --HTTP API
 ```
 
-The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, planning, workbook-classification or patch-mapping rules.
+The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, planning, workbook-classification, patch-mapping or target-resolution rules.
 
 ## Control boundary
 
-The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. Patch compilation emits additive operation intents without formulas, cells or workbook bytes. This release does not include the workbook executor. Execution, output verification and rollback remain a separate acceptance boundary.
+The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. Patch compilation emits additive operation intents without formulas, cells or workbook bytes. Target resolution identifies sheets and placement policies but does not assign write coordinates. This release does not include the workbook executor. Execution, output verification and rollback remain a separate acceptance boundary.

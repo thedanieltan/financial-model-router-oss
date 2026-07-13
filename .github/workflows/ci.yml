@@ -44,6 +44,9 @@ jobs:
       - run: python -m fmr compile-patch --help
       - run: python -m fmr validate-patch --help
       - run: python -m fmr validate-patch-receipt --help
+      - run: python -m fmr operation-specs --help
+      - run: python -m fmr resolve-targets --help
+      - run: python -m fmr validate-target-resolution --help
       - run: python -m fmr serve --help
 
   package:
@@ -72,11 +75,14 @@ jobs:
           assert files("fmr.contracts").joinpath("workbook-analysis.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("workbook-patch.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("workbook-patch-receipt.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-operation-spec-registry.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-target-resolution-request.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-target-resolution.v1.schema.json").is_file()
           assert files("fmr.web").joinpath("index.html").is_file()
           assert files("fmr.web").joinpath("app.js").is_file()
           assert files("fmr.fixtures").joinpath("dcf-ready.json").is_file()
           PY
-      - name: Inspect, analyse and compile a patch from the installed wheel
+      - name: Inspect, analyse, compile and resolve from the installed wheel
         run: |
           cd /tmp
           /tmp/fmr-package-test/bin/python - <<'PY'
@@ -140,17 +146,29 @@ jobs:
           /tmp/fmr-package-test/bin/fmr analyse-workbook /tmp/fmr-smoke.xlsx /tmp/fmr-smoke-request.json --output /tmp/fmr-smoke-analysis.json
           /tmp/fmr-package-test/bin/fmr compile-patch /tmp/fmr-smoke-analysis.json --output /tmp/fmr-smoke-patch.json
           /tmp/fmr-package-test/bin/fmr validate-patch /tmp/fmr-smoke-patch.json
+          /tmp/fmr-package-test/bin/fmr operation-specs --output /tmp/fmr-operation-specs.json
+          /tmp/fmr-package-test/bin/fmr resolve-targets /tmp/fmr-smoke-analysis.json /tmp/fmr-smoke-patch.json --output /tmp/fmr-target-resolution.json
+          /tmp/fmr-package-test/bin/fmr validate-target-resolution /tmp/fmr-target-resolution.json --analysis /tmp/fmr-smoke-analysis.json --patch /tmp/fmr-smoke-patch.json
           /tmp/fmr-package-test/bin/python - <<'PY'
           import json
           workbook_map = json.load(open("/tmp/fmr-smoke-map.json", encoding="utf-8"))
           analysis = json.load(open("/tmp/fmr-smoke-analysis.json", encoding="utf-8"))
           patch = json.load(open("/tmp/fmr-smoke-patch.json", encoding="utf-8"))
+          registry = json.load(open("/tmp/fmr-operation-specs.json", encoding="utf-8"))
+          resolution = json.load(open("/tmp/fmr-target-resolution.json", encoding="utf-8"))
           assert workbook_map["contract_version"] == "workbook-map.v1"
           assert analysis["contract_version"] == "workbook-analysis.v1"
           assert analysis["recommendation"]["readiness"]["ready"] is True
           assert patch["contract_version"] == "workbook-patch.v1"
           assert patch["ready_for_executor"] is True
           assert patch["execution_supported_by_this_release"] is False
+          assert registry["contract_version"] == "workbook-operation-spec-registry.v1"
+          assert resolution["contract_version"] == "workbook-target-resolution.v1"
+          assert resolution["patch_id"] == patch["patch_id"]
+          assert resolution["operation_specs_sha256"] == registry["registry_sha256"]
+          assert resolution["ready_for_executor"] is True
+          assert resolution["execution_supported_by_this_release"] is False
+          assert all(item["status"] != "blocked" for item in resolution["resolutions"])
           assert patch["source"]["sha256"] == workbook_map["source"]["sha256"]
           operation_ids = [item["operation_id"] for item in patch["operations"]]
           rollback_ids = [item["operation_id"] for item in patch["rollback_plan"]]

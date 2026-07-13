@@ -13,8 +13,11 @@ from fmr.workbook import (
     analyse_workbook_map,
     compile_workbook_patch,
     inspect_workbook,
+    operation_spec_registry_payload,
+    resolve_workbook_patch_targets,
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
+    validate_workbook_target_resolution_payload,
 )
 
 
@@ -90,6 +93,28 @@ def build_parser() -> argparse.ArgumentParser:
     validate_receipt.add_argument("receipt")
     validate_receipt.add_argument("--patch")
 
+    operation_specs = subparsers.add_parser(
+        "operation-specs",
+        help="Print the versioned workbook operation specification registry",
+    )
+    operation_specs.add_argument("--output")
+
+    resolve_targets = subparsers.add_parser(
+        "resolve-targets",
+        help="Resolve workbook-patch operations to deterministic workbook targets",
+    )
+    resolve_targets.add_argument("analysis")
+    resolve_targets.add_argument("patch")
+    resolve_targets.add_argument("--output")
+
+    validate_resolution = subparsers.add_parser(
+        "validate-target-resolution",
+        help="Validate and deterministically recompute workbook-target-resolution.v1",
+    )
+    validate_resolution.add_argument("resolution")
+    validate_resolution.add_argument("--analysis", required=True)
+    validate_resolution.add_argument("--patch", required=True)
+
     serve = subparsers.add_parser(
         "serve",
         help="Run the local developer API and browser workbench",
@@ -142,6 +167,34 @@ def main(argv: list[str] | None = None) -> int:
             patch = _load_object(args.patch) if args.patch else None
             issues = validate_workbook_patch_receipt_payload(
                 _load_object(args.receipt),
+                patch=patch,
+            )
+            _write({"valid": not issues, "issues": list(issues)})
+            return 0 if not issues else 2
+        if args.command == "operation-specs":
+            _write(operation_spec_registry_payload(), args.output)
+            return 0
+        if args.command == "resolve-targets":
+            analysis = WorkbookAnalysis.from_mapping(_load_object(args.analysis))
+            patch = _load_object(args.patch)
+            resolution = resolve_workbook_patch_targets(analysis, patch).to_dict()
+            issues = validate_workbook_target_resolution_payload(
+                resolution,
+                analysis=analysis,
+                patch=patch,
+            )
+            if issues:
+                raise ValueError(
+                    f"compiled target resolution is invalid: {'; '.join(issues)}"
+                )
+            _write(resolution, args.output)
+            return 0
+        if args.command == "validate-target-resolution":
+            analysis = WorkbookAnalysis.from_mapping(_load_object(args.analysis))
+            patch = _load_object(args.patch)
+            issues = validate_workbook_target_resolution_payload(
+                _load_object(args.resolution),
+                analysis=analysis,
                 patch=patch,
             )
             _write({"valid": not issues, "issues": list(issues)})

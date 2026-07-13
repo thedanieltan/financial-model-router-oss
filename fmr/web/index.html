@@ -11,7 +11,7 @@
     <div>
       <p class="eyebrow">Financial Model Router</p>
       <h1>Developer Workbench</h1>
-      <p>Test routing, workbook analysis and static patch manifests locally.</p>
+      <p>Test routing, workbook analysis, patch manifests and semantic target resolution locally.</p>
     </div>
     <nav>
       <a href="/docs">API docs</a>
@@ -37,6 +37,7 @@
         <button id="inspect-button" type="button">Inspect workbook</button>
         <button id="analyse-button" type="button" class="secondary" disabled>Analyse with request</button>
         <button id="compile-patch-button" type="button" class="secondary" disabled>Compile patch</button>
+        <button id="resolve-targets-button" type="button" class="secondary" disabled>Resolve targets</button>
       </div>
       <p id="workbook-status" class="status" aria-live="polite"></p>
 
@@ -78,7 +79,7 @@
 
   <footer>
     <span id="health-indicator">Checking local service…</span>
-    <span>No data leaves this process. Patch execution is not included.</span>
+    <span>No data leaves this process. Patch execution is not included. Workbook writing remains unavailable.</span>
   </footer>
 
   <script src="/assets/app.js" defer></script>
