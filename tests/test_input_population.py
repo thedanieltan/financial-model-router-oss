@@ -127,7 +127,10 @@ class WorkbookInputPopulationTests(unittest.TestCase):
     def test_csv_rejects_incomplete_unknown_and_non_finite_values(self) -> None:
         _, write_plan, execution_receipt, _, csv_bytes = input_population_case()
         lines = csv_bytes.decode("utf-8").splitlines()
-        with self.assertRaisesRegex(ValueError, "missing reserved input record|cell_index"):
+        with self.assertRaisesRegex(
+            ValueError,
+            "missing reserved input record|cell_index|values count does not match reserved range",
+        ):
             compile_workbook_input_set_from_csv(
                 ("\n".join(lines[:-1]) + "\n").encode("utf-8"),
                 source_name="incomplete.csv",
