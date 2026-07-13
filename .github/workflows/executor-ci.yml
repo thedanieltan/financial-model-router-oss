@@ -91,8 +91,8 @@ jobs:
           import sys
           from pathlib import Path
 
-          sys.path.insert(0, os.path.join(os.environ["FMR_REPO"], "tests"))
-          from xlsx_factory import financial_workbook
+          sys.path.insert(0, os.environ["FMR_REPO"])
+          from tests.test_executor import executable_workbook
 
           from fmr.types import ModelRequest
           from fmr.workbook import (
@@ -106,7 +106,7 @@ jobs:
               resolve_workbook_patch_targets,
           )
 
-          source_bytes = financial_workbook(include_chart=False)
+          source_bytes = executable_workbook()
           Path("/tmp/source.xlsx").write_bytes(source_bytes)
           workbook_map = inspect_workbook_bytes(source_bytes, filename="source.xlsx")
           request = ModelRequest(
