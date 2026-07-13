@@ -106,7 +106,7 @@ jobs:
               resolve_workbook_patch_targets,
           )
 
-          source_bytes = financial_workbook()
+          source_bytes = financial_workbook(include_chart=False)
           Path("/tmp/source.xlsx").write_bytes(source_bytes)
           workbook_map = inspect_workbook_bytes(source_bytes, filename="source.xlsx")
           request = ModelRequest(
