@@ -16,7 +16,7 @@ from fmr.workbook import (
     resolve_workbook_patch_targets,
     validate_workbook_content_plan_payload,
 )
-from tests.xlsx_factory import financial_workbook
+from tests.xlsx_factory import build_xlsx, financial_workbook
 
 
 def _keys(value: Any) -> set[str]:
@@ -45,32 +45,80 @@ def budget_request() -> ModelRequest:
     )
 
 
-def dcf_request() -> ModelRequest:
+def three_statement_request() -> ModelRequest:
     return ModelRequest(
-        objective="value an operating company using a DCF",
+        objective="build an integrated three-statement model",
         role="finance_manager",
         available_data=(
             "income_statement_history",
             "balance_sheet_history",
             "cash_flow_history",
-            "revenue_drivers",
             "capital_expenditure_schedule",
             "working_capital_schedule",
-            "net_debt",
+            "debt_schedule",
         ),
-        workbook_capabilities=("historical_periods", "assumptions_section"),
-        assumptions=(
-            "forecast_horizon",
-            "tax_rate",
-            "discount_rate",
-            "terminal_value_assumption",
-        ),
+        workbook_capabilities=("historical_periods",),
+        assumptions=("forecast_horizon", "tax_rate"),
     )
 
 
-def coordinate_plan(request: ModelRequest, *, periods: int = 5) -> dict:
+def three_statement_workbook() -> bytes:
+    return build_xlsx(
+        [
+            {
+                "name": "Income Statement",
+                "cells": {
+                    "A1": "Income Statement",
+                    "B2": 2024,
+                    "C2": 2025,
+                    "A3": "Revenue",
+                    "B3": 100,
+                    "C3": 110,
+                    "A4": "Net Income",
+                },
+            },
+            {
+                "name": "Balance Sheet",
+                "cells": {
+                    "A1": "Balance Sheet",
+                    "B2": 2024,
+                    "C2": 2025,
+                    "A3": "Total Assets",
+                    "A4": "Total Liabilities",
+                    "A5": "Total Equity",
+                },
+            },
+            {
+                "name": "Cash Flow Statement",
+                "cells": {
+                    "A1": "Cash Flow Statement",
+                    "B2": 2024,
+                    "C2": 2025,
+                    "A3": "Operating Cash Flow",
+                    "A4": "Capital Expenditure",
+                    "A5": "Net Change in Cash",
+                },
+            },
+            {
+                "name": "Assumptions",
+                "cells": {
+                    "A1": "Assumptions",
+                    "A3": "Tax Rate",
+                    "A4": "Forecast Horizon",
+                },
+            },
+        ]
+    )
+
+
+def coordinate_plan(
+    request: ModelRequest,
+    *,
+    periods: int = 5,
+    workbook: bytes | None = None,
+) -> dict:
     workbook_map = inspect_workbook_bytes(
-        financial_workbook(),
+        workbook if workbook is not None else financial_workbook(),
         filename="synthetic.xlsx",
     )
     analysis = analyse_workbook_map(workbook_map, request)
@@ -137,7 +185,10 @@ class ContentPlanTests(unittest.TestCase):
             self.assertNotIn(forbidden, _keys(plan))
 
     def test_reference_only_content_has_no_coordinates(self) -> None:
-        coordinates = coordinate_plan(dcf_request())
+        coordinates = coordinate_plan(
+            three_statement_request(),
+            workbook=three_statement_workbook(),
+        )
         plan = plan_workbook_content(coordinates)
         links = next(
             item
