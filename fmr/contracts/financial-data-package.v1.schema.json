@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/financial-data-package.v1.schema.json",
+  "title": "FMR financial data package v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "package_id", "source", "entity", "periods", "rows", "controls"],
+  "properties": {
+    "contract_version": {"const": "financial-data-package.v1"},
+    "package_id": {"type": "string", "pattern": "^fmrd_[0-9a-f]{24}$"},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "filename", "sha256", "size_bytes"],
+      "properties": {
+        "kind": {"const": "statement_csv"},
+        "filename": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "entity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["entity_id", "entity_name", "currency"],
+      "properties": {
+        "entity_id": {"type": "string", "minLength": 1},
+        "entity_name": {"type": "string", "minLength": 1},
+        "currency": {"type": "string", "pattern": "^[A-Z]{3}$"}
+      }
+    },
+    "periods": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["period_id", "period_end", "period_type"],
+        "properties": {
+          "period_id": {"type": "string", "minLength": 1},
+          "period_end": {"type": "string", "format": "date"},
+          "period_type": {"enum": ["actual", "budget", "forecast"]}
+        }
+      }
+    },
+    "rows": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["row_id", "statement_type", "balance_type", "account_code", "account_name", "source_ref", "values"],
+        "properties": {
+          "row_id": {"type": "string", "pattern": "^row_[0-9]{6}$"},
+          "statement_type": {"enum": ["income_statement", "balance_sheet", "cash_flow", "operating_metric"]},
+          "balance_type": {"enum": ["flow", "point_in_time"]},
+          "account_code": {"type": ["string", "null"]},
+          "account_name": {"type": "string", "minLength": 1},
+          "source_ref": {"type": "string", "minLength": 1},
+          "values": {
+            "type": "array", "minItems": 1,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["period_id", "amount"],
+              "properties": {
+                "period_id": {"type": "string", "minLength": 1},
+                "amount": {"type": "string", "pattern": "^-?[0-9]+(?:\\.[0-9]+)?$"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "controls": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}
