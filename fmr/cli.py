@@ -12,11 +12,14 @@ from fmr.workbook import (
     WorkbookAnalysis,
     analyse_workbook_map,
     compile_workbook_patch,
+    content_spec_registry_payload,
     coordinate_rule_registry_payload,
     inspect_workbook,
     operation_spec_registry_payload,
+    plan_workbook_content,
     plan_workbook_coordinates,
     resolve_workbook_patch_targets,
+    validate_workbook_content_plan_payload,
     validate_workbook_coordinate_plan_payload,
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
@@ -43,28 +46,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="fmr")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    route = subparsers.add_parser(
-        "route",
-        help="Select a model family and report readiness",
-    )
+    route = subparsers.add_parser("route", help="Select a model family and report readiness")
     route.add_argument("request")
 
-    plan = subparsers.add_parser(
-        "plan",
-        help="Create a controlled transformation plan",
-    )
+    plan = subparsers.add_parser("plan", help="Create a controlled transformation plan")
     plan.add_argument("request")
 
-    validate = subparsers.add_parser(
-        "validate-plan",
-        help="Validate a transformation plan",
-    )
+    validate = subparsers.add_parser("validate-plan", help="Validate a transformation plan")
     validate.add_argument("plan")
 
-    inspect = subparsers.add_parser(
-        "inspect",
-        help="Inspect an XLSX workbook without modifying it",
-    )
+    inspect = subparsers.add_parser("inspect", help="Inspect an XLSX workbook without modifying it")
     inspect.add_argument("workbook")
     inspect.add_argument("--output")
 
@@ -83,10 +74,7 @@ def build_parser() -> argparse.ArgumentParser:
     compile_patch.add_argument("analysis")
     compile_patch.add_argument("--output")
 
-    validate_patch = subparsers.add_parser(
-        "validate-patch",
-        help="Validate a workbook-patch.v1 manifest",
-    )
+    validate_patch = subparsers.add_parser("validate-patch", help="Validate a workbook-patch.v1 manifest")
     validate_patch.add_argument("patch")
 
     validate_receipt = subparsers.add_parser(
@@ -144,10 +132,27 @@ def build_parser() -> argparse.ArgumentParser:
     validate_coordinates.add_argument("--resolution", required=True)
     validate_coordinates.add_argument("--forecast-period-count", type=int, required=True)
 
-    serve = subparsers.add_parser(
-        "serve",
-        help="Run the local developer API and browser workbench",
+    content_specs = subparsers.add_parser(
+        "content-specs",
+        help="Print the versioned workbook content specification registry",
     )
+    content_specs.add_argument("--output")
+
+    plan_content = subparsers.add_parser(
+        "plan-content",
+        help="Compile a deterministic workbook-content-plan.v1 document",
+    )
+    plan_content.add_argument("coordinate_plan")
+    plan_content.add_argument("--output")
+
+    validate_content = subparsers.add_parser(
+        "validate-content-plan",
+        help="Validate and deterministically recompute workbook-content-plan.v1",
+    )
+    validate_content.add_argument("content_plan")
+    validate_content.add_argument("--coordinate-plan", required=True)
+
+    serve = subparsers.add_parser("serve", help="Run the local developer API and browser workbench")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8000)
     serve.add_argument("--reload", action="store_true")
@@ -213,9 +218,7 @@ def main(argv: list[str] | None = None) -> int:
                 patch=patch,
             )
             if issues:
-                raise ValueError(
-                    f"compiled target resolution is invalid: {'; '.join(issues)}"
-                )
+                raise ValueError(f"compiled target resolution is invalid: {'; '.join(issues)}")
             _write(resolution, args.output)
             return 0
         if args.command == "validate-target-resolution":
@@ -249,9 +252,7 @@ def main(argv: list[str] | None = None) -> int:
                 forecast_period_count=args.forecast_period_count,
             )
             if issues:
-                raise ValueError(
-                    f"compiled coordinate plan is invalid: {'; '.join(issues)}"
-                )
+                raise ValueError(f"compiled coordinate plan is invalid: {'; '.join(issues)}")
             _write(coordinate_plan, args.output)
             return 0
         if args.command == "validate-coordinate-plan":
@@ -264,6 +265,28 @@ def main(argv: list[str] | None = None) -> int:
                 patch=patch,
                 target_resolution=resolution,
                 forecast_period_count=args.forecast_period_count,
+            )
+            _write({"valid": not issues, "issues": list(issues)})
+            return 0 if not issues else 2
+        if args.command == "content-specs":
+            _write(content_spec_registry_payload(), args.output)
+            return 0
+        if args.command == "plan-content":
+            coordinate_plan = _load_object(args.coordinate_plan)
+            content_plan = plan_workbook_content(coordinate_plan)
+            issues = validate_workbook_content_plan_payload(
+                content_plan,
+                coordinate_plan=coordinate_plan,
+            )
+            if issues:
+                raise ValueError(f"compiled content plan is invalid: {'; '.join(issues)}")
+            _write(content_plan, args.output)
+            return 0
+        if args.command == "validate-content-plan":
+            coordinate_plan = _load_object(args.coordinate_plan)
+            issues = validate_workbook_content_plan_payload(
+                _load_object(args.content_plan),
+                coordinate_plan=coordinate_plan,
             )
             _write({"valid": not issues, "issues": list(issues)})
             return 0 if not issues else 2

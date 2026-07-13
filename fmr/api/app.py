@@ -12,6 +12,8 @@ from fmr.api.models import (
     ModelRequestPayload,
     ValidationResultPayload,
     WorkbookAnalysisRequestPayload,
+    WorkbookContentPlanRequestPayload,
+    WorkbookContentPlanValidationPayload,
     WorkbookCoordinatePlanRequestPayload,
     WorkbookCoordinatePlanValidationPayload,
     WorkbookPatchReceiptValidationPayload,
@@ -28,11 +30,14 @@ from fmr.workbook import (
     WorkbookMap,
     analyse_workbook_map,
     compile_workbook_patch,
+    content_spec_registry_payload,
     coordinate_rule_registry_payload,
     inspect_workbook_bytes,
     operation_spec_registry_payload,
+    plan_workbook_content,
     plan_workbook_coordinates,
     resolve_workbook_patch_targets,
+    validate_workbook_content_plan_payload,
     validate_workbook_coordinate_plan_payload,
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
@@ -88,7 +93,8 @@ def create_app() -> FastAPI:
         description=(
             "Local developer interface for deterministic model routing, readiness "
             "assessment, transformation planning, XLSX inspection, workbook analysis, "
-            "static patch compilation, semantic target resolution and coordinate planning."
+            "static patch compilation, semantic target resolution, coordinate planning "
+            "and symbolic content planning."
         ),
         docs_url="/docs",
         redoc_url="/redoc",
@@ -114,6 +120,8 @@ def create_app() -> FastAPI:
                 "/api/v1/workbooks/target-resolutions/validate",
                 "/api/v1/workbooks/coordinate-plans",
                 "/api/v1/workbooks/coordinate-plans/validate",
+                "/api/v1/workbooks/content-plans",
+                "/api/v1/workbooks/content-plans/validate",
             }:
                 limit = MAX_WORKBOOK_MAP_REQUEST_BYTES
             else:
@@ -169,6 +177,10 @@ def create_app() -> FastAPI:
     def workbook_coordinate_rules() -> dict[str, Any]:
         return coordinate_rule_registry_payload()
 
+    @application.get("/api/v1/workbook-content-specs")
+    def workbook_content_specs() -> dict[str, Any]:
+        return content_spec_registry_payload()
+
     @application.get("/api/v1/fixtures", response_model=list[FixtureSummaryPayload])
     def fixtures() -> list[dict[str, str]]:
         return list_fixtures()
@@ -205,9 +217,7 @@ def create_app() -> FastAPI:
             ) from exc
 
     @application.post("/api/v1/workbooks/analyse")
-    def analyse_mapped_workbook(
-        payload: WorkbookAnalysisRequestPayload,
-    ) -> dict[str, Any]:
+    def analyse_mapped_workbook(payload: WorkbookAnalysisRequestPayload) -> dict[str, Any]:
         try:
             workbook_map = WorkbookMap.from_mapping(payload.workbook_map)
             model_request = _request_from_payload(payload.model_request)
@@ -370,6 +380,43 @@ def create_app() -> FastAPI:
             patch=payload.patch,
             target_resolution=payload.target_resolution,
             forecast_period_count=payload.layout_parameters.forecast_period_count,
+        )
+        return {"valid": not issues, "issues": list(issues)}
+
+    @application.post("/api/v1/workbooks/content-plans")
+    def compile_content_plan(
+        payload: WorkbookContentPlanRequestPayload,
+    ) -> dict[str, Any]:
+        try:
+            content_plan = plan_workbook_content(payload.coordinate_plan)
+            issues = validate_workbook_content_plan_payload(
+                content_plan,
+                coordinate_plan=payload.coordinate_plan,
+            )
+            if issues:
+                raise ValueError(
+                    f"compiled content plan is invalid: {'; '.join(issues)}"
+                )
+            return content_plan
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_content_plan_request",
+                    "message": str(exc),
+                },
+            ) from exc
+
+    @application.post(
+        "/api/v1/workbooks/content-plans/validate",
+        response_model=ValidationResultPayload,
+    )
+    def validate_content_plan(
+        payload: WorkbookContentPlanValidationPayload,
+    ) -> dict[str, Any]:
+        issues = validate_workbook_content_plan_payload(
+            payload.content_plan,
+            coordinate_plan=payload.coordinate_plan,
         )
         return {"valid": not issues, "issues": list(issues)}
 

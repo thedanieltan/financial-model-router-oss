@@ -10,6 +10,7 @@ const analyseButton = document.querySelector("#analyse-button");
 const compilePatchButton = document.querySelector("#compile-patch-button");
 const resolveTargetsButton = document.querySelector("#resolve-targets-button");
 const planCoordinatesButton = document.querySelector("#plan-coordinates-button");
+const planContentButton = document.querySelector("#plan-content-button");
 const forecastPeriodCount = document.querySelector("#forecast-period-count");
 const copyButton = document.querySelector("#copy-button");
 const healthIndicator = document.querySelector("#health-indicator");
@@ -21,6 +22,7 @@ let currentAnalysis = null;
 let currentPatch = null;
 let currentTargetResolution = null;
 let currentCoordinatePlan = null;
+let currentContentPlan = null;
 
 function pretty(value) {
   return JSON.stringify(value, null, 2);
@@ -48,6 +50,8 @@ function setStatus(message = "") {
 
 function invalidateCoordinatePlan() {
   currentCoordinatePlan = null;
+  currentContentPlan = null;
+  planContentButton.disabled = true;
 }
 
 function invalidateAnalysis() {
@@ -55,9 +59,11 @@ function invalidateAnalysis() {
   currentPatch = null;
   currentTargetResolution = null;
   currentCoordinatePlan = null;
+  currentContentPlan = null;
   compilePatchButton.disabled = true;
   resolveTargetsButton.disabled = true;
   planCoordinatesButton.disabled = true;
+  planContentButton.disabled = true;
 }
 
 function addSummaryCard(label, value) {
@@ -90,6 +96,7 @@ function renderSummary(payload) {
   if (payload.patch_id) cards.push(["Patch ID", payload.patch_id]);
   if (payload.resolution_id) cards.push(["Resolution ID", payload.resolution_id]);
   if (payload.coordinate_plan_id) cards.push(["Coordinate plan ID", payload.coordinate_plan_id]);
+  if (payload.content_plan_id) cards.push(["Content plan ID", payload.content_plan_id]);
   if (typeof payload.ready_for_executor === "boolean") {
     cards.push(["Ready for executor", payload.ready_for_executor ? "Yes" : "No"]);
   }
@@ -109,6 +116,14 @@ function renderSummary(payload) {
     );
     cards.push(["Coordinate operations", String(payload.operation_plans.length)]);
     cards.push(["Planned ranges", String(allocations)]);
+  }
+  if (Array.isArray(payload.operation_contents)) {
+    const slotCount = payload.operation_contents.reduce(
+      (total, item) => total + (Array.isArray(item.slots) ? item.slots.length : 0),
+      0,
+    );
+    cards.push(["Content operations", String(payload.operation_contents.length)]);
+    cards.push(["Content slots", String(slotCount)]);
   }
   if (Array.isArray(plan.operations)) cards.push(["Operations", String(plan.operations.length)]);
   if (source.filename) cards.push(["Workbook", source.filename]);
@@ -210,9 +225,11 @@ async function analyseWorkbook() {
     currentPatch = null;
     currentTargetResolution = null;
     currentCoordinatePlan = null;
+    currentContentPlan = null;
     compilePatchButton.disabled = false;
     resolveTargetsButton.disabled = true;
     planCoordinatesButton.disabled = true;
+    planContentButton.disabled = true;
     showResult("Workbook analysis", result);
   } catch (error) {
     invalidateAnalysis();
@@ -235,15 +252,19 @@ async function compilePatch() {
     currentPatch = result;
     currentTargetResolution = null;
     currentCoordinatePlan = null;
+    currentContentPlan = null;
     resolveTargetsButton.disabled = false;
     planCoordinatesButton.disabled = true;
+    planContentButton.disabled = true;
     showResult("Workbook patch manifest", result);
   } catch (error) {
     currentPatch = null;
     currentTargetResolution = null;
     currentCoordinatePlan = null;
+    currentContentPlan = null;
     resolveTargetsButton.disabled = true;
     planCoordinatesButton.disabled = true;
+    planContentButton.disabled = true;
     workbookStatus.textContent = error.message;
   }
 }
@@ -266,12 +287,16 @@ async function resolveTargets() {
     });
     currentTargetResolution = result;
     currentCoordinatePlan = null;
+    currentContentPlan = null;
     planCoordinatesButton.disabled = false;
+    planContentButton.disabled = true;
     showResult("Semantic target resolution", result);
   } catch (error) {
     currentTargetResolution = null;
     currentCoordinatePlan = null;
+    currentContentPlan = null;
     planCoordinatesButton.disabled = true;
+    planContentButton.disabled = true;
     workbookStatus.textContent = error.message;
   }
 }
@@ -296,9 +321,36 @@ async function planCoordinates() {
       }),
     });
     currentCoordinatePlan = result;
+    currentContentPlan = null;
+    planContentButton.disabled = false;
     showResult("Workbook coordinate plan", result);
   } catch (error) {
     currentCoordinatePlan = null;
+    currentContentPlan = null;
+    planContentButton.disabled = true;
+    workbookStatus.textContent = error.message;
+  }
+}
+
+async function planContent() {
+  workbookStatus.textContent = "";
+  if (!currentCoordinatePlan) {
+    workbookStatus.textContent = "Plan coordinates before planning content.";
+    return;
+  }
+  try {
+    const result = await requestJson("/api/v1/workbooks/content-plans", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contract_version: "workbook-content-plan-request.v1",
+        coordinate_plan: currentCoordinatePlan,
+      }),
+    });
+    currentContentPlan = result;
+    showResult("Workbook content plan", result);
+  } catch (error) {
+    currentContentPlan = null;
     workbookStatus.textContent = error.message;
   }
 }
@@ -349,6 +401,7 @@ analyseButton.addEventListener("click", analyseWorkbook);
 compilePatchButton.addEventListener("click", compilePatch);
 resolveTargetsButton.addEventListener("click", resolveTargets);
 planCoordinatesButton.addEventListener("click", planCoordinates);
+planContentButton.addEventListener("click", planContent);
 document.querySelector("#route-button").addEventListener("click", () => run("/api/v1/route", "Routing result"));
 document.querySelector("#plan-button").addEventListener("click", () => run("/api/v1/plan", "Transformation plan"));
 document.querySelector("#validate-button").addEventListener("click", async () => {
@@ -357,7 +410,14 @@ document.querySelector("#validate-button").addEventListener("click", async () =>
     let path = "/api/v1/validate-plan";
     let label = "Plan validation";
     let payload = currentResult?.transformation_plan || currentResult;
-    if (currentResult?.contract_version === "workbook-coordinate-plan.v1") {
+    if (currentResult?.contract_version === "workbook-content-plan.v1") {
+      path = "/api/v1/workbooks/content-plans/validate";
+      label = "Content plan validation";
+      payload = {
+        content_plan: currentResult,
+        coordinate_plan: currentCoordinatePlan,
+      };
+    } else if (currentResult?.contract_version === "workbook-coordinate-plan.v1") {
       path = "/api/v1/workbooks/coordinate-plans/validate";
       label = "Coordinate plan validation";
       payload = {

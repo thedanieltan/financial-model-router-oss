@@ -53,12 +53,29 @@
 - return `workbook-coordinate-plan.v1`;
 - do not emit values, formulas or workbook writes.
 
+## 0.3.3 — content planning
+
+- publish one versioned content specification for every approved operation;
+- assign FMR-owned labels and input placeholders to reserved ranges;
+- assign symbolic formula, period, reference and validation identifiers;
+- assign semantic format roles without colours, fonts or number formats;
+- keep every slot inside its coordinate allocation;
+- return `workbook-content-plan.v1`;
+- do not emit values, formula expressions or workbook writes.
+
+## 0.3.4 — formula and style specifications
+
+- define formula identifiers as deterministic expression templates;
+- define dependency, sign and dimensionality rules;
+- define number-format and style roles separately from model logic;
+- validate formulas and styles without editing a workbook.
+
 ## 0.4 — workbook executor
 
 - copy the source workbook;
-- apply only accepted coordinate plans and operation specifications;
+- apply only accepted coordinate, content, formula and style plans;
 - emit operation receipts;
-- verify formulas and links against separate formula specifications;
+- verify formulas and links against accepted specifications;
 - support rollback;
 - reopen and validate the output.
 

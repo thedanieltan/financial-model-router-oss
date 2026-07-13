@@ -50,6 +50,9 @@ jobs:
       - run: python -m fmr coordinate-rules --help
       - run: python -m fmr plan-coordinates --help
       - run: python -m fmr validate-coordinate-plan --help
+      - run: python -m fmr content-specs --help
+      - run: python -m fmr plan-content --help
+      - run: python -m fmr validate-content-plan --help
       - run: python -m fmr serve --help
 
   package:
@@ -84,11 +87,14 @@ jobs:
           assert files("fmr.contracts").joinpath("workbook-coordinate-rule-registry.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("workbook-coordinate-plan-request.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("workbook-coordinate-plan.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-content-spec-registry.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-content-plan-request.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-content-plan.v1.schema.json").is_file()
           assert files("fmr.web").joinpath("index.html").is_file()
           assert files("fmr.web").joinpath("app.js").is_file()
           assert files("fmr.fixtures").joinpath("dcf-ready.json").is_file()
           PY
-      - name: Inspect, analyse, compile, resolve and plan coordinates from the installed wheel
+      - name: Inspect, analyse, compile, resolve and plan content from the installed wheel
         run: |
           cd /tmp
           /tmp/fmr-package-test/bin/python - <<'PY'
@@ -158,6 +164,9 @@ jobs:
           /tmp/fmr-package-test/bin/fmr coordinate-rules --output /tmp/fmr-coordinate-rules.json
           /tmp/fmr-package-test/bin/fmr plan-coordinates /tmp/fmr-smoke-analysis.json /tmp/fmr-smoke-patch.json /tmp/fmr-target-resolution.json --forecast-period-count 5 --output /tmp/fmr-coordinate-plan.json
           /tmp/fmr-package-test/bin/fmr validate-coordinate-plan /tmp/fmr-coordinate-plan.json --analysis /tmp/fmr-smoke-analysis.json --patch /tmp/fmr-smoke-patch.json --resolution /tmp/fmr-target-resolution.json --forecast-period-count 5
+          /tmp/fmr-package-test/bin/fmr content-specs --output /tmp/fmr-content-specs.json
+          /tmp/fmr-package-test/bin/fmr plan-content /tmp/fmr-coordinate-plan.json --output /tmp/fmr-content-plan.json
+          /tmp/fmr-package-test/bin/fmr validate-content-plan /tmp/fmr-content-plan.json --coordinate-plan /tmp/fmr-coordinate-plan.json
           /tmp/fmr-package-test/bin/python - <<'PY'
           import json
           workbook_map = json.load(open("/tmp/fmr-smoke-map.json", encoding="utf-8"))
@@ -167,6 +176,8 @@ jobs:
           resolution = json.load(open("/tmp/fmr-target-resolution.json", encoding="utf-8"))
           coordinate_registry = json.load(open("/tmp/fmr-coordinate-rules.json", encoding="utf-8"))
           coordinate_plan = json.load(open("/tmp/fmr-coordinate-plan.json", encoding="utf-8"))
+          content_registry = json.load(open("/tmp/fmr-content-specs.json", encoding="utf-8"))
+          content_plan = json.load(open("/tmp/fmr-content-plan.json", encoding="utf-8"))
           assert workbook_map["contract_version"] == "workbook-map.v1"
           assert analysis["contract_version"] == "workbook-analysis.v1"
           assert analysis["recommendation"]["readiness"]["ready"] is True
@@ -184,10 +195,21 @@ jobs:
           assert coordinate_plan["layout_parameters"]["forecast_period_count"] == 5
           assert coordinate_plan["ready_for_executor"] is True
           assert coordinate_plan["execution_supported_by_this_release"] is False
+          assert content_registry["contract_version"] == "workbook-content-spec-registry.v1"
+          assert content_plan["contract_version"] == "workbook-content-plan.v1"
+          assert content_plan["coordinate_plan_id"] == coordinate_plan["coordinate_plan_id"]
+          assert content_plan["content_specs_sha256"] == content_registry["registry_sha256"]
+          assert content_plan["ready_for_executor"] is True
+          assert content_plan["execution_supported_by_this_release"] is False
           assert any(
-              allocation["range"] == "E1:I3"
-              for operation in coordinate_plan["operation_plans"]
-              for allocation in operation["allocations"]
+              slot["content_kind"] == "formula_identifier"
+              for operation in content_plan["operation_contents"]
+              for slot in operation["slots"]
+          )
+          assert all(
+              "formula" not in slot and "value" not in slot
+              for operation in content_plan["operation_contents"]
+              for slot in operation["slots"]
           )
           assert patch["source"]["sha256"] == workbook_map["source"]["sha256"]
           operation_ids = [item["operation_id"] for item in patch["operations"]]

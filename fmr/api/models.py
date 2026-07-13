@@ -95,6 +95,26 @@ class WorkbookCoordinatePlanValidationPayload(BaseModel):
     layout_parameters: CoordinateLayoutParametersPayload
 
 
+class WorkbookContentPlanRequestPayload(BaseModel):
+    """Coordinate plan used to compile symbolic workbook content."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    contract_version: Literal["workbook-content-plan-request.v1"] = (
+        "workbook-content-plan-request.v1"
+    )
+    coordinate_plan: dict[str, Any]
+
+
+class WorkbookContentPlanValidationPayload(BaseModel):
+    """Content plan plus its source coordinate plan."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    content_plan: dict[str, Any]
+    coordinate_plan: dict[str, Any]
+
+
 class ValidationResultPayload(BaseModel):
     valid: bool
     issues: list[str]

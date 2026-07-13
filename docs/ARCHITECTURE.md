@@ -55,6 +55,16 @@ collision and Excel-bound checks
       v
 workbook-coordinate-plan.v1
       |
+      + workbook-content-spec-registry.v1
+      v
+symbolic content slot placement
+      |
+      v
+workbook-content-plan.v1
+      |
+      v
+future formula and style specifications
+      |
       v
 future executor
       |
@@ -77,6 +87,8 @@ future executor
 - `fmr.workbook.target_resolution`: semantic target resolution and validation.
 - `fmr.workbook.coordinate_rules`: versioned dimensions and allocation policies.
 - `fmr.workbook.coordinate_plan`: range allocation, collision checks and validation.
+- `fmr.workbook.content_specs`: FMR-owned labels, identifiers and format roles.
+- `fmr.workbook.content_plan`: coordinate-bounded symbolic content placement.
 - `fmr.contracts`: packaged JSON schemas.
 
 The deterministic core uses only the Python standard library.
@@ -90,8 +102,10 @@ HTTP API ----+
 Browser UI --HTTP API
 ```
 
-The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, planning, workbook-classification, patch-mapping, target-resolution or coordinate-allocation rules.
+The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, planning, workbook-classification, patch-mapping, target-resolution, coordinate-allocation or content-placement rules.
 
 ## Control boundary
 
-The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. Patch compilation emits additive operation intents without formulas, cells or workbook bytes. Target resolution identifies sheets and placement policies. Coordinate planning reserves collision-checked A1 ranges and sheet positions but includes no values, formulas or write instructions. This release does not include the workbook executor. Execution, formula specifications, output verification and rollback remain separate acceptance boundaries.
+The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. Patch compilation emits additive operation intents without formulas, cells or workbook bytes. Target resolution identifies sheets and placement policies. Coordinate planning reserves collision-checked A1 ranges and sheet positions. Content planning assigns FMR-owned labels and symbolic identifiers inside those ranges, but includes no input values, formula expressions, style definitions or write instructions.
+
+This release does not include the workbook executor. Formula definitions, style definitions, execution, output verification and rollback remain separate acceptance boundaries.

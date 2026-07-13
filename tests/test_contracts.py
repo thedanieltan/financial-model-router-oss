@@ -23,6 +23,9 @@ class ContractTests(unittest.TestCase):
             "workbook-coordinate-rule-registry.v1.schema.json",
             "workbook-coordinate-plan-request.v1.schema.json",
             "workbook-coordinate-plan.v1.schema.json",
+            "workbook-content-spec-registry.v1.schema.json",
+            "workbook-content-plan-request.v1.schema.json",
+            "workbook-content-plan.v1.schema.json",
         ):
             schema = json.loads(root.joinpath(name).read_text(encoding="utf-8"))
             self.assertTrue(
