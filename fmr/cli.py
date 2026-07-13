@@ -8,7 +8,14 @@ from typing import Any
 from fmr.plan import build_plan, validate_plan_payload
 from fmr.router import route_request
 from fmr.types import ModelRequest
-from fmr.workbook import analyse_workbook_map, inspect_workbook
+from fmr.workbook import (
+    WorkbookAnalysis,
+    analyse_workbook_map,
+    compile_workbook_patch,
+    inspect_workbook,
+    validate_workbook_patch_payload,
+    validate_workbook_patch_receipt_payload,
+)
 
 
 def _load_object(path: str) -> dict[str, Any]:
@@ -63,6 +70,26 @@ def build_parser() -> argparse.ArgumentParser:
     analyse.add_argument("request")
     analyse.add_argument("--output")
 
+    compile_patch = subparsers.add_parser(
+        "compile-patch",
+        help="Compile workbook-analysis.v1 into a validated workbook-patch.v1 manifest",
+    )
+    compile_patch.add_argument("analysis")
+    compile_patch.add_argument("--output")
+
+    validate_patch = subparsers.add_parser(
+        "validate-patch",
+        help="Validate a workbook-patch.v1 manifest",
+    )
+    validate_patch.add_argument("patch")
+
+    validate_receipt = subparsers.add_parser(
+        "validate-patch-receipt",
+        help="Validate a workbook-patch-receipt.v1 record",
+    )
+    validate_receipt.add_argument("receipt")
+    validate_receipt.add_argument("--patch")
+
     serve = subparsers.add_parser(
         "serve",
         help="Run the local developer API and browser workbench",
@@ -99,6 +126,26 @@ def main(argv: list[str] | None = None) -> int:
             request = ModelRequest.from_mapping(_load_object(args.request))
             _write(analyse_workbook_map(workbook_map, request).to_dict(), args.output)
             return 0
+        if args.command == "compile-patch":
+            analysis = WorkbookAnalysis.from_mapping(_load_object(args.analysis))
+            patch = compile_workbook_patch(analysis).to_dict()
+            issues = validate_workbook_patch_payload(patch)
+            if issues:
+                raise ValueError(f"compiled patch is invalid: {'; '.join(issues)}")
+            _write(patch, args.output)
+            return 0
+        if args.command == "validate-patch":
+            issues = validate_workbook_patch_payload(_load_object(args.patch))
+            _write({"valid": not issues, "issues": list(issues)})
+            return 0 if not issues else 2
+        if args.command == "validate-patch-receipt":
+            patch = _load_object(args.patch) if args.patch else None
+            issues = validate_workbook_patch_receipt_payload(
+                _load_object(args.receipt),
+                patch=patch,
+            )
+            _write({"valid": not issues, "issues": list(issues)})
+            return 0 if not issues else 2
         if args.command == "validate-plan":
             issues = validate_plan_payload(_load_object(args.plan))
             _write({"valid": not issues, "issues": list(issues)})
