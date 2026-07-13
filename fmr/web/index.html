@@ -11,7 +11,7 @@
     <div>
       <p class="eyebrow">Financial Model Router</p>
       <h1>Developer Workbench</h1>
-      <p>Test routing, workbook planning, copy-only XLSX execution, governed input population and calculated-output acceptance locally.</p>
+      <p>Test routing, provider-neutral financial-data intake, workbook construction, governed population and calculated-output acceptance locally.</p>
     </div>
     <nav>
       <a href="/docs">API docs</a>
@@ -29,11 +29,7 @@
       </div>
 
       <div class="workbook-control">
-        <input
-          id="workbook-file"
-          type="file"
-          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        >
+        <input id="workbook-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         <button id="inspect-button" type="button">Inspect workbook</button>
         <button id="analyse-button" type="button" class="secondary" disabled>Analyse with request</button>
         <button id="compile-patch-button" type="button" class="secondary" disabled>Compile patch</button>
@@ -50,8 +46,27 @@
 
       <div class="panel-heading">
         <div>
+          <h2>Financial-data intake</h2>
+          <p>Normalize a provider-neutral statement CSV, review exact account mappings and bind concepts or constants to semantic workbook slots.</p>
+        </div>
+      </div>
+      <div class="workbook-control">
+        <input id="financial-data-file" type="file" accept=".csv,text/csv">
+        <button id="import-financial-data-button" type="button">Import statement CSV</button>
+        <button id="map-financial-data-button" type="button" class="secondary" disabled>Map accounts</button>
+        <button id="plan-financial-bindings-button" type="button" class="secondary" disabled>Plan input bindings</button>
+        <button id="compile-financial-input-set-button" type="button" disabled>Compile governed input set</button>
+      </div>
+      <label for="financial-mapping-rules-editor">Mapping rules</label>
+      <textarea id="financial-mapping-rules-editor" spellcheck="false" aria-label="Financial mapping rules JSON">[]</textarea>
+      <label for="financial-binding-profile-editor">Semantic slot bindings</label>
+      <textarea id="financial-binding-profile-editor" spellcheck="false" aria-label="Financial binding profile JSON">[]</textarea>
+      <p id="financial-data-status" class="status" aria-live="polite"></p>
+
+      <div class="panel-heading">
+        <div>
           <h2>Governed input population</h2>
-          <p>Compile explicit numeric or boolean CSV rows into a pinned input set, then populate only reserved input cells in the executed copy.</p>
+          <p>Compile explicit numeric or boolean CSV rows—or use a ready financial binding plan—then populate only reserved input cells in the executed copy.</p>
         </div>
       </div>
       <div class="workbook-control">
@@ -69,34 +84,18 @@
         </div>
       </div>
       <div class="workbook-control">
-        <input
-          id="calculation-file"
-          type="file"
-          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        >
+        <input id="calculation-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         <button id="calculate-output-button" type="button" disabled>Recalculate and validate</button>
         <span id="calculation-engine-status" class="status" aria-live="polite"></span>
       </div>
 
-      <div class="panel-heading">
-        <div>
-          <h2>Write context</h2>
-          <p>Supply period labels and explicit source or validation bindings. Formula strings are not accepted.</p>
-        </div>
-      </div>
+      <div class="panel-heading"><div><h2>Write context</h2><p>Supply period labels and explicit source or validation bindings. Formula strings are not accepted.</p></div></div>
       <textarea id="write-context-editor" spellcheck="false" aria-label="Workbook write context JSON"></textarea>
 
       <div class="panel-heading">
-        <div>
-          <h2>Model request</h2>
-          <p>Edit JSON or load a bundled synthetic fixture.</p>
-        </div>
-        <div class="fixture-control">
-          <label for="fixture-select">Fixture</label>
-          <select id="fixture-select"></select>
-        </div>
+        <div><h2>Model request</h2><p>Edit JSON or load a bundled synthetic fixture.</p></div>
+        <div class="fixture-control"><label for="fixture-select">Fixture</label><select id="fixture-select"></select></div>
       </div>
-
       <textarea id="request-editor" spellcheck="false" aria-label="Model request JSON"></textarea>
 
       <div class="actions">
@@ -110,13 +109,9 @@
 
     <section class="panel result-panel">
       <div class="panel-heading">
-        <div>
-          <h2>Result</h2>
-          <p id="result-kind">No request has been run.</p>
-        </div>
+        <div><h2>Result</h2><p id="result-kind">No request has been run.</p></div>
         <button id="copy-button" type="button" class="quiet" disabled>Copy JSON</button>
       </div>
-
       <div id="summary" class="summary empty">Run a request or inspect a workbook.</div>
       <pre id="result-output">{}</pre>
     </section>
@@ -124,7 +119,7 @@
 
   <footer>
     <span id="health-indicator">Checking local service…</span>
-    <span>Patch execution is not included in planning. The selected source is never overwritten, and input or calculated values are not written to receipts.</span>
+    <span>Exact mappings and explicit bindings only. The selected source is never overwritten, and input or calculated values are not written to receipts.</span>
   </footer>
 
   <script src="/assets/app.js" defer></script>
@@ -132,6 +127,7 @@
   <script src="/assets/write_plan.js" defer></script>
   <script src="/assets/execution.js" defer></script>
   <script src="/assets/input_population.js" defer></script>
+  <script src="/assets/financial_data.js" defer></script>
   <script src="/assets/calculation.js" defer></script>
 </body>
 </html>
