@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-patch-receipt.v1.schema.json",
+  "title": "FMR workbook patch receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "patch_id",
+    "source_sha256",
+    "output_sha256",
+    "status",
+    "operation_receipts",
+    "validations"
+  ],
+  "properties": {
+    "contract_version": {"const": "workbook-patch-receipt.v1"},
+    "patch_id": {"type": "string", "pattern": "^fmrp_[0-9a-f]{24}$"},
+    "source_sha256": {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"},
+    "output_sha256": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"}
+      ]
+    },
+    "status": {"enum": ["applied", "failed", "rolled_back"]},
+    "operation_receipts": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/operationReceipt"}
+    },
+    "validations": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/validation"}
+    }
+  },
+  "$defs": {
+    "operationReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "operation_id",
+        "status",
+        "before_state_sha256",
+        "after_state_sha256",
+        "rollback_state_sha256",
+        "affected_parts"
+      ],
+      "properties": {
+        "operation_id": {"type": "string", "pattern": "^op-[0-9]{3}$"},
+        "status": {"enum": ["applied", "failed", "rolled_back", "skipped"]},
+        "before_state_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "after_state_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "rollback_state_sha256": {
+          "oneOf": [
+            {"type": "null"},
+            {"type": "string", "pattern": "^[0-9a-fA-F]{64}$"}
+          ]
+        },
+        "affected_parts": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "uniqueItems": true
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check", "passed", "message"],
+      "properties": {
+        "check": {"type": "string", "minLength": 1},
+        "passed": {"type": "boolean"},
+        "message": {"type": "string"}
+      }
+    }
+  }
+}
