@@ -34,10 +34,19 @@
 - validate `workbook-patch-receipt.v1` execution and rollback records;
 - do not execute patch operations.
 
+## 0.3.1 — operation specifications and target resolution
+
+- publish one versioned specification for every approved operation;
+- resolve semantic roles to existing, new, planned or set targets;
+- block ambiguous targets and missing required statement roles;
+- pin the operation registry and patch hashes;
+- return `workbook-target-resolution.v1`;
+- do not assign write coordinates or modify the workbook.
+
 ## 0.4 — workbook executor
 
 - copy the source workbook;
-- resolve exact targets against the approved operation specifications;
+- convert approved placement policies into exact coordinates;
 - apply additive patch operations;
 - emit operation receipts;
 - verify formulas and links;
