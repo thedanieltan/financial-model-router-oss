@@ -1,7 +1,7 @@
 """Deterministic XLSX inspection, planning, execution and calculated acceptance."""
 
 from fmr.workbook.analyse import WorkbookAnalysis, analyse_workbook_map
-from fmr.workbook.calculation import (
+from fmr.workbook.calculation_public import (
     CalculationEngine,
     WorkbookCalculationResult,
     accept_calculated_workbook_bytes,
