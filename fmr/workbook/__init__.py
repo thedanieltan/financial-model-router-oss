@@ -67,7 +67,7 @@ from fmr.workbook.target_resolution import (
     validate_workbook_target_resolution_payload,
 )
 from fmr.workbook.types import Classification, SheetMap, WorkbookMap
-from fmr.workbook.write_plan import (
+from fmr.workbook.write_plan_public import (
     compile_workbook_write_plan,
     validate_workbook_write_context_payload,
     validate_workbook_write_plan_payload,
