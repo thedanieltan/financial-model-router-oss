@@ -1,6 +1,16 @@
-"""Deterministic XLSX inspection, planning and transactional execution."""
+"""Deterministic XLSX inspection, planning, execution and calculated acceptance."""
 
 from fmr.workbook.analyse import WorkbookAnalysis, analyse_workbook_map
+from fmr.workbook.calculation import (
+    CalculationEngine,
+    WorkbookCalculationResult,
+    accept_calculated_workbook_bytes,
+    calculate_and_accept_workbook_bytes,
+    calculate_and_accept_workbook_file,
+    calculation_engine_status,
+    discover_calculation_engine,
+    validate_workbook_calculation_acceptance_payload,
+)
 from fmr.workbook.content_plan import (
     plan_workbook_content,
     validate_workbook_content_plan_payload,
@@ -88,6 +98,7 @@ __all__ = [
     "OPERATION_SPECS",
     "PALETTE",
     "STYLE_SPECS",
+    "CalculationEngine",
     "Classification",
     "ContentSlotSpec",
     "EvidenceItem",
@@ -100,6 +111,7 @@ __all__ = [
     "ResolutionAnchor",
     "SheetMap",
     "WorkbookAnalysis",
+    "WorkbookCalculationResult",
     "WorkbookContentSpec",
     "WorkbookCoordinateRule",
     "WorkbookEvidence",
@@ -110,12 +122,17 @@ __all__ = [
     "WorkbookPatch",
     "WorkbookStyleSpec",
     "WorkbookTargetResolution",
+    "accept_calculated_workbook_bytes",
     "analyse_workbook_map",
+    "calculate_and_accept_workbook_bytes",
+    "calculate_and_accept_workbook_file",
+    "calculation_engine_status",
     "compile_workbook_patch",
     "compile_workbook_write_plan",
     "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
     "derive_workbook_evidence",
+    "discover_calculation_engine",
     "execute_workbook_write_plan_bytes",
     "execute_workbook_write_plan_file",
     "formula_spec_registry_payload",
@@ -129,6 +146,7 @@ __all__ = [
     "resolve_workbook_patch_targets",
     "semantic_type_for_slot",
     "style_spec_registry_payload",
+    "validate_workbook_calculation_acceptance_payload",
     "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",
     "validate_workbook_execution_receipt_payload",
