@@ -43,13 +43,22 @@
 - return `workbook-target-resolution.v1`;
 - do not assign write coordinates or modify the workbook.
 
+## 0.3.2 — coordinate planning
+
+- publish one versioned coordinate rule for every approved operation;
+- require an explicit forecast-period count for variable-width extensions;
+- reserve new-sheet, appended-section and right-extension ranges;
+- treat source used ranges and prior allocations as occupied;
+- block collisions and Excel row or column overflow;
+- return `workbook-coordinate-plan.v1`;
+- do not emit values, formulas or workbook writes.
+
 ## 0.4 — workbook executor
 
 - copy the source workbook;
-- convert approved placement policies into exact coordinates;
-- apply additive patch operations;
+- apply only accepted coordinate plans and operation specifications;
 - emit operation receipts;
-- verify formulas and links;
+- verify formulas and links against separate formula specifications;
 - support rollback;
 - reopen and validate the output.
 
