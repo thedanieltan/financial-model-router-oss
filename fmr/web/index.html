@@ -11,7 +11,7 @@
     <div>
       <p class="eyebrow">Financial Model Router</p>
       <h1>Developer Workbench</h1>
-      <p>Test routing, workbook analysis and non-mutating plans through formula and style realization.</p>
+      <p>Test routing, workbook analysis and non-mutating plans through dry-run write compilation.</p>
     </div>
     <nav>
       <a href="/docs">API docs</a>
@@ -43,8 +43,17 @@
         <button id="plan-coordinates-button" type="button" class="secondary" disabled>Plan coordinates</button>
         <button id="plan-content-button" type="button" class="secondary" disabled>Plan content</button>
         <button id="plan-realization-button" type="button" class="secondary" disabled>Plan formulas and styles</button>
+        <button id="plan-writes-button" type="button" class="secondary" disabled>Plan dry-run writes</button>
       </div>
       <p id="workbook-status" class="status" aria-live="polite"></p>
+
+      <div class="panel-heading">
+        <div>
+          <h2>Write context</h2>
+          <p>Supply period labels and explicit source or validation bindings. Formula strings are not accepted.</p>
+        </div>
+      </div>
+      <textarea id="write-context-editor" spellcheck="false" aria-label="Workbook write context JSON"></textarea>
 
       <div class="panel-heading">
         <div>
@@ -84,10 +93,11 @@
 
   <footer>
     <span id="health-indicator">Checking local service…</span>
-    <span>No data leaves this process. Patch execution is not included. Workbook writing remains unavailable.</span>
+    <span>No data leaves this process. The write plan is a dry run; workbook mutation remains unavailable.</span>
   </footer>
 
   <script src="/assets/app.js" defer></script>
   <script src="/assets/realization.js" defer></script>
+  <script src="/assets/write_plan.js" defer></script>
 </body>
 </html>
