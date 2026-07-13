@@ -18,6 +18,7 @@ def compile_workbook_write_plan(
 ) -> dict[str, Any]:
     normalized_realization = _normalize_deferred_bindings(realization_plan)
     payload = _compile_unordered(normalized_realization, write_context)
+    payload["realization_plan_id"] = realization_plan["realization_plan_id"]
     payload["realization_plan_sha256"] = _digest(realization_plan)
     sequence = 0
     for phase in payload["phases"]:
@@ -54,6 +55,7 @@ def validate_workbook_write_plan_payload(
 
 def _normalize_deferred_bindings(realization_plan: dict[str, Any]) -> dict[str, Any]:
     normalized = copy.deepcopy(realization_plan)
+    changed = False
     for operation in normalized.get("operation_realizations", []):
         for slot in operation.get("slots", []):
             formula = slot.get("formula_binding")
@@ -66,6 +68,10 @@ def _normalize_deferred_bindings(realization_plan: dict[str, Any]) -> dict[str, 
                     and dependency.get("target") is None
                 ):
                     dependency["target"] = {}
+                    changed = True
+    if changed:
+        normalized.pop("realization_plan_id", None)
+        normalized["realization_plan_id"] = f"fmrr_{_digest(normalized)[:24]}"
     return normalized
 
 
