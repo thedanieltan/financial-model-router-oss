@@ -8,6 +8,7 @@ const workbookStatus = document.querySelector("#workbook-status");
 const workbookFile = document.querySelector("#workbook-file");
 const analyseButton = document.querySelector("#analyse-button");
 const compilePatchButton = document.querySelector("#compile-patch-button");
+const resolveTargetsButton = document.querySelector("#resolve-targets-button");
 const copyButton = document.querySelector("#copy-button");
 const healthIndicator = document.querySelector("#health-indicator");
 
@@ -15,6 +16,8 @@ let currentFixture = null;
 let currentResult = null;
 let currentWorkbookMap = null;
 let currentAnalysis = null;
+let currentPatch = null;
+let currentTargetResolution = null;
 
 function pretty(value) {
   return JSON.stringify(value, null, 2);
@@ -34,7 +37,10 @@ function setStatus(message = "") {
 
 function invalidateAnalysis() {
   currentAnalysis = null;
+  currentPatch = null;
+  currentTargetResolution = null;
   compilePatchButton.disabled = true;
+  resolveTargetsButton.disabled = true;
 }
 
 function addSummaryCard(label, value) {
@@ -65,13 +71,19 @@ function renderSummary(payload) {
   if (Array.isArray(readiness.blockers)) cards.push(["Blockers", String(readiness.blockers.length)]);
   if (typeof plan.ready_to_apply === "boolean") cards.push(["Ready to apply", plan.ready_to_apply ? "Yes" : "No"]);
   if (payload.patch_id) cards.push(["Patch ID", payload.patch_id]);
+  if (payload.resolution_id) cards.push(["Resolution ID", payload.resolution_id]);
   if (typeof payload.ready_for_executor === "boolean") {
     cards.push(["Ready for executor", payload.ready_for_executor ? "Yes" : "No"]);
   }
   if (typeof payload.execution_supported_by_this_release === "boolean") {
     cards.push(["Execution included", payload.execution_supported_by_this_release ? "Yes" : "No"]);
   }
-  if (Array.isArray(payload.blockers)) cards.push(["Patch blockers", String(payload.blockers.length)]);
+  if (Array.isArray(payload.blockers)) cards.push(["Contract blockers", String(payload.blockers.length)]);
+  if (Array.isArray(payload.resolutions)) {
+    const blocked = payload.resolutions.filter((item) => item.status === "blocked").length;
+    cards.push(["Target resolutions", String(payload.resolutions.length)]);
+    cards.push(["Blocked targets", String(blocked)]);
+  }
   if (Array.isArray(plan.operations)) cards.push(["Operations", String(plan.operations.length)]);
   if (source.filename) cards.push(["Workbook", source.filename]);
   if (typeof workbook.sheet_count === "number") cards.push(["Sheets", String(workbook.sheet_count)]);
@@ -169,7 +181,10 @@ async function analyseWorkbook() {
       }),
     });
     currentAnalysis = result;
+    currentPatch = null;
+    currentTargetResolution = null;
     compilePatchButton.disabled = false;
+    resolveTargetsButton.disabled = true;
     showResult("Workbook analysis", result);
   } catch (error) {
     invalidateAnalysis();
@@ -189,8 +204,38 @@ async function compilePatch() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(currentAnalysis),
     });
+    currentPatch = result;
+    currentTargetResolution = null;
+    resolveTargetsButton.disabled = false;
     showResult("Workbook patch manifest", result);
   } catch (error) {
+    currentPatch = null;
+    currentTargetResolution = null;
+    resolveTargetsButton.disabled = true;
+    workbookStatus.textContent = error.message;
+  }
+}
+
+async function resolveTargets() {
+  workbookStatus.textContent = "";
+  if (!currentAnalysis || !currentPatch) {
+    workbookStatus.textContent = "Analyse the workbook and compile its patch first.";
+    return;
+  }
+  try {
+    const result = await requestJson("/api/v1/workbooks/target-resolutions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contract_version: "workbook-target-resolution-request.v1",
+        workbook_analysis: currentAnalysis,
+        workbook_patch: currentPatch,
+      }),
+    });
+    currentTargetResolution = result;
+    showResult("Semantic target resolution", result);
+  } catch (error) {
+    currentTargetResolution = null;
     workbookStatus.textContent = error.message;
   }
 }
@@ -238,6 +283,7 @@ workbookFile.addEventListener("change", () => {
 editor.addEventListener("input", invalidateAnalysis);
 analyseButton.addEventListener("click", analyseWorkbook);
 compilePatchButton.addEventListener("click", compilePatch);
+resolveTargetsButton.addEventListener("click", resolveTargets);
 document.querySelector("#route-button").addEventListener("click", () => run("/api/v1/route", "Routing result"));
 document.querySelector("#plan-button").addEventListener("click", () => run("/api/v1/plan", "Transformation plan"));
 document.querySelector("#validate-button").addEventListener("click", async () => {
@@ -246,7 +292,15 @@ document.querySelector("#validate-button").addEventListener("click", async () =>
     let path = "/api/v1/validate-plan";
     let label = "Plan validation";
     let payload = currentResult?.transformation_plan || currentResult;
-    if (currentResult?.contract_version === "workbook-patch.v1") {
+    if (currentResult?.contract_version === "workbook-target-resolution.v1") {
+      path = "/api/v1/workbooks/target-resolutions/validate";
+      label = "Target resolution validation";
+      payload = {
+        target_resolution: currentResult,
+        workbook_analysis: currentAnalysis,
+        workbook_patch: currentPatch,
+      };
+    } else if (currentResult?.contract_version === "workbook-patch.v1") {
       path = "/api/v1/workbooks/patches/validate";
       label = "Patch validation";
       payload = currentResult;
