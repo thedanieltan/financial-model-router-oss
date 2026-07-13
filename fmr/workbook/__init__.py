@@ -1,6 +1,16 @@
-"""Deterministic XLSX inspection, analysis, patch, target and coordinate planning."""
+"""Deterministic XLSX inspection, analysis, patch, target, coordinate and content planning."""
 
 from fmr.workbook.analyse import WorkbookAnalysis, analyse_workbook_map
+from fmr.workbook.content_plan import (
+    plan_workbook_content,
+    validate_workbook_content_plan_payload,
+)
+from fmr.workbook.content_specs import (
+    CONTENT_SPECS,
+    ContentSlotSpec,
+    WorkbookContentSpec,
+    content_spec_registry_payload,
+)
 from fmr.workbook.coordinate_plan import (
     Rectangle,
     plan_workbook_coordinates,
@@ -38,8 +48,10 @@ from fmr.workbook.target_resolution import (
 from fmr.workbook.types import Classification, SheetMap, WorkbookMap
 
 __all__ = [
+    "CONTENT_SPECS",
     "COORDINATE_RULES",
     "Classification",
+    "ContentSlotSpec",
     "EvidenceItem",
     "OPERATION_SPECS",
     "OperationTargetResolution",
@@ -49,6 +61,7 @@ __all__ = [
     "ResolutionAnchor",
     "SheetMap",
     "WorkbookAnalysis",
+    "WorkbookContentSpec",
     "WorkbookCoordinateRule",
     "WorkbookEvidence",
     "WorkbookMap",
@@ -57,13 +70,16 @@ __all__ = [
     "WorkbookTargetResolution",
     "analyse_workbook_map",
     "compile_workbook_patch",
+    "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
     "derive_workbook_evidence",
     "inspect_workbook",
     "inspect_workbook_bytes",
     "operation_spec_registry_payload",
+    "plan_workbook_content",
     "plan_workbook_coordinates",
     "resolve_workbook_patch_targets",
+    "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",
     "validate_workbook_patch_payload",
     "validate_workbook_patch_receipt_payload",
