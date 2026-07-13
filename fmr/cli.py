@@ -12,9 +12,12 @@ from fmr.workbook import (
     WorkbookAnalysis,
     analyse_workbook_map,
     compile_workbook_patch,
+    coordinate_rule_registry_payload,
     inspect_workbook,
     operation_spec_registry_payload,
+    plan_workbook_coordinates,
     resolve_workbook_patch_targets,
+    validate_workbook_coordinate_plan_payload,
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
     validate_workbook_target_resolution_payload,
@@ -115,6 +118,32 @@ def build_parser() -> argparse.ArgumentParser:
     validate_resolution.add_argument("--analysis", required=True)
     validate_resolution.add_argument("--patch", required=True)
 
+    coordinate_rules = subparsers.add_parser(
+        "coordinate-rules",
+        help="Print the versioned workbook coordinate rule registry",
+    )
+    coordinate_rules.add_argument("--output")
+
+    plan_coordinates = subparsers.add_parser(
+        "plan-coordinates",
+        help="Compile a deterministic workbook-coordinate-plan.v1 document",
+    )
+    plan_coordinates.add_argument("analysis")
+    plan_coordinates.add_argument("patch")
+    plan_coordinates.add_argument("resolution")
+    plan_coordinates.add_argument("--forecast-period-count", type=int, required=True)
+    plan_coordinates.add_argument("--output")
+
+    validate_coordinates = subparsers.add_parser(
+        "validate-coordinate-plan",
+        help="Validate and deterministically recompute workbook-coordinate-plan.v1",
+    )
+    validate_coordinates.add_argument("coordinate_plan")
+    validate_coordinates.add_argument("--analysis", required=True)
+    validate_coordinates.add_argument("--patch", required=True)
+    validate_coordinates.add_argument("--resolution", required=True)
+    validate_coordinates.add_argument("--forecast-period-count", type=int, required=True)
+
     serve = subparsers.add_parser(
         "serve",
         help="Run the local developer API and browser workbench",
@@ -196,6 +225,45 @@ def main(argv: list[str] | None = None) -> int:
                 _load_object(args.resolution),
                 analysis=analysis,
                 patch=patch,
+            )
+            _write({"valid": not issues, "issues": list(issues)})
+            return 0 if not issues else 2
+        if args.command == "coordinate-rules":
+            _write(coordinate_rule_registry_payload(), args.output)
+            return 0
+        if args.command == "plan-coordinates":
+            analysis = WorkbookAnalysis.from_mapping(_load_object(args.analysis))
+            patch = _load_object(args.patch)
+            resolution = _load_object(args.resolution)
+            coordinate_plan = plan_workbook_coordinates(
+                analysis,
+                patch,
+                resolution,
+                forecast_period_count=args.forecast_period_count,
+            )
+            issues = validate_workbook_coordinate_plan_payload(
+                coordinate_plan,
+                analysis=analysis,
+                patch=patch,
+                target_resolution=resolution,
+                forecast_period_count=args.forecast_period_count,
+            )
+            if issues:
+                raise ValueError(
+                    f"compiled coordinate plan is invalid: {'; '.join(issues)}"
+                )
+            _write(coordinate_plan, args.output)
+            return 0
+        if args.command == "validate-coordinate-plan":
+            analysis = WorkbookAnalysis.from_mapping(_load_object(args.analysis))
+            patch = _load_object(args.patch)
+            resolution = _load_object(args.resolution)
+            issues = validate_workbook_coordinate_plan_payload(
+                _load_object(args.coordinate_plan),
+                analysis=analysis,
+                patch=patch,
+                target_resolution=resolution,
+                forecast_period_count=args.forecast_period_count,
             )
             _write({"valid": not issues, "issues": list(issues)})
             return 0 if not issues else 2
