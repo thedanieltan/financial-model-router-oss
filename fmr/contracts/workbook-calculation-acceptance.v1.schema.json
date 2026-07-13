@@ -57,10 +57,23 @@
     "immutable_verification": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["verified_record_ids", "failed_record_ids", "verified_record_count", "input_cell_count", "populated_input_cell_count"],
+      "required": ["verified_record_ids", "failed_record_ids", "failures", "verified_record_count", "input_cell_count", "populated_input_cell_count"],
       "properties": {
-        "verified_record_ids": {"type": "array", "items": {"type": "string"}},
-        "failed_record_ids": {"type": "array", "items": {"type": "string"}},
+        "verified_record_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "failed_record_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "failures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["scope", "record_id", "issue_code"],
+            "properties": {
+              "scope": {"enum": ["input", "output"]},
+              "record_id": {"type": "string", "minLength": 1},
+              "issue_code": {"type": "string", "minLength": 1}
+            }
+          }
+        },
         "verified_record_count": {"type": "integer", "minimum": 0},
         "input_cell_count": {"type": "integer", "minimum": 0},
         "populated_input_cell_count": {"type": "integer", "minimum": 0}
