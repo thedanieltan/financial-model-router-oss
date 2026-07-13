@@ -61,6 +61,16 @@ transactional copy-only executor
       |
       +--> completed XLSX
       +--> workbook-execution-receipt.v1
+                 |
+                 + populated reserved inputs
+                 v
+      optional spreadsheet calculation engine
+                 |
+                 v
+      immutable-record and cached-result validation
+                 |
+                 +--> accepted calculated XLSX
+                 +--> workbook-calculation-acceptance.v1
 ```
 
 ## Core modules
@@ -87,9 +97,11 @@ transactional copy-only executor
 - `fmr.workbook.write_plan_public`: phase normalization and deterministic public validation.
 - `fmr.workbook.executor`: low-level XLSX record application and verification.
 - `fmr.workbook.executor_public`: source verification, transactional output and receipt construction.
+- `fmr.workbook.calculation`: engine discovery, isolated execution, cached-result inspection and acceptance construction.
+- `fmr.workbook.calculation_public`: input/output immutable-record verification and publish-only-on-pass boundary.
 - `fmr.contracts`: packaged JSON schemas.
 
-The planning core uses only the Python standard library. Workbook execution is an optional `openpyxl` adapter installed through the `executor` extra.
+The planning core uses only the Python standard library. Workbook execution and calculated-output validation use the optional `openpyxl` adapter installed through the `executor` extra. Live recalculation requires an external spreadsheet engine; LibreOffice is the first supported adapter.
 
 ## Interfaces
 
@@ -99,11 +111,12 @@ Python API --+--> deterministic planning core
 HTTP API ----+
 Browser UI --HTTP API
                  |
-                 v
-          optional executor
+                 +--> optional executor
+                 |
+                 +--> optional calculation engine
 ```
 
-The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding, style-resolution, write-compilation or workbook-mutation rules.
+The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding, style-resolution, write-compilation, workbook-mutation or calculation-acceptance rules.
 
 ## Execution boundary
 
@@ -120,4 +133,19 @@ The executor:
 9. writes a temporary output and publishes it atomically; and
 10. emits a content-free receipt using before and after state hashes.
 
-The executor does not calculate Excel formulas. It marks the output for full recalculation when opened by a spreadsheet engine. Calculated-output acceptance remains a separate boundary.
+The executor does not calculate Excel formulas. It marks the output for full recalculation.
+
+## Calculation-acceptance boundary
+
+Calculated-output acceptance:
+
+1. validates and pins the write plan and execution receipt;
+2. permits user edits only inside reserved input ranges;
+3. verifies immutable records before the spreadsheet engine runs;
+4. runs LibreOffice in a temporary directory and isolated profile, or accepts an externally recalculated workbook;
+5. verifies immutable records and populated inputs after calculation;
+6. opens the output in formula and data-only modes;
+7. validates cached results, declared output types, sign conventions and formula errors;
+8. scans every formula cell for missing caches or spreadsheet error tokens;
+9. records only hashes, identifiers, types, signs and issue codes; and
+10. publishes workbook bytes only when acceptance passes.

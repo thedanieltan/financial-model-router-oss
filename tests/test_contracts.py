@@ -36,6 +36,10 @@ class ContractTests(unittest.TestCase):
             "workbook-execution-request.v1.schema.json",
             "workbook-execution-result.v1.schema.json",
             "workbook-execution-receipt.v1.schema.json",
+            "workbook-calculation-request.v1.schema.json",
+            "workbook-calculation-result.v1.schema.json",
+            "external-calculation-acceptance-request.v1.schema.json",
+            "workbook-calculation-acceptance.v1.schema.json",
         ):
             schema = json.loads(root.joinpath(name).read_text(encoding="utf-8"))
             self.assertTrue(

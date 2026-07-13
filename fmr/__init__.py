@@ -3,12 +3,17 @@
 from fmr.plan import build_plan
 from fmr.router import route_request
 from fmr.workbook import (
+    accept_calculated_workbook_bytes,
     analyse_workbook_map,
+    calculate_and_accept_workbook_bytes,
+    calculate_and_accept_workbook_file,
+    calculation_engine_status,
     compile_workbook_patch,
     compile_workbook_write_plan,
     content_spec_registry_payload,
     coordinate_rule_registry_payload,
     derive_workbook_evidence,
+    discover_calculation_engine,
     execute_workbook_write_plan_bytes,
     execute_workbook_write_plan_file,
     formula_spec_registry_payload,
@@ -20,6 +25,7 @@ from fmr.workbook import (
     plan_workbook_realization,
     resolve_workbook_patch_targets,
     style_spec_registry_payload,
+    validate_workbook_calculation_acceptance_payload,
     validate_workbook_content_plan_payload,
     validate_workbook_coordinate_plan_payload,
     validate_workbook_execution_receipt_payload,
@@ -32,13 +38,18 @@ from fmr.workbook import (
 )
 
 __all__ = [
+    "accept_calculated_workbook_bytes",
     "analyse_workbook_map",
     "build_plan",
+    "calculate_and_accept_workbook_bytes",
+    "calculate_and_accept_workbook_file",
+    "calculation_engine_status",
     "compile_workbook_patch",
     "compile_workbook_write_plan",
     "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
     "derive_workbook_evidence",
+    "discover_calculation_engine",
     "execute_workbook_write_plan_bytes",
     "execute_workbook_write_plan_file",
     "formula_spec_registry_payload",
@@ -51,6 +62,7 @@ __all__ = [
     "resolve_workbook_patch_targets",
     "route_request",
     "style_spec_registry_payload",
+    "validate_workbook_calculation_acceptance_payload",
     "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",
     "validate_workbook_execution_receipt_payload",
@@ -61,4 +73,4 @@ __all__ = [
     "validate_workbook_write_context_payload",
     "validate_workbook_write_plan_payload",
 ]
-__version__ = "0.4.0"
+__version__ = "0.4.1"

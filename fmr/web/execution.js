@@ -1,5 +1,7 @@
 const executeWorkbookButton = document.querySelector("#execute-workbook-button");
 let currentExecutionReceipt = null;
+let currentExecutedWorkbookBase64 = null;
+let currentExecutedWorkbookFilename = null;
 
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
@@ -40,6 +42,8 @@ function copiedWorkbookName(filename) {
 
 function invalidateExecution() {
   currentExecutionReceipt = null;
+  currentExecutedWorkbookBase64 = null;
+  currentExecutedWorkbookFilename = null;
   executeWorkbookButton.disabled = true;
 }
 
@@ -68,12 +72,16 @@ async function executeCopiedWorkbook() {
         write_plan: currentWritePlan,
       }),
     });
-    downloadBase64Workbook(result.output_filename, result.workbook_base64);
+    currentExecutedWorkbookBase64 = result.workbook_base64;
+    currentExecutedWorkbookFilename = result.output_filename;
     currentExecutionReceipt = result.receipt;
+    downloadBase64Workbook(result.output_filename, result.workbook_base64);
     showResult("Workbook execution receipt", result.receipt);
     workbookStatus.textContent = `Downloaded ${result.output_filename}. The selected source file was not modified.`;
   } catch (error) {
     currentExecutionReceipt = null;
+    currentExecutedWorkbookBase64 = null;
+    currentExecutedWorkbookFilename = null;
     workbookStatus.textContent = error.message;
   } finally {
     executeWorkbookButton.disabled = !(currentWritePlan?.ready_for_executor === true);
@@ -85,6 +93,8 @@ executeWorkbookButton.addEventListener("click", executeCopiedWorkbook);
 const executionResultObserver = new MutationObserver(() => {
   if (currentResult?.contract_version === "workbook-write-plan.v1") {
     currentExecutionReceipt = null;
+    currentExecutedWorkbookBase64 = null;
+    currentExecutedWorkbookFilename = null;
     executeWorkbookButton.disabled = currentResult.ready_for_executor !== true;
   }
 });

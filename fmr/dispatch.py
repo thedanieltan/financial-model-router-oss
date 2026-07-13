@@ -8,8 +8,12 @@ from typing import Any
 
 from fmr.cli import main as legacy_main
 from fmr.workbook import (
+    accept_calculated_workbook_bytes,
+    calculate_and_accept_workbook_file,
+    calculation_engine_status,
     compile_workbook_write_plan,
     execute_workbook_write_plan_file,
+    validate_workbook_calculation_acceptance_payload,
     validate_workbook_execution_receipt_payload,
     validate_workbook_write_plan_payload,
 )
@@ -74,6 +78,50 @@ def _executor_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _calculation_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="fmr")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    status = subparsers.add_parser(
+        "calculation-engine-status",
+        help="Report whether a supported spreadsheet calculation engine is available",
+    )
+    status.add_argument("--engine")
+
+    calculate = subparsers.add_parser(
+        "calculate-output",
+        help="Recalculate a populated XLSX workbook and validate its cached results",
+    )
+    calculate.add_argument("input_workbook")
+    calculate.add_argument("write_plan")
+    calculate.add_argument("execution_receipt")
+    calculate.add_argument("--output", required=True)
+    calculate.add_argument("--receipt", required=True)
+    calculate.add_argument("--engine")
+    calculate.add_argument("--timeout", type=int, default=120)
+
+    accept = subparsers.add_parser(
+        "accept-calculated-output",
+        help="Validate a workbook recalculated by an external spreadsheet engine",
+    )
+    accept.add_argument("input_workbook")
+    accept.add_argument("calculated_workbook")
+    accept.add_argument("write_plan")
+    accept.add_argument("execution_receipt")
+    accept.add_argument("--receipt", required=True)
+    accept.add_argument("--engine-name", required=True)
+    accept.add_argument("--engine-version", required=True)
+
+    validate = subparsers.add_parser(
+        "validate-calculation-acceptance",
+        help="Validate workbook-calculation-acceptance.v1",
+    )
+    validate.add_argument("acceptance")
+    validate.add_argument("--write-plan")
+    validate.add_argument("--execution-receipt")
+    return parser
+
+
 def _run_write_command(argv: list[str]) -> int:
     args = _write_parser().parse_args(argv)
     try:
@@ -133,6 +181,60 @@ def _run_executor_command(argv: list[str]) -> int:
         return 2
 
 
+def _run_calculation_command(argv: list[str]) -> int:
+    args = _calculation_parser().parse_args(argv)
+    try:
+        if args.command == "calculation-engine-status":
+            payload = calculation_engine_status(args.engine)
+            _write(payload)
+            return 0 if payload["available"] else 2
+        if args.command == "calculate-output":
+            write_plan = _load(args.write_plan)
+            execution_receipt = _load(args.execution_receipt)
+            receipt = calculate_and_accept_workbook_file(
+                args.input_workbook,
+                output_path=args.output,
+                write_plan=write_plan,
+                execution_receipt=execution_receipt,
+                engine_executable=args.engine,
+                timeout_seconds=args.timeout,
+            )
+            _write(receipt, args.receipt)
+            return 0 if receipt["status"] == "passed" else 2
+        if args.command == "accept-calculated-output":
+            write_plan = _load(args.write_plan)
+            execution_receipt = _load(args.execution_receipt)
+            receipt = accept_calculated_workbook_bytes(
+                Path(args.input_workbook).read_bytes(),
+                Path(args.calculated_workbook).read_bytes(),
+                input_filename=Path(args.input_workbook).name,
+                output_filename=Path(args.calculated_workbook).name,
+                write_plan=write_plan,
+                execution_receipt=execution_receipt,
+                engine={
+                    "name": args.engine_name,
+                    "version": args.engine_version,
+                    "adapter": "external-calculation.v1",
+                },
+            )
+            _write(receipt, args.receipt)
+            return 0 if receipt["status"] == "passed" else 2
+        write_plan = _load(args.write_plan) if args.write_plan else None
+        execution_receipt = (
+            _load(args.execution_receipt) if args.execution_receipt else None
+        )
+        issues = validate_workbook_calculation_acceptance_payload(
+            _load(args.acceptance),
+            write_plan=write_plan,
+            execution_receipt=execution_receipt,
+        )
+        _write({"valid": not issues, "issues": list(issues)})
+        return 0 if not issues else 2
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        _write({"valid": False, "error": str(exc)})
+        return 2
+
+
 def _serve_composed(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(prog="fmr serve")
     parser.add_argument("--host", default="127.0.0.1")
@@ -160,6 +262,13 @@ def main(argv: list[str] | None = None) -> int:
         return _run_write_command(arguments)
     if arguments and arguments[0] in {"execute-writes", "validate-execution-receipt"}:
         return _run_executor_command(arguments)
+    if arguments and arguments[0] in {
+        "calculation-engine-status",
+        "calculate-output",
+        "accept-calculated-output",
+        "validate-calculation-acceptance",
+    }:
+        return _run_calculation_command(arguments)
     if arguments and arguments[0] == "serve":
         return _serve_composed(arguments[1:])
     return legacy_main(arguments)

@@ -11,7 +11,7 @@
     <div>
       <p class="eyebrow">Financial Model Router</p>
       <h1>Developer Workbench</h1>
-      <p>Test routing, workbook planning and explicit copy-only XLSX execution locally.</p>
+      <p>Test routing, workbook planning, copy-only XLSX execution and calculated-output acceptance locally.</p>
     </div>
     <nav>
       <a href="/docs">API docs</a>
@@ -47,6 +47,22 @@
         <button id="execute-workbook-button" type="button" disabled>Execute copied workbook</button>
       </div>
       <p id="workbook-status" class="status" aria-live="polite"></p>
+
+      <div class="panel-heading">
+        <div>
+          <h2>Calculated-output acceptance</h2>
+          <p>Fill the editable cells in the downloaded copy, then select it here for recalculation and validation.</p>
+        </div>
+      </div>
+      <div class="workbook-control">
+        <input
+          id="calculation-file"
+          type="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        >
+        <button id="calculate-output-button" type="button" disabled>Recalculate and validate</button>
+        <span id="calculation-engine-status" class="status" aria-live="polite"></span>
+      </div>
 
       <div class="panel-heading">
         <div>
@@ -94,12 +110,13 @@
 
   <footer>
     <span id="health-indicator">Checking local service…</span>
-    <span>Patch execution is not included in planning. Execution writes only to a downloaded copy; the selected source is never overwritten.</span>
+    <span>Patch execution is not included in planning. The selected source is never overwritten, and calculated values are not written to receipts.</span>
   </footer>
 
   <script src="/assets/app.js" defer></script>
   <script src="/assets/realization.js" defer></script>
   <script src="/assets/write_plan.js" defer></script>
   <script src="/assets/execution.js" defer></script>
+  <script src="/assets/calculation.js" defer></script>
 </body>
 </html>
