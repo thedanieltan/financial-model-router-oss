@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/financial-data-mapping-result.v1.schema.json",
+  "title": "FMR financial data mapping result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "mapping_id", "package_id", "package_sha256", "profile_id", "profile_sha256", "row_mappings", "concept_series", "ready_for_binding", "blockers", "controls"],
+  "properties": {
+    "contract_version": {"const": "financial-data-mapping-result.v1"},
+    "mapping_id": {"type": "string", "pattern": "^fmrm_[0-9a-f]{24}$"},
+    "package_id": {"type": "string", "pattern": "^fmrd_[0-9a-f]{24}$"},
+    "package_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "profile_id": {"type": "string", "pattern": "^fmrmp_[0-9a-f]{24}$"},
+    "profile_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "row_mappings": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["row_id", "status", "concept_id", "candidates", "method", "evidence"],
+        "properties": {
+          "row_id": {"type": "string", "pattern": "^row_[0-9]{6}$"},
+          "status": {"enum": ["mapped", "unmapped", "ambiguous", "invalid"]},
+          "concept_id": {"type": ["string", "null"]},
+          "candidates": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "method": {"type": ["string", "null"]},
+          "evidence": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        }
+      }
+    },
+    "concept_series": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["concept_id", "period_id", "amount", "source_row_ids"],
+        "properties": {
+          "concept_id": {"type": "string"},
+          "period_id": {"type": "string"},
+          "amount": {"type": "string", "pattern": "^-?[0-9]+(?:\\.[0-9]+)?$"},
+          "source_row_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^row_[0-9]{6}$"}, "uniqueItems": true}
+        }
+      }
+    },
+    "ready_for_binding": {"type": "boolean"},
+    "blockers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "controls": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}
