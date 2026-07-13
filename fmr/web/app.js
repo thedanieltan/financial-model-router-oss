@@ -7,12 +7,14 @@ const requestStatus = document.querySelector("#request-status");
 const workbookStatus = document.querySelector("#workbook-status");
 const workbookFile = document.querySelector("#workbook-file");
 const analyseButton = document.querySelector("#analyse-button");
+const compilePatchButton = document.querySelector("#compile-patch-button");
 const copyButton = document.querySelector("#copy-button");
 const healthIndicator = document.querySelector("#health-indicator");
 
 let currentFixture = null;
 let currentResult = null;
 let currentWorkbookMap = null;
+let currentAnalysis = null;
 
 function pretty(value) {
   return JSON.stringify(value, null, 2);
@@ -28,6 +30,11 @@ function parseEditor() {
 
 function setStatus(message = "") {
   requestStatus.textContent = message;
+}
+
+function invalidateAnalysis() {
+  currentAnalysis = null;
+  compilePatchButton.disabled = true;
 }
 
 function addSummaryCard(label, value) {
@@ -57,6 +64,14 @@ function renderSummary(payload) {
   if (typeof readiness.ready === "boolean") cards.push(["Ready", readiness.ready ? "Yes" : "No"]);
   if (Array.isArray(readiness.blockers)) cards.push(["Blockers", String(readiness.blockers.length)]);
   if (typeof plan.ready_to_apply === "boolean") cards.push(["Ready to apply", plan.ready_to_apply ? "Yes" : "No"]);
+  if (payload.patch_id) cards.push(["Patch ID", payload.patch_id]);
+  if (typeof payload.ready_for_executor === "boolean") {
+    cards.push(["Ready for executor", payload.ready_for_executor ? "Yes" : "No"]);
+  }
+  if (typeof payload.execution_supported_by_this_release === "boolean") {
+    cards.push(["Execution included", payload.execution_supported_by_this_release ? "Yes" : "No"]);
+  }
+  if (Array.isArray(payload.blockers)) cards.push(["Patch blockers", String(payload.blockers.length)]);
   if (Array.isArray(plan.operations)) cards.push(["Operations", String(plan.operations.length)]);
   if (source.filename) cards.push(["Workbook", source.filename]);
   if (typeof workbook.sheet_count === "number") cards.push(["Sheets", String(workbook.sheet_count)]);
@@ -126,10 +141,12 @@ async function inspectWorkbook() {
       },
     );
     currentWorkbookMap = result;
+    invalidateAnalysis();
     analyseButton.disabled = false;
     showResult("Workbook map", result);
   } catch (error) {
     currentWorkbookMap = null;
+    invalidateAnalysis();
     analyseButton.disabled = true;
     workbookStatus.textContent = error.message;
   }
@@ -151,7 +168,28 @@ async function analyseWorkbook() {
         model_request: parseEditor(),
       }),
     });
+    currentAnalysis = result;
+    compilePatchButton.disabled = false;
     showResult("Workbook analysis", result);
+  } catch (error) {
+    invalidateAnalysis();
+    workbookStatus.textContent = error.message;
+  }
+}
+
+async function compilePatch() {
+  workbookStatus.textContent = "";
+  if (!currentAnalysis) {
+    workbookStatus.textContent = "Analyse the current workbook and request first.";
+    return;
+  }
+  try {
+    const result = await requestJson("/api/v1/workbooks/patches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(currentAnalysis),
+    });
+    showResult("Workbook patch manifest", result);
   } catch (error) {
     workbookStatus.textContent = error.message;
   }
@@ -161,6 +199,7 @@ async function loadFixture(fixtureId) {
   const fixture = await requestJson(`/api/v1/fixtures/${encodeURIComponent(fixtureId)}`);
   currentFixture = fixture;
   editor.value = pretty(fixture);
+  invalidateAnalysis();
   setStatus();
 }
 
@@ -192,31 +231,41 @@ async function initialize() {
 document.querySelector("#inspect-button").addEventListener("click", inspectWorkbook);
 workbookFile.addEventListener("change", () => {
   currentWorkbookMap = null;
+  invalidateAnalysis();
   analyseButton.disabled = true;
   workbookStatus.textContent = "";
 });
+editor.addEventListener("input", invalidateAnalysis);
 analyseButton.addEventListener("click", analyseWorkbook);
+compilePatchButton.addEventListener("click", compilePatch);
 document.querySelector("#route-button").addEventListener("click", () => run("/api/v1/route", "Routing result"));
 document.querySelector("#plan-button").addEventListener("click", () => run("/api/v1/plan", "Transformation plan"));
 document.querySelector("#validate-button").addEventListener("click", async () => {
   setStatus();
   try {
-    const candidate = currentResult?.transformation_plan || currentResult;
-    const payload = candidate?.contract_version === "transformation-plan.v1"
-      ? candidate
-      : parseEditor();
-    const result = await requestJson("/api/v1/validate-plan", {
+    let path = "/api/v1/validate-plan";
+    let label = "Plan validation";
+    let payload = currentResult?.transformation_plan || currentResult;
+    if (currentResult?.contract_version === "workbook-patch.v1") {
+      path = "/api/v1/workbooks/patches/validate";
+      label = "Patch validation";
+      payload = currentResult;
+    } else if (payload?.contract_version !== "transformation-plan.v1") {
+      payload = parseEditor();
+    }
+    const result = await requestJson(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    showResult("Plan validation", result);
+    showResult(label, result);
   } catch (error) {
     setStatus(error.message);
   }
 });
 document.querySelector("#reset-button").addEventListener("click", () => {
   if (currentFixture) editor.value = pretty(currentFixture);
+  invalidateAnalysis();
   setStatus();
 });
 fixtureSelect.addEventListener("change", () => loadFixture(fixtureSelect.value));
