@@ -9,6 +9,8 @@ from typing import Any
 from fmr.cli import main as legacy_main
 from fmr.workbook import (
     compile_workbook_write_plan,
+    execute_workbook_write_plan_file,
+    validate_workbook_execution_receipt_payload,
     validate_workbook_write_plan_payload,
 )
 
@@ -50,6 +52,28 @@ def _write_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _executor_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="fmr")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    execute = subparsers.add_parser(
+        "execute-writes",
+        help="Apply an accepted write plan to a copied XLSX workbook",
+    )
+    execute.add_argument("source_workbook")
+    execute.add_argument("write_plan")
+    execute.add_argument("--output", required=True)
+    execute.add_argument("--receipt", required=True)
+
+    validate = subparsers.add_parser(
+        "validate-execution-receipt",
+        help="Validate workbook-execution-receipt.v1",
+    )
+    validate.add_argument("receipt")
+    validate.add_argument("--write-plan")
+    return parser
+
+
 def _run_write_command(argv: list[str]) -> int:
     args = _write_parser().parse_args(argv)
     try:
@@ -70,6 +94,37 @@ def _run_write_command(argv: list[str]) -> int:
             _load(args.write_plan),
             realization_plan=realization_plan,
             write_context=write_context,
+        )
+        _write({"valid": not issues, "issues": list(issues)})
+        return 0 if not issues else 2
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        _write({"valid": False, "error": str(exc)})
+        return 2
+
+
+def _run_executor_command(argv: list[str]) -> int:
+    args = _executor_parser().parse_args(argv)
+    try:
+        if args.command == "execute-writes":
+            write_plan = _load(args.write_plan)
+            receipt = execute_workbook_write_plan_file(
+                args.source_workbook,
+                output_path=args.output,
+                write_plan=write_plan,
+            )
+            issues = validate_workbook_execution_receipt_payload(
+                receipt,
+                write_plan=write_plan,
+            )
+            if issues:
+                Path(args.output).unlink(missing_ok=True)
+                raise ValueError("execution receipt is invalid: " + "; ".join(issues))
+            _write(receipt, args.receipt)
+            return 0
+        write_plan = _load(args.write_plan) if args.write_plan else None
+        issues = validate_workbook_execution_receipt_payload(
+            _load(args.receipt),
+            write_plan=write_plan,
         )
         _write({"valid": not issues, "issues": list(issues)})
         return 0 if not issues else 2
@@ -103,6 +158,8 @@ def main(argv: list[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
     if arguments and arguments[0] in {"plan-writes", "validate-write-plan"}:
         return _run_write_command(arguments)
+    if arguments and arguments[0] in {"execute-writes", "validate-execution-receipt"}:
+        return _run_executor_command(arguments)
     if arguments and arguments[0] == "serve":
         return _serve_composed(arguments[1:])
     return legacy_main(arguments)
