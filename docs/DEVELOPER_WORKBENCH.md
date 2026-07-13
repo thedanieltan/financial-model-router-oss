@@ -11,7 +11,7 @@ python -m pip install -e ".[dev-ui]"
 fmr serve
 ```
 
-Planning, copied-workbook execution and calculated-output validation:
+Planning, execution, input population and calculated-output validation:
 
 ```bash
 python -m pip install -e ".[dev-ui,executor]"
@@ -36,12 +36,17 @@ The workbench exposes the routing and workbook-planning endpoints plus:
 |---|---|---|
 | POST | `/api/v1/workbooks/executions` | apply a ready write plan to a copied workbook |
 | POST | `/api/v1/workbooks/execution-receipts/validate` | validate an execution receipt |
+| POST | `/api/v1/workbooks/input-sets/from-csv` | compile explicit CSV cells into `workbook-input-set.v1` |
+| POST | `/api/v1/workbooks/input-sets/validate` | validate an input set |
+| POST | `/api/v1/workbooks/input-populations` | populate reserved input ranges in the executed copy |
+| POST | `/api/v1/workbooks/input-population-receipts/validate` | validate a value-free population receipt |
+| POST | `/api/v1/workbooks/input-population-receipts/validate-calculation-link` | validate the population-to-calculation hash chain |
 | GET | `/api/v1/calculation-engine` | report local LibreOffice availability and version |
-| POST | `/api/v1/workbooks/calculations` | recalculate and validate a populated executed workbook |
+| POST | `/api/v1/workbooks/calculations` | recalculate and validate a populated workbook |
 | POST | `/api/v1/workbooks/calculation-acceptances` | validate a workbook recalculated elsewhere |
 | POST | `/api/v1/workbooks/calculation-acceptances/validate` | validate a calculation-acceptance receipt |
 
-Execution and calculation requests transport workbook bytes as base64 JSON. The decoded workbook limit is 20 MiB per workbook field. Python and CLI execution should be used for larger files.
+Workbook requests transport bytes as base64 JSON. The decoded workbook limit is 20 MiB. CSV input is limited to 2 MiB. Python and CLI workflows should be used for larger files.
 
 Nothing is retained by the service.
 
@@ -49,50 +54,32 @@ Nothing is retained by the service.
 
 1. Select and inspect an `.xlsx` workbook.
 2. Edit or load a model request.
-3. Analyse the workbook with the request.
-4. Compile the analysis into a patch manifest.
-5. Resolve patch operations to workbook targets.
-6. Enter the explicit number of forecast periods.
-7. Plan collision-checked coordinates.
-8. Assign labels, placeholders and symbolic identifiers.
-9. Bind formula dependencies, style roles, protection and number formats.
-10. Review or replace the visible synthetic write context.
-11. Compile ordered dry-run write records.
-12. Select **Execute copied workbook**.
-13. Download the `-fmr.xlsx` output.
-14. Populate every editable input cell in the downloaded copy.
-15. Select the populated copy under **Calculated-output acceptance**.
-16. Select **Recalculate and validate**.
-17. Download the `-calculated.xlsx` output only when acceptance passes.
-18. Review and validate `workbook-calculation-acceptance.v1`.
+3. Analyse the workbook and compile patch, target, coordinate, content, realization and write contracts.
+4. Review the visible write context and compile ordered dry-run writes.
+5. Select **Execute copied workbook**.
+6. Download the `-fmr.xlsx` output and review the execution receipt.
+7. Select a UTF-8 CSV under **Governed input population**.
+8. Select **Compile input CSV** to produce a pinned input-set document.
+9. Review or replace the visible `workbook-input-set.v1` JSON.
+10. Select **Populate reserved inputs**.
+11. Download the `-populated.xlsx` output and review the value-free population receipt.
+12. Select **Recalculate and validate**. The governed populated copy is used automatically unless another workbook is selected.
+13. FMR verifies the population-to-calculation hash chain.
+14. Download the calculated workbook only when acceptance passes.
 
-The synthetic write context is generated only for local testing. It is visible in the editor and never treated as a production binding source.
+The CSV must provide one row per reserved cell using `record_id,cell_index,value_type,value,source_ref`. Only finite numbers and booleans are accepted.
 
-## Execution behavior
+## Input-population behavior
 
-The browser sends the selected source workbook and accepted write plan to the local process. The process:
+The browser sends the executed workbook, input set, write plan and execution receipt to the local process. The process verifies the executor output hash, proves generated records are unchanged, writes only reserved input cells, reopens and verifies the output, returns a separate workbook plus a value-free receipt, and retains neither artifact.
 
-- verifies the source hash;
-- executes in memory;
-- reopens and verifies the output;
-- returns the output workbook and execution receipt; and
-- retains neither file.
-
-The browser immediately downloads the output workbook and displays only the receipt. The selected source file is never modified.
+Input-set JSON contains the values required for workbook population. Population receipts contain no input values. The selected source is never modified.
 
 ## Calculation behavior
 
-The browser sends the populated executed workbook, write plan and execution receipt to the local process. The process:
+The browser sends the populated workbook, write plan and execution receipt to the local process. The process runs LibreOffice headlessly, verifies immutable records and populated inputs, checks cached results and errors, and returns workbook bytes only when acceptance passes.
 
-- runs LibreOffice headlessly in an isolated temporary profile;
-- verifies immutable records before and after calculation;
-- confirms every reserved input cell is populated;
-- reopens the output in formula and data-only modes;
-- checks cached results, result types, sign conventions and spreadsheet errors;
-- returns workbook bytes only when acceptance passes; and
-- retains neither input nor output.
-
-Failed acceptance displays only the receipt and issue counts. Input and calculated cell values are never included in the receipt.
+Failed acceptance displays only the receipt and issue counts. Input and calculated values are not included in receipts.
 
 ## Boundary
 
@@ -101,10 +88,11 @@ The interface:
 - stores no requests or workbooks;
 - enables no cross-origin access;
 - applies request-size limits;
-- makes no network calls;
-- contains no financial-model, workbook-classification, planning, execution or calculation-acceptance rules of its own;
-- requires an explicit ready write plan before execution;
-- requires a valid execution receipt before calculation; and
+- makes no outbound network calls;
+- contains no financial-model, planning, execution, input-binding or calculation rules of its own;
+- requires a ready write plan before execution;
+- requires a valid execution receipt and complete input set before population;
+- writes only reserved input ranges; and
 - returns no failed calculated workbook.
 
 ## Test it
@@ -114,4 +102,4 @@ python -m pip install -e ".[dev-ui,test-ui,executor]"
 python -m unittest discover -s tests -v
 ```
 
-Engine-independent tests generate synthetic XLSX workbooks at runtime. The focused live-acceptance workflow installs LibreOffice and recalculates a runtime-generated workbook. No workbook binaries are committed.
+All workbooks are generated at test runtime. The live calculation workflow installs LibreOffice and recalculates a synthetic workbook. No workbook binaries are committed.
