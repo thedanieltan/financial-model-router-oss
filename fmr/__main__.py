@@ -1,3 +1,3 @@
-from fmr.cli import main
+from fmr.dispatch import main
 
 raise SystemExit(main())
