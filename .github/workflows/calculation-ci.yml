@@ -205,20 +205,34 @@ jobs:
           )
           PY
       - name: Recalculate, accept and validate with installed CLI
+        shell: bash
         run: |
+          set -o pipefail
           cd /tmp
-          /tmp/fmr-calculation-live/bin/fmr calculation-engine-status
+          /tmp/fmr-calculation-live/bin/fmr calculation-engine-status \
+            2>&1 | tee /tmp/calculation-engine-status.json
           /tmp/fmr-calculation-live/bin/fmr calculate-output \
             /tmp/populated.xlsx \
             /tmp/write-plan.json \
             /tmp/execution-receipt.json \
             --output /tmp/calculated.xlsx \
             --receipt /tmp/calculation-acceptance.json \
-            --timeout 180
+            --timeout 180 2>&1 | tee /tmp/calculation-command-output.txt
           /tmp/fmr-calculation-live/bin/fmr validate-calculation-acceptance \
             /tmp/calculation-acceptance.json \
             --write-plan /tmp/write-plan.json \
             --execution-receipt /tmp/execution-receipt.json
+      - name: Preserve value-free live calculation failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-calculation-acceptance-failure
+          path: |
+            /tmp/calculation-acceptance.json
+            /tmp/calculation-engine-status.json
+            /tmp/calculation-command-output.txt
+          if-no-files-found: warn
+          retention-days: 7
       - name: Verify live acceptance boundary
         run: |
           /tmp/fmr-calculation-live/bin/python - <<'PY'
