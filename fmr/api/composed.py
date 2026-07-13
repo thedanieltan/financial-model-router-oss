@@ -6,10 +6,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response
 
 from fmr.api.app import create_app as create_base_app
+from fmr.api.calculation_routes import router as calculation_router
 from fmr.api.execution_routes import router as execution_router
 from fmr.api.write_routes import router as write_router
 
-_EXECUTION_PATH = "/api/v1/workbooks/executions"
+_LARGE_JSON_PATHS = {
+    "/api/v1/workbooks/executions",
+    "/api/v1/workbooks/calculations",
+    "/api/v1/workbooks/calculation-acceptances",
+}
 
 
 def _asset(name: str) -> str:
@@ -20,10 +25,11 @@ def create_app() -> FastAPI:
     application = create_base_app()
     application.include_router(write_router)
     application.include_router(execution_router)
+    application.include_router(calculation_router)
 
     @application.middleware("http")
-    async def execution_request_limit_override(request: Request, call_next):  # type: ignore[no-untyped-def]
-        if request.url.path == _EXECUTION_PATH:
+    async def large_request_limit_override(request: Request, call_next):  # type: ignore[no-untyped-def]
+        if request.url.path in _LARGE_JSON_PATHS:
             request.scope["headers"] = [
                 (name, value)
                 for name, value in request.scope.get("headers", [])
@@ -42,6 +48,10 @@ def create_app() -> FastAPI:
     @application.get("/assets/execution.js", include_in_schema=False)
     def execution_javascript() -> Response:
         return Response(_asset("execution.js"), media_type="application/javascript")
+
+    @application.get("/assets/calculation.js", include_in_schema=False)
+    def calculation_javascript() -> Response:
+        return Response(_asset("calculation.js"), media_type="application/javascript")
 
     return application
 
