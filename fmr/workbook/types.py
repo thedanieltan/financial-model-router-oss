@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import string
 from dataclasses import dataclass
 from typing import Any
 
@@ -155,7 +156,11 @@ class WorkbookMap:
         external_links = workbook.get("external_links_detected")
         if not isinstance(filename, str) or not filename:
             raise ValueError("workbook-map source.filename must be a non-empty string")
-        if not isinstance(sha256, str) or len(sha256) != 64:
+        if (
+            not isinstance(sha256, str)
+            or len(sha256) != 64
+            or any(character not in string.hexdigits for character in sha256)
+        ):
             raise ValueError("workbook-map source.sha256 must be a SHA-256 hex string")
         if not isinstance(size_bytes, int) or size_bytes < 0:
             raise ValueError(
@@ -172,8 +177,8 @@ class WorkbookMap:
         if not isinstance(sheets, list):
             raise ValueError("workbook-map sheets must be an array")
         parsed_sheets = tuple(SheetMap.from_mapping(item) for item in sheets)
-        if sheet_count != len(parsed_sheets):
-            raise ValueError("workbook-map sheet_count does not match sheets")
+        if sheet_count < len(parsed_sheets):
+            raise ValueError("workbook-map sheet_count is smaller than mapped sheets")
         return cls(
             source_filename=filename,
             source_sha256=sha256,
