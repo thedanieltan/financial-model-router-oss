@@ -20,6 +20,7 @@ from fmr.workbook.calculation import (
 from fmr.workbook.executor import _cells
 
 _BOOLEAN_CALL_RE = re.compile(r"\b(TRUE|FALSE)\(\)", re.IGNORECASE)
+_COLOUR_TOKEN_RE = re.compile(r"\[([A-Za-z]+)\]")
 
 
 def _normalise_formula(value: Any) -> str | None:
@@ -39,13 +40,31 @@ def _formulas_equivalent(expected: Any, actual: Any) -> bool:
     )
 
 
+def _normalise_number_format(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    normalised = _COLOUR_TOKEN_RE.sub(
+        lambda match: f"[{match.group(1).upper()}]",
+        value,
+    )
+    for character in ("(", ")", "-"):
+        normalised = normalised.replace(f"\\{character}", character)
+    return normalised
+
+
 def _number_formats_equivalent(
     expected: Any,
     actual: Any,
     *,
     semantic_type: Any,
 ) -> bool:
-    if expected == actual:
+    expected_normalised = _normalise_number_format(expected)
+    actual_normalised = _normalise_number_format(actual)
+    if (
+        expected_normalised is not None
+        and actual_normalised is not None
+        and expected_normalised == actual_normalised
+    ):
         return True
     if semantic_type == "boolean":
         return str(expected).upper() in {"GENERAL", "BOOLEAN"} and str(
@@ -158,8 +177,9 @@ def accept_calculated_workbook_bytes(
 
     Formula comparison permits only engine-neutral syntax changes: whitespace,
     case, comma/semicolon separators and TRUE/FALSE with optional parentheses.
-    Boolean number formats treat General and BOOLEAN as equivalent. No other
-    formula or style drift is accepted.
+    Number-format comparison permits only colour-token case and LibreOffice
+    escaping of parentheses or hyphens, plus General/BOOLEAN equivalence for
+    boolean cells. No other formula or style drift is accepted.
     """
     acceptance = _accept_calculated_workbook_bytes(
         input_bytes,
