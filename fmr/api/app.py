@@ -13,6 +13,8 @@ from fmr.api.models import (
     ValidationResultPayload,
     WorkbookAnalysisRequestPayload,
     WorkbookPatchReceiptValidationPayload,
+    WorkbookTargetResolutionRequestPayload,
+    WorkbookTargetResolutionValidationPayload,
 )
 from fmr.fixtures import list_fixtures, load_fixture
 from fmr.model_specs import MODEL_DEFINITIONS
@@ -25,8 +27,11 @@ from fmr.workbook import (
     analyse_workbook_map,
     compile_workbook_patch,
     inspect_workbook_bytes,
+    operation_spec_registry_payload,
+    resolve_workbook_patch_targets,
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
+    validate_workbook_target_resolution_payload,
 )
 
 MAX_REQUEST_BYTES = 1_048_576
@@ -77,8 +82,8 @@ def create_app() -> FastAPI:
         version=__version__,
         description=(
             "Local developer interface for deterministic model routing, readiness "
-            "assessment, transformation planning, XLSX inspection, workbook analysis "
-            "and static workbook patch compilation."
+            "assessment, transformation planning, XLSX inspection, workbook analysis, "
+            "static patch compilation and semantic target resolution."
         ),
         docs_url="/docs",
         redoc_url="/redoc",
@@ -100,6 +105,8 @@ def create_app() -> FastAPI:
             elif request.url.path in {
                 "/api/v1/workbooks/analyse",
                 "/api/v1/workbooks/patches",
+                "/api/v1/workbooks/target-resolutions",
+                "/api/v1/workbooks/target-resolutions/validate",
             }:
                 limit = MAX_WORKBOOK_MAP_REQUEST_BYTES
             else:
@@ -146,6 +153,10 @@ def create_app() -> FastAPI:
             }
             for definition in MODEL_DEFINITIONS
         ]
+
+    @application.get("/api/v1/workbook-operation-specs")
+    def workbook_operation_specs() -> dict[str, Any]:
+        return operation_spec_registry_payload()
 
     @application.get("/api/v1/fixtures", response_model=list[FixtureSummaryPayload])
     def fixtures() -> list[dict[str, str]]:
@@ -235,6 +246,59 @@ def create_app() -> FastAPI:
         issues = validate_workbook_patch_receipt_payload(
             payload.receipt,
             patch=payload.patch,
+        )
+        return {"valid": not issues, "issues": list(issues)}
+
+    @application.post("/api/v1/workbooks/target-resolutions")
+    def resolve_targets(
+        payload: WorkbookTargetResolutionRequestPayload,
+    ) -> dict[str, Any]:
+        try:
+            analysis = WorkbookAnalysis.from_mapping(payload.workbook_analysis)
+            resolution = resolve_workbook_patch_targets(
+                analysis,
+                payload.workbook_patch,
+            ).to_dict()
+            issues = validate_workbook_target_resolution_payload(
+                resolution,
+                analysis=analysis,
+                patch=payload.workbook_patch,
+            )
+            if issues:
+                raise ValueError(
+                    f"compiled target resolution is invalid: {'; '.join(issues)}"
+                )
+            return resolution
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_target_resolution_request",
+                    "message": str(exc),
+                },
+            ) from exc
+
+    @application.post(
+        "/api/v1/workbooks/target-resolutions/validate",
+        response_model=ValidationResultPayload,
+    )
+    def validate_target_resolution(
+        payload: WorkbookTargetResolutionValidationPayload,
+    ) -> dict[str, Any]:
+        try:
+            analysis = WorkbookAnalysis.from_mapping(payload.workbook_analysis)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_target_resolution_validation_request",
+                    "message": str(exc),
+                },
+            ) from exc
+        issues = validate_workbook_target_resolution_payload(
+            payload.target_resolution,
+            analysis=analysis,
+            patch=payload.workbook_patch,
         )
         return {"valid": not issues, "issues": list(issues)}
 
