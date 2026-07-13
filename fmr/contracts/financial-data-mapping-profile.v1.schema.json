@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/financial-data-mapping-profile.v1.schema.json",
+  "title": "FMR financial data mapping profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "profile_id", "name", "rules"],
+  "properties": {
+    "contract_version": {"const": "financial-data-mapping-profile.v1"},
+    "profile_id": {"type": "string", "pattern": "^fmrmp_[0-9a-f]{24}$"},
+    "name": {"type": "string", "minLength": 1},
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["account_code", "account_name", "concept_id"],
+        "properties": {
+          "account_code": {"type": ["string", "null"]},
+          "account_name": {"type": ["string", "null"]},
+          "concept_id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"}
+        },
+        "anyOf": [
+          {"properties": {"account_code": {"type": "string", "minLength": 1}}},
+          {"properties": {"account_name": {"type": "string", "minLength": 1}}}
+        ]
+      }
+    }
+  }
+}
