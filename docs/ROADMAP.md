@@ -58,24 +58,35 @@
 - publish one versioned content specification for every approved operation;
 - assign FMR-owned labels and input placeholders to reserved ranges;
 - assign symbolic formula, period, reference and validation identifiers;
-- assign semantic format roles without colours, fonts or number formats;
+- assign semantic format roles;
 - keep every slot inside its coordinate allocation;
 - return `workbook-content-plan.v1`;
 - do not emit values, formula expressions or workbook writes.
 
-## 0.3.4 — formula and style specifications
+## 0.3.4 — formula and style realization
 
-- define formula identifiers as deterministic expression templates;
-- define dependency, sign and dimensionality rules;
-- define number-format and style roles separately from model logic;
-- validate formulas and styles without editing a workbook.
+- publish `workbook-formula-spec-registry.v1` using `fmr-expression.v1`;
+- declare formula dependencies, output types, sign conventions and fill policies;
+- forbid workbook-specific references, volatile functions and circular dependencies;
+- publish `workbook-style-spec-registry.v1` with an original FMR palette, protection rules and number formats;
+- bind content slots to formula dependencies and declarative styles;
+- return `workbook-realization-plan.v1`;
+- do not compile Excel formulas or modify a workbook.
+
+## 0.3.5 — write-plan compilation
+
+- translate accepted FMR expressions into explicit Excel formula records;
+- resolve deferred source, period and reference dependencies;
+- emit an ordered, collision-checked write set;
+- define merge, style and protection records;
+- validate the complete write set without opening or editing a workbook.
 
 ## 0.4 — workbook executor
 
 - copy the source workbook;
-- apply only accepted coordinate, content, formula and style plans;
+- apply only an accepted write plan;
 - emit operation receipts;
-- verify formulas and links against accepted specifications;
+- verify formulas, styles, links and source hashes;
 - support rollback;
 - reopen and validate the output.
 
