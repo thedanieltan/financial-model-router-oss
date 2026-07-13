@@ -7,7 +7,7 @@ import unittest
 from io import BytesIO
 from pathlib import Path
 
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 
 from fmr.types import ModelRequest
 from fmr.workbook import (
@@ -26,8 +26,47 @@ from fmr.workbook import (
 from tests.xlsx_factory import financial_workbook
 
 
-def execution_case(*, include_chart: bool = False) -> tuple[bytes, dict]:
-    source_bytes = financial_workbook(include_chart=include_chart)
+def executable_workbook() -> bytes:
+    workbook = Workbook()
+    income = workbook.active
+    income.title = "Income Statement"
+    income["A1"] = "Income Statement"
+    income.merge_cells("A1:D1")
+    income["B2"] = 2024
+    income["C2"] = 2025
+    income["D2"] = "2026E"
+    income["A3"] = "Revenue"
+    income["B3"] = 100
+    income["C3"] = 120
+    income["D3"] = "=C3*1.10"
+    income["A4"] = "EBITDA"
+    income["B4"] = 20
+    income["C4"] = 24
+    income["D4"] = "=D3*0.20"
+    income["A5"] = "Net Income"
+
+    balance = workbook.create_sheet("Balance Sheet")
+    balance.sheet_state = "hidden"
+    balance["A1"] = "Balance Sheet"
+    balance["B2"] = 2024
+    balance["C2"] = 2025
+    balance["A3"] = "Total Assets"
+    balance["A4"] = "Total Liabilities"
+    balance["A5"] = "Total Equity"
+
+    assumptions = workbook.create_sheet("Assumptions")
+    assumptions["A1"] = "Assumptions"
+    assumptions["A3"] = "Growth Rate"
+    assumptions["A4"] = "Tax Rate"
+    assumptions["A5"] = "WACC"
+
+    stream = BytesIO()
+    workbook.save(stream)
+    workbook.close()
+    return stream.getvalue()
+
+
+def _write_plan_for(source_bytes: bytes) -> dict:
     workbook_map = inspect_workbook_bytes(source_bytes, filename="synthetic.xlsx")
     request = ModelRequest(
         objective="build a budget forecast",
@@ -69,7 +108,12 @@ def execution_case(*, include_chart: bool = False) -> tuple[bytes, dict]:
         "period_labels": [f"P{index}" for index in range(1, 13)],
         "bindings": bindings,
     }
-    return source_bytes, compile_workbook_write_plan(realization, context)
+    return compile_workbook_write_plan(realization, context)
+
+
+def execution_case() -> tuple[bytes, dict]:
+    source_bytes = executable_workbook()
+    return source_bytes, _write_plan_for(source_bytes)
 
 
 class WorkbookExecutorTests(unittest.TestCase):
@@ -157,7 +201,8 @@ class WorkbookExecutorTests(unittest.TestCase):
             )
 
     def test_detected_chart_is_rejected(self) -> None:
-        source_bytes, write_plan = execution_case(include_chart=True)
+        source_bytes = financial_workbook(include_chart=True)
+        write_plan = _write_plan_for(source_bytes)
         with self.assertRaisesRegex(ValueError, "unsupported_feature:charts"):
             execute_workbook_write_plan_bytes(
                 source_bytes,
