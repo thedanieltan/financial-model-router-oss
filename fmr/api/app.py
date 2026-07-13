@@ -17,6 +17,8 @@ from fmr.api.models import (
     WorkbookCoordinatePlanRequestPayload,
     WorkbookCoordinatePlanValidationPayload,
     WorkbookPatchReceiptValidationPayload,
+    WorkbookRealizationPlanRequestPayload,
+    WorkbookRealizationPlanValidationPayload,
     WorkbookTargetResolutionRequestPayload,
     WorkbookTargetResolutionValidationPayload,
 )
@@ -32,21 +34,37 @@ from fmr.workbook import (
     compile_workbook_patch,
     content_spec_registry_payload,
     coordinate_rule_registry_payload,
+    formula_spec_registry_payload,
     inspect_workbook_bytes,
     operation_spec_registry_payload,
     plan_workbook_content,
     plan_workbook_coordinates,
+    plan_workbook_realization,
     resolve_workbook_patch_targets,
+    style_spec_registry_payload,
     validate_workbook_content_plan_payload,
     validate_workbook_coordinate_plan_payload,
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
+    validate_workbook_realization_plan_payload,
     validate_workbook_target_resolution_payload,
 )
 
 MAX_REQUEST_BYTES = 1_048_576
 MAX_WORKBOOK_MAP_REQUEST_BYTES = 5 * 1024 * 1024
 MAX_WORKBOOK_REQUEST_BYTES = 20 * 1024 * 1024
+_WORKBOOK_JSON_PATHS = {
+    "/api/v1/workbooks/analyse",
+    "/api/v1/workbooks/patches",
+    "/api/v1/workbooks/target-resolutions",
+    "/api/v1/workbooks/target-resolutions/validate",
+    "/api/v1/workbooks/coordinate-plans",
+    "/api/v1/workbooks/coordinate-plans/validate",
+    "/api/v1/workbooks/content-plans",
+    "/api/v1/workbooks/content-plans/validate",
+    "/api/v1/workbooks/realization-plans",
+    "/api/v1/workbooks/realization-plans/validate",
+}
 
 
 def _asset(name: str) -> str:
@@ -67,6 +85,13 @@ def _execute_request(payload: ModelRequestPayload, *, plan: bool) -> dict[str, A
             status_code=422,
             detail={"code": "invalid_model_request", "message": str(exc)},
         ) from exc
+
+
+def _contract_error(code: str, exc: ValueError) -> HTTPException:
+    return HTTPException(
+        status_code=422,
+        detail={"code": code, "message": str(exc)},
+    )
 
 
 async def _read_limited_body(request: Request, limit: int) -> bytes:
@@ -92,9 +117,8 @@ def create_app() -> FastAPI:
         version=__version__,
         description=(
             "Local developer interface for deterministic model routing, readiness "
-            "assessment, transformation planning, XLSX inspection, workbook analysis, "
-            "static patch compilation, semantic target resolution, coordinate planning "
-            "and symbolic content planning."
+            "assessment, XLSX inspection and non-mutating workbook planning through "
+            "formula dependency and declarative style realization."
         ),
         docs_url="/docs",
         redoc_url="/redoc",
@@ -113,16 +137,7 @@ def create_app() -> FastAPI:
                 )
             if request.url.path == "/api/v1/workbooks/inspect":
                 limit = MAX_WORKBOOK_REQUEST_BYTES
-            elif request.url.path in {
-                "/api/v1/workbooks/analyse",
-                "/api/v1/workbooks/patches",
-                "/api/v1/workbooks/target-resolutions",
-                "/api/v1/workbooks/target-resolutions/validate",
-                "/api/v1/workbooks/coordinate-plans",
-                "/api/v1/workbooks/coordinate-plans/validate",
-                "/api/v1/workbooks/content-plans",
-                "/api/v1/workbooks/content-plans/validate",
-            }:
+            elif request.url.path in _WORKBOOK_JSON_PATHS:
                 limit = MAX_WORKBOOK_MAP_REQUEST_BYTES
             else:
                 limit = MAX_REQUEST_BYTES
@@ -181,6 +196,14 @@ def create_app() -> FastAPI:
     def workbook_content_specs() -> dict[str, Any]:
         return content_spec_registry_payload()
 
+    @application.get("/api/v1/workbook-formula-specs")
+    def workbook_formula_specs() -> dict[str, Any]:
+        return formula_spec_registry_payload()
+
+    @application.get("/api/v1/workbook-style-specs")
+    def workbook_style_specs() -> dict[str, Any]:
+        return style_spec_registry_payload()
+
     @application.get("/api/v1/fixtures", response_model=list[FixtureSummaryPayload])
     def fixtures() -> list[dict[str, str]]:
         return list_fixtures()
@@ -211,10 +234,7 @@ def create_app() -> FastAPI:
         try:
             return inspect_workbook_bytes(data, filename=filename).to_dict()
         except ValueError as exc:
-            raise HTTPException(
-                status_code=422,
-                detail={"code": "invalid_workbook", "message": str(exc)},
-            ) from exc
+            raise _contract_error("invalid_workbook", exc) from exc
 
     @application.post("/api/v1/workbooks/analyse")
     def analyse_mapped_workbook(payload: WorkbookAnalysisRequestPayload) -> dict[str, Any]:
@@ -223,13 +243,7 @@ def create_app() -> FastAPI:
             model_request = _request_from_payload(payload.model_request)
             return analyse_workbook_map(workbook_map, model_request).to_dict()
         except ValueError as exc:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "invalid_workbook_analysis_request",
-                    "message": str(exc),
-                },
-            ) from exc
+            raise _contract_error("invalid_workbook_analysis_request", exc) from exc
 
     @application.post("/api/v1/workbooks/patches")
     def compile_patch(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
@@ -241,13 +255,7 @@ def create_app() -> FastAPI:
                 raise ValueError(f"compiled patch is invalid: {'; '.join(issues)}")
             return patch
         except ValueError as exc:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "invalid_workbook_patch_request",
-                    "message": str(exc),
-                },
-            ) from exc
+            raise _contract_error("invalid_workbook_patch_request", exc) from exc
 
     @application.post(
         "/api/v1/workbooks/patches/validate",
@@ -291,13 +299,7 @@ def create_app() -> FastAPI:
                 )
             return resolution
         except ValueError as exc:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "invalid_target_resolution_request",
-                    "message": str(exc),
-                },
-            ) from exc
+            raise _contract_error("invalid_target_resolution_request", exc) from exc
 
     @application.post(
         "/api/v1/workbooks/target-resolutions/validate",
@@ -309,12 +311,9 @@ def create_app() -> FastAPI:
         try:
             analysis = WorkbookAnalysis.from_mapping(payload.workbook_analysis)
         except ValueError as exc:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "invalid_target_resolution_validation_request",
-                    "message": str(exc),
-                },
+            raise _contract_error(
+                "invalid_target_resolution_validation_request",
+                exc,
             ) from exc
         issues = validate_workbook_target_resolution_payload(
             payload.target_resolution,
@@ -349,13 +348,7 @@ def create_app() -> FastAPI:
                 )
             return coordinate_plan
         except ValueError as exc:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "invalid_coordinate_plan_request",
-                    "message": str(exc),
-                },
-            ) from exc
+            raise _contract_error("invalid_coordinate_plan_request", exc) from exc
 
     @application.post(
         "/api/v1/workbooks/coordinate-plans/validate",
@@ -367,12 +360,9 @@ def create_app() -> FastAPI:
         try:
             analysis = WorkbookAnalysis.from_mapping(payload.analysis)
         except ValueError as exc:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "invalid_coordinate_plan_validation_request",
-                    "message": str(exc),
-                },
+            raise _contract_error(
+                "invalid_coordinate_plan_validation_request",
+                exc,
             ) from exc
         issues = validate_workbook_coordinate_plan_payload(
             payload.coordinate_plan,
@@ -399,13 +389,7 @@ def create_app() -> FastAPI:
                 )
             return content_plan
         except ValueError as exc:
-            raise HTTPException(
-                status_code=422,
-                detail={
-                    "code": "invalid_content_plan_request",
-                    "message": str(exc),
-                },
-            ) from exc
+            raise _contract_error("invalid_content_plan_request", exc) from exc
 
     @application.post(
         "/api/v1/workbooks/content-plans/validate",
@@ -417,6 +401,37 @@ def create_app() -> FastAPI:
         issues = validate_workbook_content_plan_payload(
             payload.content_plan,
             coordinate_plan=payload.coordinate_plan,
+        )
+        return {"valid": not issues, "issues": list(issues)}
+
+    @application.post("/api/v1/workbooks/realization-plans")
+    def compile_realization_plan(
+        payload: WorkbookRealizationPlanRequestPayload,
+    ) -> dict[str, Any]:
+        try:
+            realization_plan = plan_workbook_realization(payload.content_plan)
+            issues = validate_workbook_realization_plan_payload(
+                realization_plan,
+                content_plan=payload.content_plan,
+            )
+            if issues:
+                raise ValueError(
+                    f"compiled realization plan is invalid: {'; '.join(issues)}"
+                )
+            return realization_plan
+        except ValueError as exc:
+            raise _contract_error("invalid_realization_plan_request", exc) from exc
+
+    @application.post(
+        "/api/v1/workbooks/realization-plans/validate",
+        response_model=ValidationResultPayload,
+    )
+    def validate_realization_plan(
+        payload: WorkbookRealizationPlanValidationPayload,
+    ) -> dict[str, Any]:
+        issues = validate_workbook_realization_plan_payload(
+            payload.realization_plan,
+            content_plan=payload.content_plan,
         )
         return {"valid": not issues, "issues": list(issues)}
 
