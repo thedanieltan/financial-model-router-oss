@@ -45,6 +45,7 @@ from fmr.workbook.formula_specs import (
     formula_spec_registry_payload,
     resolve_formula_spec,
 )
+from fmr.workbook.input_link import validate_input_population_calculation_link
 from fmr.workbook.input_population import (
     WorkbookInputPopulationResult,
     compile_workbook_input_set_from_csv,
@@ -158,6 +159,7 @@ __all__ = [
     "resolve_workbook_patch_targets",
     "semantic_type_for_slot",
     "style_spec_registry_payload",
+    "validate_input_population_calculation_link",
     "validate_workbook_calculation_acceptance_payload",
     "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",
