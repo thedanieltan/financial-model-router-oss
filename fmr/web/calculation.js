@@ -9,7 +9,11 @@ function calculatedWorkbookName(filename) {
 }
 
 function refreshCalculationButton() {
-  const hasWorkbook = Boolean(calculationFile.files[0] || currentExecutedWorkbookBase64);
+  const hasWorkbook = Boolean(
+    calculationFile.files[0]
+    || currentPopulatedWorkbookBase64
+    || currentExecutedWorkbookBase64
+  );
   calculateOutputButton.disabled = !(
     calculationEngineAvailable
     && hasWorkbook
@@ -44,12 +48,19 @@ async function calculateOutput() {
     return;
   }
   const selected = calculationFile.files[0];
-  const inputFilename = selected?.name || currentExecutedWorkbookFilename;
+  const usesGovernedPopulation = Boolean(
+    !selected
+    && currentPopulatedWorkbookBase64
+    && currentInputPopulationReceipt
+  );
+  const inputFilename = selected?.name
+    || currentPopulatedWorkbookFilename
+    || currentExecutedWorkbookFilename;
   const encoded = selected
     ? await fileToBase64(selected)
-    : currentExecutedWorkbookBase64;
+    : currentPopulatedWorkbookBase64 || currentExecutedWorkbookBase64;
   if (!inputFilename || !encoded) {
-    workbookStatus.textContent = "Select the populated executed workbook.";
+    workbookStatus.textContent = "Select or generate a populated executed workbook.";
     return;
   }
   calculateOutputButton.disabled = true;
@@ -68,9 +79,27 @@ async function calculateOutput() {
       }),
     });
     currentCalculationAcceptance = result.acceptance;
+    if (usesGovernedPopulation) {
+      const link = await requestJson(
+        "/api/v1/workbooks/input-population-receipts/validate-calculation-link",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            population_receipt: currentInputPopulationReceipt,
+            calculation_acceptance: result.acceptance,
+          }),
+        },
+      );
+      if (!link.valid) {
+        throw new Error(`Calculated output is not linked to the governed input population: ${link.issues.join("; ")}`);
+      }
+    }
     if (result.workbook_base64) {
       downloadBase64Workbook(result.output_filename, result.workbook_base64);
-      workbookStatus.textContent = `Calculated output passed and ${result.output_filename} was downloaded.`;
+      workbookStatus.textContent = usesGovernedPopulation
+        ? `Calculated output passed, the input-population hash chain was verified, and ${result.output_filename} was downloaded.`
+        : `Calculated output passed and ${result.output_filename} was downloaded.`;
     } else {
       workbookStatus.textContent = "Calculated output failed acceptance. No workbook was downloaded.";
     }
@@ -87,7 +116,10 @@ calculationFile.addEventListener("change", invalidateCalculation);
 calculateOutputButton.addEventListener("click", calculateOutput);
 
 const calculationResultObserver = new MutationObserver(() => {
-  if (currentResult?.contract_version === "workbook-execution-receipt.v1") {
+  if (
+    currentResult?.contract_version === "workbook-execution-receipt.v1"
+    || currentResult?.contract_version === "workbook-input-population-receipt.v1"
+  ) {
     refreshCalculationButton();
   }
 });
@@ -112,6 +144,7 @@ for (const button of [
   planRealizationButton,
   planWritesButton,
   executeWorkbookButton,
+  populateInputsButton,
   document.querySelector("#reset-button"),
 ]) {
   button.addEventListener("click", invalidateCalculation);
