@@ -36,8 +36,11 @@ class WorkbookAnalysis:
             raise ValueError("workbook analysis must be an object")
         if data.get("contract_version") != "workbook-analysis.v1":
             raise ValueError("unsupported workbook-analysis contract_version")
+        original_payload = data.get("original_request")
+        if not isinstance(original_payload, dict):
+            raise ValueError("workbook-analysis original_request must be an object")
         workbook_map = WorkbookMap.from_mapping(data.get("workbook_map"))
-        original_request = ModelRequest.from_mapping(data.get("original_request"))
+        original_request = ModelRequest.from_mapping(original_payload)
         expected = analyse_workbook_map(workbook_map, original_request)
         if data != expected.to_dict():
             raise ValueError(
