@@ -1,10 +1,4 @@
-:root {
-  color-scheme: light;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f4f5f7;
-  color: #15181d;
-}
-
+:root { color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f4f5f7; color: #15181d; }
 * { box-sizing: border-box; }
 body { margin: 0; min-height: 100vh; }
 header, footer, main { width: min(1440px, calc(100% - 32px)); margin-inline: auto; }
@@ -20,10 +14,12 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap:
 .panel-heading h2 { margin: 0 0 3px; font-size: 1rem; }
 .panel-heading p { margin: 0; font-size: .88rem; color: #68717d; }
 .fixture-control { display: grid; gap: 5px; min-width: 180px; }
+.workbook-control { display: flex; align-items: center; gap: 10px; padding: 16px 20px; border-bottom: 1px solid #e6e8ec; }
+.workbook-control input { flex: 1; min-width: 0; }
 label { font-size: .72rem; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: .06em; }
-select, button, textarea { font: inherit; }
+select, button, textarea, input { font: inherit; }
 select { border: 1px solid #cbd0d8; border-radius: 7px; padding: 8px 10px; background: #fff; }
-textarea { width: 100%; min-height: 520px; resize: vertical; border: 0; padding: 18px 20px; font-family: "SFMono-Regular", Consolas, monospace; font-size: .86rem; line-height: 1.55; outline: none; background: #fbfcfd; }
+textarea { width: 100%; min-height: 430px; resize: vertical; border: 0; padding: 18px 20px; font-family: "SFMono-Regular", Consolas, monospace; font-size: .86rem; line-height: 1.55; outline: none; background: #fbfcfd; }
 .actions { display: flex; flex-wrap: wrap; gap: 9px; padding: 14px 20px; border-top: 1px solid #e6e8ec; }
 button { border: 1px solid #111827; border-radius: 7px; padding: 9px 13px; background: #111827; color: #fff; font-weight: 650; cursor: pointer; }
 button:hover { opacity: .88; }
@@ -40,8 +36,4 @@ pre { margin: 0; min-height: 390px; max-height: 650px; overflow: auto; padding: 
 footer { display: flex; justify-content: space-between; gap: 20px; padding: 18px 0 36px; color: #667085; font-size: .82rem; }
 .health-ok { color: #027a48; }
 .health-error { color: #b42318; }
-@media (max-width: 900px) {
-  header { align-items: start; flex-direction: column; }
-  main { grid-template-columns: 1fr; }
-  textarea { min-height: 420px; }
-}
+@media (max-width: 900px) { header { align-items: start; flex-direction: column; } main { grid-template-columns: 1fr; } textarea { min-height: 420px; } .workbook-control { align-items: stretch; flex-direction: column; } }

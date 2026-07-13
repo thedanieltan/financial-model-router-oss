@@ -15,6 +15,17 @@ model definition registry
                  |
                  v
        transformation-plan.v1
+
+XLSX bytes
+      |
+      v
+archive and XML validation
+      |
+      v
+sheet, period and metric inspection
+      |
+      v
+workbook-map.v1
 ```
 
 ## Core modules
@@ -23,6 +34,7 @@ model definition registry
 - `fmr.readiness`: required-input comparison.
 - `fmr.plan`: ordered, closed-vocabulary transformation plans.
 - `fmr.model_specs`: supported model definitions.
+- `fmr.workbook`: deterministic XLSX inspection and workbook-map types.
 - `fmr.contracts`: packaged JSON schemas.
 
 The deterministic core uses only the Python standard library.
@@ -36,8 +48,8 @@ HTTP API ----+
 Browser UI --HTTP API
 ```
 
-`fmr.api` and `fmr.web` are optional developer interfaces. They do not duplicate routing or planning logic. The browser workbench sends JSON to the local HTTP API, which calls the same functions exported by the package.
+The browser sends model-request JSON or XLSX bytes to the local HTTP API. HTTP handlers contain no routing, planning or workbook-classification rules.
 
 ## Control boundary
 
-The planner can emit only approved operation types. It does not emit formulas or cell writes. Workbook mutation will be implemented as a separate layer with preconditions, rollback, and file-level verification.
+The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. The planner emits approved operation names only. Workbook mutation remains a separate layer with preconditions, rollback and output verification.

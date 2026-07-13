@@ -39,6 +39,7 @@ jobs:
       - run: python -m compileall -q fmr
       - run: python -m fmr route tests/fixtures/request-dcf-ready.json
       - run: python -m fmr plan tests/fixtures/request-debt-blocked.json
+      - run: python -m fmr inspect --help
       - run: python -m fmr serve --help
 
   package:
@@ -62,9 +63,61 @@ jobs:
           /tmp/fmr-package-test/bin/python - <<'PY'
           from importlib.resources import files
           assert files("fmr.contracts").joinpath("transformation-plan.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-map.v1.schema.json").is_file()
           assert files("fmr.web").joinpath("index.html").is_file()
           assert files("fmr.web").joinpath("app.js").is_file()
           assert files("fmr.fixtures").joinpath("dcf-ready.json").is_file()
+          PY
+      - name: Inspect a generated XLSX from the installed wheel
+        run: |
+          cd /tmp
+          /tmp/fmr-package-test/bin/python - <<'PY'
+          import io
+          import zipfile
+          from pathlib import Path
+
+          content_types = '''<?xml version="1.0" encoding="UTF-8"?>
+          <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+            <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+            <Default Extension="xml" ContentType="application/xml"/>
+            <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+            <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+          </Types>'''
+          package_rels = '''<?xml version="1.0" encoding="UTF-8"?>
+          <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+            <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+          </Relationships>'''
+          workbook = '''<?xml version="1.0" encoding="UTF-8"?>
+          <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+            <sheets><sheet name="Income Statement" sheetId="1" r:id="rId1"/></sheets>
+          </workbook>'''
+          workbook_rels = '''<?xml version="1.0" encoding="UTF-8"?>
+          <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+            <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+          </Relationships>'''
+          sheet = '''<?xml version="1.0" encoding="UTF-8"?>
+          <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+            <dimension ref="A1:C3"/><sheetData>
+              <row r="1"><c r="A1" t="inlineStr"><is><t>Income Statement</t></is></c></row>
+              <row r="2"><c r="B2"><v>2025</v></c><c r="C2" t="inlineStr"><is><t>2026E</t></is></c></row>
+              <row r="3"><c r="A3" t="inlineStr"><is><t>Revenue</t></is></c><c r="B3"><v>100</v></c><c r="C3"><f>B3*1.1</f><v>110</v></c></row>
+            </sheetData>
+          </worksheet>'''
+          path = Path("/tmp/fmr-smoke.xlsx")
+          with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
+              archive.writestr("[Content_Types].xml", content_types)
+              archive.writestr("_rels/.rels", package_rels)
+              archive.writestr("xl/workbook.xml", workbook)
+              archive.writestr("xl/_rels/workbook.xml.rels", workbook_rels)
+              archive.writestr("xl/worksheets/sheet1.xml", sheet)
+          PY
+          /tmp/fmr-package-test/bin/fmr inspect /tmp/fmr-smoke.xlsx --output /tmp/fmr-smoke-map.json
+          /tmp/fmr-package-test/bin/python - <<'PY'
+          import json
+          payload = json.load(open("/tmp/fmr-smoke-map.json", encoding="utf-8"))
+          assert payload["contract_version"] == "workbook-map.v1"
+          assert payload["sheets"][0]["candidate_role"]["value"] == "income_statement"
+          assert payload["sheets"][0]["formula_cells"] == 1
           PY
       - name: Start local server and check health
         run: |

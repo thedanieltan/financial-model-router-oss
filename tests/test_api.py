@@ -4,11 +4,13 @@ import unittest
 
 from fastapi.testclient import TestClient
 
-from fmr.api.app import MAX_REQUEST_BYTES, create_app
+from fmr.api.app import MAX_REQUEST_BYTES, MAX_WORKBOOK_REQUEST_BYTES, create_app
 from fmr.fixtures import load_fixture
 from fmr.plan import build_plan
 from fmr.router import route_request
 from fmr.types import ModelRequest
+from fmr.workbook import inspect_workbook_bytes
+from tests.xlsx_factory import financial_workbook
 
 
 class DeveloperApiTests(unittest.TestCase):
@@ -25,6 +27,7 @@ class DeveloperApiTests(unittest.TestCase):
         workbench = self.client.get("/")
         self.assertEqual(workbench.status_code, 200)
         self.assertIn("Developer Workbench", workbench.text)
+        self.assertIn("Workbook inspection", workbench.text)
         self.assertIn("/assets/app.js", workbench.text)
 
     def test_model_families_and_fixtures_are_discoverable(self) -> None:
@@ -101,6 +104,36 @@ class DeveloperApiTests(unittest.TestCase):
                 "Content-Type": "application/json",
                 "Content-Length": str(MAX_REQUEST_BYTES + 1),
             },
+        )
+        self.assertEqual(response.status_code, 413)
+        self.assertFalse(response.json()["valid"])
+
+    def test_workbook_inspection_matches_core_exactly(self) -> None:
+        data = financial_workbook()
+        core = inspect_workbook_bytes(data, filename="synthetic.xlsx").to_dict()
+        response = self.client.post(
+            "/api/v1/workbooks/inspect?filename=synthetic.xlsx",
+            content=data,
+            headers={
+                "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), core)
+
+    def test_workbook_inspection_rejects_unsupported_extension(self) -> None:
+        response = self.client.post(
+            "/api/v1/workbooks/inspect?filename=synthetic.xlsm",
+            content=financial_workbook(),
+        )
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()["detail"]["code"], "invalid_workbook")
+
+    def test_declared_oversized_workbook_is_rejected(self) -> None:
+        response = self.client.post(
+            "/api/v1/workbooks/inspect?filename=synthetic.xlsx",
+            content=b"x",
+            headers={"Content-Length": str(MAX_WORKBOOK_REQUEST_BYTES + 1)},
         )
         self.assertEqual(response.status_code, 413)
         self.assertFalse(response.json()["valid"])
