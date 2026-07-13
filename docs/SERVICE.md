@@ -1,13 +1,13 @@
 # Service
 
-Financial Model Router turns a modelling objective and available inputs into:
+Financial Model Router turns financial source data, a modelling objective and an optional existing workbook into:
 
-1. a selected model family;
-2. a readiness report;
-3. a controlled transformation plan;
-4. an optional governed workbook write plan;
-5. an optional copied-workbook execution receipt;
-6. an optional governed input set and value-free population receipt; and
+1. a normalized financial-data package;
+2. an auditable account-mapping result;
+3. a selected model family and readiness report;
+4. a controlled transformation and workbook-write plan;
+5. a copied-workbook execution receipt;
+6. a governed input set and value-free population receipt; and
 7. an optional calculated-output acceptance receipt.
 
 ## Supported model families
@@ -19,41 +19,41 @@ Financial Model Router turns a modelling objective and available inputs into:
 
 ## Inputs
 
-The routing interface accepts JSON containing:
+The routing interface accepts `objective`, `role`, `available_data`, `workbook_capabilities` and `assumptions`.
 
-- `objective`;
-- `role`;
-- `available_data`;
-- `workbook_capabilities`; and
-- `assumptions`.
+The first financial-data adapter accepts one-entity UTF-8 statement CSVs with period, statement, account, amount and source-reference fields. Mapping profiles may supply exact account-code or account-name overrides. Binding profiles map semantic workbook slot IDs to canonical concepts or explicit numeric and boolean constants.
 
-Workbook workflows additionally accept versioned FMR contracts and `.xlsx` bytes or file paths.
-
-Governed input population accepts `workbook-input-set.v1` or UTF-8 CSV with one explicit finite numeric or boolean value per reserved input cell. Input sets are value-bearing working artifacts and should be handled accordingly.
+Workbook workflows accept versioned FMR contracts and `.xlsx` bytes or file paths.
 
 ## Outputs
 
-`route` returns a recommendation and readiness report. `plan` adds ordered transformation operations.
+The intake layer can return:
 
-The workbook pipeline can return versioned map, analysis, patch, target, coordinate, content, realization, write-plan, execution-receipt, input-set, population-receipt and calculation-acceptance documents. Successful execution, population and calculation commands write only to new output paths.
+- `financial-data-package.v1`;
+- `financial-data-mapping-profile.v1`;
+- `financial-data-mapping-result.v1`;
+- `financial-data-binding-profile.v1`; and
+- `workbook-input-binding-plan.v1`.
 
-Execution, population and calculation receipts contain hashes, identifiers, counts and statuses rather than workbook cell values. The population-to-calculation link validator confirms that calculated acceptance consumed the exact governed population output.
+A ready binding plan compiles into the existing `workbook-input-set.v1`. The remaining workbook pipeline returns map, analysis, patch, target, coordinate, content, realization, write-plan, execution, population and calculation-acceptance contracts.
+
+Execution, population and calculation receipts contain hashes, identifiers, counts and statuses rather than workbook cell values.
 
 ## Boundaries
 
 FMR does not:
 
-- keep books;
-- calculate tax;
-- provide investment advice;
-- forecast market prices;
-- upload user files to a remote service;
-- invent missing data;
-- overwrite a source workbook;
-- populate cells outside accepted `reserve_input` ranges;
+- keep books or post journal entries;
+- calculate tax or provide investment advice;
+- infer missing financial values or assumptions;
+- use fuzzy account mapping;
+- silently resolve unmapped or conflicting accounts;
+- consolidate entities or convert currencies;
+- upload files to a remote service;
+- overwrite source workbooks;
+- populate cells outside accepted reserved ranges;
 - accept text, formulas, NaN or infinity as governed input values;
-- execute macros or external workbook links;
-- preserve unsupported charts, pivots or drawings through the executor; or
-- record input or calculated cell values in execution, population or calculation receipts.
+- execute macros or external workbook links; or
+- record input or calculated cell values in receipts.
 
-Live formula calculation is delegated to an optional spreadsheet engine. FMR validates cached results against declared contracts but does not replace financial review.
+Live formula calculation is delegated to an optional spreadsheet engine. FMR validates outputs against declared contracts but does not replace accounting or financial review.
