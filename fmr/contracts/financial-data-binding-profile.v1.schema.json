@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/financial-data-binding-profile.v1.schema.json",
+  "title": "FMR financial data binding profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "binding_profile_id", "name", "bindings"],
+  "properties": {
+    "contract_version": {"const": "financial-data-binding-profile.v1"},
+    "binding_profile_id": {"type": "string", "pattern": "^fmrbp_[0-9a-f]{24}$"},
+    "name": {"type": "string", "minLength": 1},
+    "bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slot_id", "source_type"],
+        "properties": {
+          "slot_id": {"type": "string", "minLength": 1},
+          "source_type": {"enum": ["concept", "constant"]},
+          "concept_id": {"type": "string"},
+          "selector": {"enum": ["period_series", "latest", "repeat_latest"]},
+          "value_type": {"enum": ["number", "boolean"]},
+          "value": {"type": ["number", "boolean"]}
+        },
+        "allOf": [
+          {
+            "if": {"properties": {"source_type": {"const": "concept"}}},
+            "then": {"required": ["concept_id", "selector"], "not": {"anyOf": [{"required": ["value_type"]}, {"required": ["value"]}]}}
+          },
+          {
+            "if": {"properties": {"source_type": {"const": "constant"}}},
+            "then": {"required": ["value_type", "value"], "not": {"anyOf": [{"required": ["concept_id"]}, {"required": ["selector"]}]}}
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}
