@@ -1,12 +1,12 @@
 # Financial Model Router
 
-Financial Model Router (FMR) is an open-source Python toolkit for selecting a financial-model architecture, checking whether the available inputs are sufficient, and producing a controlled transformation plan.
+Financial Model Router (FMR) is an open-source Python toolkit for selecting a financial-model architecture, checking whether the available inputs are sufficient, inspecting XLSX workbook structure, and producing a controlled transformation plan.
 
-FMR does not provide accounting, tax, investment advice, or unrestricted spreadsheet editing. Its core is deterministic and runs locally.
+FMR does not provide accounting, tax, or investment advice. It does not modify workbooks in the current release. The core is deterministic and runs locally.
 
 ## Current scope
 
-The first release supports four model families:
+FMR supports four model families:
 
 - budget and forecast;
 - integrated three-statement model;
@@ -21,7 +21,7 @@ Given a JSON request, FMR returns:
 - readiness blockers; and
 - a machine-readable transformation plan.
 
-It does not yet modify an Excel file. Workbook writing is a later, separately validated layer.
+FMR can also inspect an `.xlsx` workbook and return `workbook-map.v1`, including sheet structure, formulas and hardcodes, candidate sheet roles, detected periods, candidate financial metrics, hidden sheets, defined names and external-link indicators.
 
 ## Install the core
 
@@ -36,18 +36,20 @@ python -m pip install -e ".[dev-ui]"
 fmr serve
 ```
 
-Open `http://127.0.0.1:8000` for the browser workbench or `http://127.0.0.1:8000/docs` for the interactive API documentation.
+Open `http://127.0.0.1:8000` for the browser workbench or `http://127.0.0.1:8000/docs` for the API console.
 
-The server binds to the loopback interface by default, stores no requests, sends no telemetry, and makes no outbound network calls.
+The server binds to the loopback interface, stores no requests, sends no telemetry and makes no outbound network calls.
 
 ## Use the CLI
 
 ```bash
 fmr route tests/fixtures/request-dcf-ready.json
-fmr plan tests/fixtures/request-dcf-ready.json
+fmr plan tests/fixtures/request-debt-blocked.json
 fmr validate-plan plan.json
-python -m unittest discover -s tests -v
+fmr inspect model.xlsx --output workbook-map.json
 ```
+
+Only `.xlsx` files are accepted for inspection. The source file is hashed before and after inspection and is never modified.
 
 ## Input example
 
@@ -82,12 +84,13 @@ python -m unittest discover -s tests -v
 
 - Model selection is explainable.
 - Missing information is reported, not invented.
-- Formulas and workbook mutations require approved specifications.
-- Existing workbooks must be copied rather than overwritten.
-- Public fixtures are synthetic and independently authored.
-- CLI, Python and HTTP interfaces use the same deterministic functions.
+- Workbook classification includes its evidence and confidence.
+- Formulas are read as text and never executed.
+- Workbook mutations require a separate approved specification.
+- Public fixtures are synthetic and generated during tests.
+- CLI, Python and HTTP interfaces call the same deterministic functions.
 
-See [docs/SERVICE.md](docs/SERVICE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
+See [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
 
 ## Licence
 

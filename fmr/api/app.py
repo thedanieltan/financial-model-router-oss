@@ -13,8 +13,10 @@ from fmr.model_specs import MODEL_DEFINITIONS
 from fmr.plan import build_plan, validate_plan_payload
 from fmr.router import route_request
 from fmr.types import ModelRequest
+from fmr.workbook import inspect_workbook_bytes
 
 MAX_REQUEST_BYTES = 1_048_576
+MAX_WORKBOOK_REQUEST_BYTES = 20 * 1024 * 1024
 
 
 def _asset(name: str) -> str:
@@ -37,13 +39,27 @@ def _execute_request(payload: ModelRequestPayload, *, plan: bool) -> dict[str, A
         ) from exc
 
 
+async def _read_limited_body(request: Request, limit: int) -> bytes:
+    chunks: list[bytes] = []
+    size = 0
+    async for chunk in request.stream():
+        size += len(chunk)
+        if size > limit:
+            raise HTTPException(
+                status_code=413,
+                detail={"code": "workbook_too_large", "message": f"workbook exceeds {limit} bytes"},
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 def create_app() -> FastAPI:
     application = FastAPI(
         title="Financial Model Router Developer API",
         version=__version__,
         description=(
             "Local developer interface for deterministic model routing, readiness "
-            "assessment and transformation planning."
+            "assessment, transformation planning and XLSX inspection."
         ),
         docs_url="/docs",
         redoc_url="/redoc",
@@ -60,13 +76,15 @@ def create_app() -> FastAPI:
                     status_code=400,
                     content={"valid": False, "error": "invalid Content-Length header"},
                 )
-            if size > MAX_REQUEST_BYTES:
+            limit = (
+                MAX_WORKBOOK_REQUEST_BYTES
+                if request.url.path == "/api/v1/workbooks/inspect"
+                else MAX_REQUEST_BYTES
+            )
+            if size > limit:
                 return JSONResponse(
                     status_code=413,
-                    content={
-                        "valid": False,
-                        "error": f"request exceeds {MAX_REQUEST_BYTES} bytes",
-                    },
+                    content={"valid": False, "error": f"request exceeds {limit} bytes"},
                 )
         return await call_next(request)
 
@@ -84,11 +102,7 @@ def create_app() -> FastAPI:
 
     @application.get("/health")
     def health() -> dict[str, str]:
-        return {
-            "status": "ok",
-            "service": "financial-model-router",
-            "version": __version__,
-        }
+        return {"status": "ok", "service": "financial-model-router", "version": __version__}
 
     @application.get("/api/v1/model-families")
     def model_families() -> list[dict[str, Any]]:
@@ -99,17 +113,12 @@ def create_app() -> FastAPI:
                 "objective_terms": list(definition.objective_terms),
                 "required_data": list(definition.required_data),
                 "required_assumptions": list(definition.required_assumptions),
-                "required_workbook_capabilities": list(
-                    definition.required_workbook_capabilities
-                ),
+                "required_workbook_capabilities": list(definition.required_workbook_capabilities),
             }
             for definition in MODEL_DEFINITIONS
         ]
 
-    @application.get(
-        "/api/v1/fixtures",
-        response_model=list[FixtureSummaryPayload],
-    )
+    @application.get("/api/v1/fixtures", response_model=list[FixtureSummaryPayload])
     def fixtures() -> list[dict[str, str]]:
         return list_fixtures()
 
@@ -128,15 +137,21 @@ def create_app() -> FastAPI:
     def plan(payload: ModelRequestPayload) -> dict[str, Any]:
         return _execute_request(payload, plan=True)
 
-    @application.post(
-        "/api/v1/validate-plan",
-        response_model=ValidationResultPayload,
-    )
-    def validate_plan(
-        payload: dict[str, Any] = Body(...),
-    ) -> dict[str, Any]:
+    @application.post("/api/v1/validate-plan", response_model=ValidationResultPayload)
+    def validate_plan(payload: dict[str, Any] = Body(...)) -> dict[str, Any]:
         issues = validate_plan_payload(payload)
         return {"valid": not issues, "issues": list(issues)}
+
+    @application.post("/api/v1/workbooks/inspect")
+    async def inspect_uploaded_workbook(request: Request, filename: str) -> dict[str, Any]:
+        data = await _read_limited_body(request, MAX_WORKBOOK_REQUEST_BYTES)
+        try:
+            return inspect_workbook_bytes(data, filename=filename).to_dict()
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={"code": "invalid_workbook", "message": str(exc)},
+            ) from exc
 
     return application
 

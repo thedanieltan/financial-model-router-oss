@@ -4,6 +4,8 @@ const output = document.querySelector("#result-output");
 const summary = document.querySelector("#summary");
 const resultKind = document.querySelector("#result-kind");
 const requestStatus = document.querySelector("#request-status");
+const workbookStatus = document.querySelector("#workbook-status");
+const workbookFile = document.querySelector("#workbook-file");
 const copyButton = document.querySelector("#copy-button");
 const healthIndicator = document.querySelector("#health-indicator");
 
@@ -26,9 +28,22 @@ function setStatus(message = "") {
   requestStatus.textContent = message;
 }
 
+function addSummaryCard(label, value) {
+  const card = document.createElement("div");
+  card.className = "card";
+  const labelNode = document.createElement("span");
+  labelNode.textContent = label;
+  const valueNode = document.createElement("strong");
+  valueNode.textContent = value;
+  card.append(labelNode, valueNode);
+  summary.append(card);
+}
+
 function renderSummary(payload) {
   const readiness = payload.readiness || {};
+  const workbook = payload.workbook || {};
   const cards = [];
+
   if (payload.model_family) cards.push(["Model family", payload.model_family]);
   if (payload.title) cards.push(["Title", payload.title]);
   if (payload.confidence) cards.push(["Confidence", payload.confidence]);
@@ -37,17 +52,21 @@ function renderSummary(payload) {
   if (Array.isArray(readiness.blockers)) cards.push(["Blockers", String(readiness.blockers.length)]);
   if (Array.isArray(payload.unresolved_inputs)) cards.push(["Unresolved inputs", String(payload.unresolved_inputs.length)]);
   if (Array.isArray(payload.operations)) cards.push(["Operations", String(payload.operations.length)]);
+  if (payload.source?.filename) cards.push(["Workbook", payload.source.filename]);
+  if (typeof workbook.sheet_count === "number") cards.push(["Sheets", String(workbook.sheet_count)]);
+  if (typeof workbook.external_links_detected === "boolean") {
+    cards.push(["External links", workbook.external_links_detected ? "Detected" : "None"]);
+  }
   if (typeof payload.valid === "boolean") cards.push(["Valid", payload.valid ? "Yes" : "No"]);
 
+  summary.replaceChildren();
   if (!cards.length) {
     summary.className = "summary empty";
     summary.textContent = "No summary fields available.";
     return;
   }
   summary.className = "summary";
-  summary.innerHTML = cards.map(([label, value]) => (
-    `<div class="card"><span>${label}</span><strong>${value}</strong></div>`
-  )).join("");
+  cards.forEach(([label, value]) => addSummaryCard(label, String(value)));
 }
 
 function showResult(kind, payload) {
@@ -86,6 +105,28 @@ async function run(path, label) {
   }
 }
 
+async function inspectWorkbook() {
+  workbookStatus.textContent = "";
+  const file = workbookFile.files[0];
+  if (!file) {
+    workbookStatus.textContent = "Select an .xlsx workbook.";
+    return;
+  }
+  try {
+    const result = await requestJson(
+      `/api/v1/workbooks/inspect?filename=${encodeURIComponent(file.name)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        body: file,
+      },
+    );
+    showResult("Workbook map", result);
+  } catch (error) {
+    workbookStatus.textContent = error.message;
+  }
+}
+
 async function loadFixture(fixtureId) {
   const fixture = await requestJson(`/api/v1/fixtures/${encodeURIComponent(fixtureId)}`);
   currentFixture = fixture;
@@ -105,15 +146,20 @@ async function initialize() {
 
   try {
     const fixtures = await requestJson("/api/v1/fixtures");
-    fixtureSelect.innerHTML = fixtures.map((fixture) => (
-      `<option value="${fixture.fixture_id}">${fixture.title}</option>`
-    )).join("");
+    fixtureSelect.replaceChildren();
+    fixtures.forEach((fixture) => {
+      const option = document.createElement("option");
+      option.value = fixture.fixture_id;
+      option.textContent = fixture.title;
+      fixtureSelect.append(option);
+    });
     if (fixtures.length) await loadFixture(fixtures[0].fixture_id);
   } catch (error) {
     setStatus(error.message);
   }
 }
 
+document.querySelector("#inspect-button").addEventListener("click", inspectWorkbook);
 document.querySelector("#route-button").addEventListener("click", () => run("/api/v1/route", "Routing result"));
 document.querySelector("#plan-button").addEventListener("click", () => run("/api/v1/plan", "Transformation plan"));
 document.querySelector("#validate-button").addEventListener("click", async () => {

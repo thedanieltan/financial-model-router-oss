@@ -17,12 +17,6 @@ Defaults:
 - OpenAPI console: `/docs`;
 - ReDoc: `/redoc`.
 
-For container testing, expose the server explicitly:
-
-```bash
-fmr serve --host 0.0.0.0 --port 8000
-```
-
 ## HTTP endpoints
 
 | Method | Path | Purpose |
@@ -34,19 +28,19 @@ fmr serve --host 0.0.0.0 --port 8000
 | POST | `/api/v1/route` | route a model request |
 | POST | `/api/v1/plan` | build a transformation plan |
 | POST | `/api/v1/validate-plan` | validate a plan payload |
+| POST | `/api/v1/workbooks/inspect?filename=...` | inspect an XLSX workbook |
+
+The workbook endpoint accepts raw request bytes rather than multipart form data. This keeps the optional interface small and avoids retaining temporary files.
 
 ## Boundary
 
 The interface:
 
-- does not store requests;
-- does not accept workbook uploads;
-- does not enable cross-origin access;
-- rejects declared request bodies above 1 MiB;
-- does not call external services; and
-- contains no financial-model logic of its own.
-
-The HTTP handlers translate request payloads into `ModelRequest` objects and call the existing router, readiness and planning modules.
+- stores no requests or workbooks;
+- enables no cross-origin access;
+- applies separate JSON and workbook request-size limits;
+- makes no external calls; and
+- contains no financial-model or workbook-classification logic of its own.
 
 ## Test it
 
@@ -55,4 +49,4 @@ python -m pip install -e ".[dev-ui,test-ui]"
 python -m unittest discover -s tests -v
 ```
 
-The API tests verify exact JSON parity between the Python and HTTP interfaces for the bundled fixtures.
+Tests generate synthetic XLSX archives at runtime. No workbook binaries are committed.

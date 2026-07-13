@@ -11,7 +11,7 @@
     <div>
       <p class="eyebrow">Financial Model Router</p>
       <h1>Developer Workbench</h1>
-      <p>Run the public request contracts against the local deterministic engine.</p>
+      <p>Test routing, planning and workbook inspection against the local engine.</p>
     </div>
     <nav>
       <a href="/docs">API docs</a>
@@ -23,7 +23,24 @@
     <section class="panel input-panel">
       <div class="panel-heading">
         <div>
-          <h2>Request</h2>
+          <h2>Workbook inspection</h2>
+          <p>Select an XLSX file. It is inspected in memory and not retained.</p>
+        </div>
+      </div>
+
+      <div class="workbook-control">
+        <input
+          id="workbook-file"
+          type="file"
+          accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        >
+        <button id="inspect-button" type="button">Inspect workbook</button>
+      </div>
+      <p id="workbook-status" class="status" aria-live="polite"></p>
+
+      <div class="panel-heading">
+        <div>
+          <h2>Model request</h2>
           <p>Edit JSON or load a bundled synthetic fixture.</p>
         </div>
         <div class="fixture-control">
@@ -52,7 +69,7 @@
         <button id="copy-button" type="button" class="quiet" disabled>Copy JSON</button>
       </div>
 
-      <div id="summary" class="summary empty">Run a route or plan request.</div>
+      <div id="summary" class="summary empty">Run a request or inspect a workbook.</div>
       <pre id="result-output">{}</pre>
     </section>
   </main>
