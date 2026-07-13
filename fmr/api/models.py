@@ -61,6 +61,40 @@ class WorkbookTargetResolutionValidationPayload(BaseModel):
     workbook_patch: dict[str, Any]
 
 
+class CoordinateLayoutParametersPayload(BaseModel):
+    """Explicit variable dimensions required by coordinate planning."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    forecast_period_count: int = Field(ge=1, le=60)
+
+
+class WorkbookCoordinatePlanRequestPayload(BaseModel):
+    """Source contracts and layout parameters for coordinate planning."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    contract_version: Literal["workbook-coordinate-plan-request.v1"] = (
+        "workbook-coordinate-plan-request.v1"
+    )
+    analysis: dict[str, Any]
+    patch: dict[str, Any]
+    target_resolution: dict[str, Any]
+    layout_parameters: CoordinateLayoutParametersPayload
+
+
+class WorkbookCoordinatePlanValidationPayload(BaseModel):
+    """Coordinate plan plus source contracts for deterministic validation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    coordinate_plan: dict[str, Any]
+    analysis: dict[str, Any]
+    patch: dict[str, Any]
+    target_resolution: dict[str, Any]
+    layout_parameters: CoordinateLayoutParametersPayload
+
+
 class ValidationResultPayload(BaseModel):
     valid: bool
     issues: list[str]
