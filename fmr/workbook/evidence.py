@@ -113,7 +113,7 @@ def derive_workbook_evidence(workbook_map: WorkbookMap) -> WorkbookEvidence:
             role == "balance_sheet"
             and accepted_role
             and {"cash", "debt"}.issubset(set(sheet.candidate_metrics))
-            and historical_periods
+            and len(historical_periods) >= 2
         ):
             items.append(
                 EvidenceItem(
