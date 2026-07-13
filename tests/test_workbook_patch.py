@@ -105,7 +105,7 @@ class WorkbookPatchTests(unittest.TestCase):
         self.assertFalse(patch["ready_for_executor"])
         self.assertIn("external_links_detected", patch["blockers"])
 
-    def test_validator_detects_tampering(self) -> None:
+    def test_validator_detects_tampering_and_extra_fields(self) -> None:
         tampered = copy.deepcopy(self.patch)
         tampered["operations"][0]["target"]["semantic_role"] = "unapproved"
         issues = validate_workbook_patch_payload(tampered)
@@ -114,6 +114,11 @@ class WorkbookPatchTests(unittest.TestCase):
             issues,
         )
         self.assertIn("patch_id does not match payload", issues)
+
+        extra = copy.deepcopy(self.patch)
+        extra["notes"] = "not part of the contract"
+        extra_issues = validate_workbook_patch_payload(extra)
+        self.assertIn("patch contains unsupported fields: notes", extra_issues)
 
     def test_workbook_analysis_round_trip_recomputes_contract(self) -> None:
         payload = self.analysis.to_dict()
