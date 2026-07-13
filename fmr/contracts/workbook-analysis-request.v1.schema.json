@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-analysis-request.v1.schema.json",
+  "title": "Workbook analysis request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "workbook_map", "model_request"],
+  "properties": {
+    "contract_version": {"const": "workbook-analysis-request.v1"},
+    "workbook_map": {"type": "object"},
+    "model_request": {"type": "object"}
+  }
+}
