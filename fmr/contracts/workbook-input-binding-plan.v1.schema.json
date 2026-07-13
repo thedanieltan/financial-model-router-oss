@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-input-binding-plan.v1.schema.json",
+  "title": "FMR workbook input binding plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version", "binding_plan_id", "package_id", "package_sha256",
+    "mapping_id", "mapping_sha256", "binding_profile_id", "binding_profile_sha256",
+    "write_plan_id", "write_plan_sha256", "execution_id", "execution_receipt_sha256",
+    "bound_records", "unresolved_records", "ready_for_input_set", "blockers", "controls"
+  ],
+  "properties": {
+    "contract_version": {"const": "workbook-input-binding-plan.v1"},
+    "binding_plan_id": {"type": "string", "pattern": "^fmrbd_[0-9a-f]{24}$"},
+    "package_id": {"type": "string", "pattern": "^fmrd_[0-9a-f]{24}$"},
+    "package_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "mapping_id": {"type": "string", "pattern": "^fmrm_[0-9a-f]{24}$"},
+    "mapping_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "binding_profile_id": {"type": "string", "pattern": "^fmrbp_[0-9a-f]{24}$"},
+    "binding_profile_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "write_plan_id": {"type": "string", "pattern": "^fmrw_[0-9a-f]{24}$"},
+    "write_plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "execution_id": {"type": "string", "pattern": "^fmre_[0-9a-f]{24}$"},
+    "execution_receipt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "bound_records": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["record_id", "slot_id", "value_type", "values", "source_ref"],
+        "properties": {
+          "record_id": {"type": "string", "pattern": "^fmrw_[0-9]{6}$"},
+          "slot_id": {"type": "string", "minLength": 1},
+          "value_type": {"enum": ["number", "boolean"]},
+          "values": {"type": "array", "minItems": 1, "items": {"type": ["number", "boolean"]}},
+          "source_ref": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "unresolved_records": {
+      "type": "array",
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["record_id", "slot_id", "reason"],
+        "properties": {
+          "record_id": {"type": "string", "pattern": "^fmrw_[0-9]{6}$"},
+          "slot_id": {"type": "string", "minLength": 1},
+          "reason": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "ready_for_input_set": {"type": "boolean"},
+    "blockers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "controls": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}
