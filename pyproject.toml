@@ -26,7 +26,7 @@ executor = ["openpyxl>=3.1,<4"]
 calculation = ["openpyxl>=3.1,<4"]
 
 [project.scripts]
-fmr = "fmr.dispatch:main"
+fmr = "fmr.entrypoint:main"
 
 [tool.setuptools.packages.find]
 include = ["fmr*"]
