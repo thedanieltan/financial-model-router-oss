@@ -15,7 +15,7 @@ from fmr.workbook.calculation import (
     accept_calculated_workbook_bytes as _accept_calculated_workbook_bytes,
     calculation_engine_status,
     discover_calculation_engine,
-    validate_workbook_calculation_acceptance_payload,
+    validate_workbook_calculation_acceptance_payload as _validate_acceptance,
 )
 
 
@@ -97,6 +97,145 @@ def accept_calculated_workbook_bytes(
     candidate.pop("acceptance_id", None)
     acceptance["acceptance_id"] = f"fmrc_{_digest(candidate)[:24]}"
     return acceptance
+
+
+def validate_workbook_calculation_acceptance_payload(
+    payload: Any,
+    *,
+    write_plan: dict[str, Any] | None = None,
+    execution_receipt: dict[str, Any] | None = None,
+) -> tuple[str, ...]:
+    issues = list(
+        _validate_acceptance(
+            payload,
+            write_plan=write_plan,
+            execution_receipt=execution_receipt,
+        )
+    )
+    if not isinstance(payload, dict):
+        return tuple(dict.fromkeys(issues))
+
+    summary = payload.get("summary")
+    immutable = payload.get("immutable_verification")
+    formula_checks = payload.get("formula_checks")
+    formula_scan = payload.get("workbook_formula_scan")
+
+    if isinstance(immutable, dict):
+        verified = immutable.get("verified_record_ids")
+        failed = immutable.get("failed_record_ids")
+        if isinstance(verified, list):
+            if len(verified) != len(set(verified)):
+                issues.append("immutable verified_record_ids contain duplicates")
+            if immutable.get("verified_record_count") != len(verified):
+                issues.append(
+                    "immutable verified_record_count does not match verified_record_ids"
+                )
+        if isinstance(failed, list) and len(failed) != len(set(failed)):
+            issues.append("immutable failed_record_ids contain duplicates")
+        if isinstance(summary, dict):
+            if summary.get("immutable_record_count") != immutable.get(
+                "verified_record_count"
+            ):
+                issues.append(
+                    "summary immutable_record_count does not match verification"
+                )
+            if isinstance(failed, list) and summary.get(
+                "immutable_failure_count"
+            ) != len(failed):
+                issues.append(
+                    "summary immutable_failure_count does not match verification"
+                )
+            if summary.get("input_cell_count") != immutable.get(
+                "input_cell_count"
+            ):
+                issues.append("summary input_cell_count does not match verification")
+            if summary.get("populated_input_cell_count") != immutable.get(
+                "populated_input_cell_count"
+            ):
+                issues.append(
+                    "summary populated_input_cell_count does not match verification"
+                )
+
+    if isinstance(formula_checks, list) and isinstance(summary, dict):
+        failed_formula_count = sum(
+            1
+            for item in formula_checks
+            if isinstance(item, dict) and item.get("status") == "failed"
+        )
+        if summary.get("planned_formula_count") != len(formula_checks):
+            issues.append("summary planned_formula_count does not match checks")
+        if summary.get("planned_formula_failure_count") != failed_formula_count:
+            issues.append(
+                "summary planned_formula_failure_count does not match checks"
+            )
+
+    if isinstance(formula_scan, dict) and isinstance(summary, dict):
+        for summary_field, scan_field in (
+            ("workbook_formula_count", "formula_count"),
+            ("workbook_formula_error_count", "error_count"),
+            ("missing_cached_value_count", "missing_cached_value_count"),
+        ):
+            if summary.get(summary_field) != formula_scan.get(scan_field):
+                issues.append(
+                    f"summary {summary_field} does not match workbook formula scan"
+                )
+
+    if write_plan is not None and isinstance(write_plan, dict):
+        expected_records = [
+            record["record_id"]
+            for phase in write_plan.get("phases", [])
+            if isinstance(phase, dict)
+            for record in phase.get("records", [])
+            if isinstance(record, dict) and isinstance(record.get("record_id"), str)
+        ]
+        expected_record_set = set(expected_records)
+        if isinstance(immutable, dict):
+            verified = immutable.get("verified_record_ids")
+            failed = immutable.get("failed_record_ids")
+            if isinstance(verified, list) and any(
+                item not in expected_record_set for item in verified
+            ):
+                issues.append("immutable verification references unknown records")
+            if isinstance(failed, list):
+                raw_failures = {
+                    item.split(":", 1)[1]
+                    if isinstance(item, str) and ":" in item
+                    else item
+                    for item in failed
+                }
+                unknown = raw_failures - expected_record_set - {
+                    "reserved_inputs_incomplete"
+                }
+                if unknown:
+                    issues.append("immutable failures reference unknown records")
+                accounted = set(verified or []) | (
+                    raw_failures & expected_record_set
+                )
+                if accounted != expected_record_set:
+                    issues.append(
+                        "immutable verification does not account for every write record"
+                    )
+        expected_formula_ids = [
+            record["record_id"]
+            for phase in write_plan.get("phases", [])
+            if isinstance(phase, dict)
+            for record in phase.get("records", [])
+            if isinstance(record, dict)
+            and record.get("write_kind") == "write_formula"
+            and isinstance(record.get("record_id"), str)
+        ]
+        if isinstance(formula_checks, list):
+            actual_formula_ids = [
+                item.get("record_id")
+                for item in formula_checks
+                if isinstance(item, dict)
+            ]
+            if actual_formula_ids != expected_formula_ids:
+                issues.append(
+                    "formula checks do not match ordered write-plan formula records"
+                )
+
+    return tuple(dict.fromkeys(issues))
 
 
 def calculate_and_accept_workbook_bytes(
