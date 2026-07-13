@@ -17,6 +17,14 @@
 - `workbook-map.v1` contract;
 - CLI, Python, HTTP and browser interfaces.
 
+## 0.2.1 — workbook evidence and analysis
+
+- derive conservative model inputs from `workbook-map.v1`;
+- retain evidence and confidence for every derived item;
+- merge workbook evidence with an explicit model request;
+- return `workbook-analysis.v1` with recommendation and transformation plan;
+- never infer assumptions or mutate the workbook.
+
 ## 0.3 — workbook writing
 
 - copy the source workbook;

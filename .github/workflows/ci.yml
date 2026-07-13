@@ -40,6 +40,7 @@ jobs:
       - run: python -m fmr route tests/fixtures/request-dcf-ready.json
       - run: python -m fmr plan tests/fixtures/request-debt-blocked.json
       - run: python -m fmr inspect --help
+      - run: python -m fmr analyse-workbook --help
       - run: python -m fmr serve --help
 
   package:
@@ -64,15 +65,17 @@ jobs:
           from importlib.resources import files
           assert files("fmr.contracts").joinpath("transformation-plan.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("workbook-map.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-analysis-request.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("workbook-analysis.v1.schema.json").is_file()
           assert files("fmr.web").joinpath("index.html").is_file()
           assert files("fmr.web").joinpath("app.js").is_file()
           assert files("fmr.fixtures").joinpath("dcf-ready.json").is_file()
           PY
-      - name: Inspect a generated XLSX from the installed wheel
+      - name: Inspect and analyse a generated XLSX from the installed wheel
         run: |
           cd /tmp
           /tmp/fmr-package-test/bin/python - <<'PY'
-          import io
+          import json
           import zipfile
           from pathlib import Path
 
@@ -97,10 +100,10 @@ jobs:
           </Relationships>'''
           sheet = '''<?xml version="1.0" encoding="UTF-8"?>
           <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-            <dimension ref="A1:C3"/><sheetData>
+            <dimension ref="A1:D3"/><sheetData>
               <row r="1"><c r="A1" t="inlineStr"><is><t>Income Statement</t></is></c></row>
-              <row r="2"><c r="B2"><v>2025</v></c><c r="C2" t="inlineStr"><is><t>2026E</t></is></c></row>
-              <row r="3"><c r="A3" t="inlineStr"><is><t>Revenue</t></is></c><c r="B3"><v>100</v></c><c r="C3"><f>B3*1.1</f><v>110</v></c></row>
+              <row r="2"><c r="B2"><v>2024</v></c><c r="C2"><v>2025</v></c><c r="D2" t="inlineStr"><is><t>2026E</t></is></c></row>
+              <row r="3"><c r="A3" t="inlineStr"><is><t>Revenue</t></is></c><c r="B3"><v>100</v></c><c r="C3"><v>110</v></c><c r="D3"><f>C3*1.1</f><v>121</v></c></row>
             </sheetData>
           </worksheet>'''
           path = Path("/tmp/fmr-smoke.xlsx")
@@ -110,14 +113,36 @@ jobs:
               archive.writestr("xl/workbook.xml", workbook)
               archive.writestr("xl/_rels/workbook.xml.rels", workbook_rels)
               archive.writestr("xl/worksheets/sheet1.xml", sheet)
+
+          request = {
+              "contract_version": "model-request.v1",
+              "objective": "build a budget forecast",
+              "role": "finance_manager",
+              "available_data": [
+                  "balance_sheet_history",
+                  "revenue_drivers",
+                  "operating_cost_drivers"
+              ],
+              "workbook_capabilities": [],
+              "assumptions": ["forecast_horizon"]
+          }
+          Path("/tmp/fmr-smoke-request.json").write_text(
+              json.dumps(request),
+              encoding="utf-8",
+          )
           PY
           /tmp/fmr-package-test/bin/fmr inspect /tmp/fmr-smoke.xlsx --output /tmp/fmr-smoke-map.json
+          /tmp/fmr-package-test/bin/fmr analyse-workbook /tmp/fmr-smoke.xlsx /tmp/fmr-smoke-request.json --output /tmp/fmr-smoke-analysis.json
           /tmp/fmr-package-test/bin/python - <<'PY'
           import json
-          payload = json.load(open("/tmp/fmr-smoke-map.json", encoding="utf-8"))
-          assert payload["contract_version"] == "workbook-map.v1"
-          assert payload["sheets"][0]["candidate_role"]["value"] == "income_statement"
-          assert payload["sheets"][0]["formula_cells"] == 1
+          workbook_map = json.load(open("/tmp/fmr-smoke-map.json", encoding="utf-8"))
+          analysis = json.load(open("/tmp/fmr-smoke-analysis.json", encoding="utf-8"))
+          assert workbook_map["contract_version"] == "workbook-map.v1"
+          assert workbook_map["sheets"][0]["candidate_role"]["value"] == "income_statement"
+          assert analysis["contract_version"] == "workbook-analysis.v1"
+          assert analysis["recommendation"]["readiness"]["ready"] is True
+          assert "income_statement_history" in analysis["derived_evidence"]["available_data"]
+          assert "historical_periods" in analysis["derived_evidence"]["workbook_capabilities"]
           PY
       - name: Start local server and check health
         run: |

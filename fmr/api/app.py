@@ -7,15 +7,21 @@ from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, Response
 
 from fmr import __version__
-from fmr.api.models import FixtureSummaryPayload, ModelRequestPayload, ValidationResultPayload
+from fmr.api.models import (
+    FixtureSummaryPayload,
+    ModelRequestPayload,
+    ValidationResultPayload,
+    WorkbookAnalysisRequestPayload,
+)
 from fmr.fixtures import list_fixtures, load_fixture
 from fmr.model_specs import MODEL_DEFINITIONS
 from fmr.plan import build_plan, validate_plan_payload
 from fmr.router import route_request
 from fmr.types import ModelRequest
-from fmr.workbook import inspect_workbook_bytes
+from fmr.workbook import WorkbookMap, analyse_workbook_map, inspect_workbook_bytes
 
 MAX_REQUEST_BYTES = 1_048_576
+MAX_WORKBOOK_MAP_REQUEST_BYTES = 5 * 1024 * 1024
 MAX_WORKBOOK_REQUEST_BYTES = 20 * 1024 * 1024
 
 
@@ -47,7 +53,10 @@ async def _read_limited_body(request: Request, limit: int) -> bytes:
         if size > limit:
             raise HTTPException(
                 status_code=413,
-                detail={"code": "workbook_too_large", "message": f"workbook exceeds {limit} bytes"},
+                detail={
+                    "code": "workbook_too_large",
+                    "message": f"workbook exceeds {limit} bytes",
+                },
             )
         chunks.append(chunk)
     return b"".join(chunks)
@@ -76,11 +85,12 @@ def create_app() -> FastAPI:
                     status_code=400,
                     content={"valid": False, "error": "invalid Content-Length header"},
                 )
-            limit = (
-                MAX_WORKBOOK_REQUEST_BYTES
-                if request.url.path == "/api/v1/workbooks/inspect"
-                else MAX_REQUEST_BYTES
-            )
+            if request.url.path == "/api/v1/workbooks/inspect":
+                limit = MAX_WORKBOOK_REQUEST_BYTES
+            elif request.url.path == "/api/v1/workbooks/analyse":
+                limit = MAX_WORKBOOK_MAP_REQUEST_BYTES
+            else:
+                limit = MAX_REQUEST_BYTES
             if size > limit:
                 return JSONResponse(
                     status_code=413,
@@ -102,7 +112,11 @@ def create_app() -> FastAPI:
 
     @application.get("/health")
     def health() -> dict[str, str]:
-        return {"status": "ok", "service": "financial-model-router", "version": __version__}
+        return {
+            "status": "ok",
+            "service": "financial-model-router",
+            "version": __version__,
+        }
 
     @application.get("/api/v1/model-families")
     def model_families() -> list[dict[str, Any]]:
@@ -113,7 +127,9 @@ def create_app() -> FastAPI:
                 "objective_terms": list(definition.objective_terms),
                 "required_data": list(definition.required_data),
                 "required_assumptions": list(definition.required_assumptions),
-                "required_workbook_capabilities": list(definition.required_workbook_capabilities),
+                "required_workbook_capabilities": list(
+                    definition.required_workbook_capabilities
+                ),
             }
             for definition in MODEL_DEFINITIONS
         ]
@@ -151,6 +167,23 @@ def create_app() -> FastAPI:
             raise HTTPException(
                 status_code=422,
                 detail={"code": "invalid_workbook", "message": str(exc)},
+            ) from exc
+
+    @application.post("/api/v1/workbooks/analyse")
+    def analyse_mapped_workbook(
+        payload: WorkbookAnalysisRequestPayload,
+    ) -> dict[str, Any]:
+        try:
+            workbook_map = WorkbookMap.from_mapping(payload.workbook_map)
+            model_request = _request_from_payload(payload.model_request)
+            return analyse_workbook_map(workbook_map, model_request).to_dict()
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_workbook_analysis_request",
+                    "message": str(exc),
+                },
             ) from exc
 
     return application

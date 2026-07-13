@@ -34,6 +34,16 @@ class ModelRequest:
             assumptions=_string_tuple(data.get("assumptions"), "assumptions"),
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "contract_version": self.contract_version,
+            "objective": self.objective,
+            "role": self.role,
+            "available_data": list(self.available_data),
+            "workbook_capabilities": list(self.workbook_capabilities),
+            "assumptions": list(self.assumptions),
+        }
+
 
 @dataclass(frozen=True)
 class ModelDefinition:

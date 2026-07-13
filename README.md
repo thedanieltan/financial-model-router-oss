@@ -13,15 +13,11 @@ FMR supports four model families:
 - operating-company discounted cash-flow valuation; and
 - debt-capacity and refinancing analysis.
 
-Given a JSON request, FMR returns:
+Given a JSON request, FMR returns the selected model family, reasons, readiness blockers and a machine-readable transformation plan.
 
-- the selected model family;
-- the reasons for the selection;
-- available and missing inputs;
-- readiness blockers; and
-- a machine-readable transformation plan.
+FMR can inspect an `.xlsx` workbook and return `workbook-map.v1`. It can then derive evidence-backed inputs and workbook capabilities, merge them with an explicit `model-request.v1`, and return `workbook-analysis.v1`.
 
-FMR can also inspect an `.xlsx` workbook and return `workbook-map.v1`, including sheet structure, formulas and hardcodes, candidate sheet roles, detected periods, candidate financial metrics, hidden sheets, defined names and external-link indicators.
+Derived evidence never creates assumptions and never overrides explicit user input.
 
 ## Install the core
 
@@ -45,52 +41,25 @@ The server binds to the loopback interface, stores no requests, sends no telemet
 ```bash
 fmr route tests/fixtures/request-dcf-ready.json
 fmr plan tests/fixtures/request-debt-blocked.json
-fmr validate-plan plan.json
 fmr inspect model.xlsx --output workbook-map.json
+fmr analyse-workbook model.xlsx request.json --output workbook-analysis.json
 ```
 
-Only `.xlsx` files are accepted for inspection. The source file is hashed before and after inspection and is never modified.
-
-## Input example
-
-```json
-{
-  "contract_version": "model-request.v1",
-  "objective": "value an operating company using a DCF",
-  "role": "finance_manager",
-  "available_data": [
-    "income_statement_history",
-    "balance_sheet_history",
-    "cash_flow_history",
-    "revenue_drivers",
-    "capital_expenditure_schedule",
-    "working_capital_schedule",
-    "net_debt"
-  ],
-  "workbook_capabilities": [
-    "historical_periods",
-    "assumptions_section"
-  ],
-  "assumptions": [
-    "forecast_horizon",
-    "tax_rate",
-    "discount_rate",
-    "terminal_value_assumption"
-  ]
-}
-```
+Only `.xlsx` files are accepted. Inspection and analysis do not modify the source workbook.
 
 ## Design rules
 
 - Model selection is explainable.
 - Missing information is reported, not invented.
-- Workbook classification includes its evidence and confidence.
+- Workbook classification includes evidence and confidence.
+- Workbook-derived inputs require medium or high confidence and sufficient period evidence.
+- Assumptions are never inferred from workbook labels.
 - Formulas are read as text and never executed.
 - Workbook mutations require a separate approved specification.
 - Public fixtures are synthetic and generated during tests.
 - CLI, Python and HTTP interfaces call the same deterministic functions.
 
-See [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
+See [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/WORKBOOK_ANALYSIS.md](docs/WORKBOOK_ANALYSIS.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
 
 ## Licence
 
