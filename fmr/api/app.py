@@ -12,6 +12,8 @@ from fmr.api.models import (
     ModelRequestPayload,
     ValidationResultPayload,
     WorkbookAnalysisRequestPayload,
+    WorkbookCoordinatePlanRequestPayload,
+    WorkbookCoordinatePlanValidationPayload,
     WorkbookPatchReceiptValidationPayload,
     WorkbookTargetResolutionRequestPayload,
     WorkbookTargetResolutionValidationPayload,
@@ -26,9 +28,12 @@ from fmr.workbook import (
     WorkbookMap,
     analyse_workbook_map,
     compile_workbook_patch,
+    coordinate_rule_registry_payload,
     inspect_workbook_bytes,
     operation_spec_registry_payload,
+    plan_workbook_coordinates,
     resolve_workbook_patch_targets,
+    validate_workbook_coordinate_plan_payload,
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
     validate_workbook_target_resolution_payload,
@@ -83,7 +88,7 @@ def create_app() -> FastAPI:
         description=(
             "Local developer interface for deterministic model routing, readiness "
             "assessment, transformation planning, XLSX inspection, workbook analysis, "
-            "static patch compilation and semantic target resolution."
+            "static patch compilation, semantic target resolution and coordinate planning."
         ),
         docs_url="/docs",
         redoc_url="/redoc",
@@ -107,6 +112,8 @@ def create_app() -> FastAPI:
                 "/api/v1/workbooks/patches",
                 "/api/v1/workbooks/target-resolutions",
                 "/api/v1/workbooks/target-resolutions/validate",
+                "/api/v1/workbooks/coordinate-plans",
+                "/api/v1/workbooks/coordinate-plans/validate",
             }:
                 limit = MAX_WORKBOOK_MAP_REQUEST_BYTES
             else:
@@ -157,6 +164,10 @@ def create_app() -> FastAPI:
     @application.get("/api/v1/workbook-operation-specs")
     def workbook_operation_specs() -> dict[str, Any]:
         return operation_spec_registry_payload()
+
+    @application.get("/api/v1/workbook-coordinate-rules")
+    def workbook_coordinate_rules() -> dict[str, Any]:
+        return coordinate_rule_registry_payload()
 
     @application.get("/api/v1/fixtures", response_model=list[FixtureSummaryPayload])
     def fixtures() -> list[dict[str, str]]:
@@ -299,6 +310,66 @@ def create_app() -> FastAPI:
             payload.target_resolution,
             analysis=analysis,
             patch=payload.workbook_patch,
+        )
+        return {"valid": not issues, "issues": list(issues)}
+
+    @application.post("/api/v1/workbooks/coordinate-plans")
+    def compile_coordinate_plan(
+        payload: WorkbookCoordinatePlanRequestPayload,
+    ) -> dict[str, Any]:
+        try:
+            analysis = WorkbookAnalysis.from_mapping(payload.analysis)
+            count = payload.layout_parameters.forecast_period_count
+            coordinate_plan = plan_workbook_coordinates(
+                analysis,
+                payload.patch,
+                payload.target_resolution,
+                forecast_period_count=count,
+            )
+            issues = validate_workbook_coordinate_plan_payload(
+                coordinate_plan,
+                analysis=analysis,
+                patch=payload.patch,
+                target_resolution=payload.target_resolution,
+                forecast_period_count=count,
+            )
+            if issues:
+                raise ValueError(
+                    f"compiled coordinate plan is invalid: {'; '.join(issues)}"
+                )
+            return coordinate_plan
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_coordinate_plan_request",
+                    "message": str(exc),
+                },
+            ) from exc
+
+    @application.post(
+        "/api/v1/workbooks/coordinate-plans/validate",
+        response_model=ValidationResultPayload,
+    )
+    def validate_coordinate_plan(
+        payload: WorkbookCoordinatePlanValidationPayload,
+    ) -> dict[str, Any]:
+        try:
+            analysis = WorkbookAnalysis.from_mapping(payload.analysis)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "code": "invalid_coordinate_plan_validation_request",
+                    "message": str(exc),
+                },
+            ) from exc
+        issues = validate_workbook_coordinate_plan_payload(
+            payload.coordinate_plan,
+            analysis=analysis,
+            patch=payload.patch,
+            target_resolution=payload.target_resolution,
+            forecast_period_count=payload.layout_parameters.forecast_period_count,
         )
         return {"valid": not issues, "issues": list(issues)}
 

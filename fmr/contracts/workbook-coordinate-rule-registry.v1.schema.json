@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-coordinate-rule-registry.v1.schema.json",
+  "title": "FMR workbook coordinate rule registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "registry_version",
+    "rules",
+    "registry_sha256"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "workbook-coordinate-rule-registry.v1"
+    },
+    "registry_version": {
+      "const": "v1"
+    },
+    "registry_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract_version",
+          "specification_ref",
+          "source_operation",
+          "allocation_kind",
+          "footprint",
+          "existing_target_mode",
+          "controls"
+        ],
+        "properties": {
+          "contract_version": {
+            "const": "workbook-coordinate-rule.v1"
+          },
+          "specification_ref": {
+            "type": "string",
+            "pattern": "^fmr://workbook-coordinate-rules/[a-z0-9_]+/v1$"
+          },
+          "source_operation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "allocation_kind": {
+            "enum": [
+              "sheet_block",
+              "append_block",
+              "column_extension",
+              "reference_only"
+            ]
+          },
+          "footprint": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "rows",
+              "columns",
+              "columns_parameter",
+              "gap_rows"
+            ],
+            "properties": {
+              "rows": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              },
+              "columns": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              },
+              "columns_parameter": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "forecast_period_count",
+                  null
+                ]
+              },
+              "gap_rows": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "existing_target_mode": {
+            "enum": [
+              "allocate",
+              "satisfied"
+            ]
+          },
+          "controls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    }
+  }
+}

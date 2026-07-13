@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-coordinate-plan.v1.schema.json",
+  "title": "FMR workbook coordinate plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "coordinate_plan_id",
+    "patch_id",
+    "resolution_id",
+    "target_resolution_sha256",
+    "coordinate_rules_sha256",
+    "source",
+    "layout_parameters",
+    "ready_for_executor",
+    "execution_supported_by_this_release",
+    "blockers",
+    "operation_plans",
+    "sheet_plan",
+    "controls"
+  ],
+  "properties": {
+    "contract_version": {"const": "workbook-coordinate-plan.v1"},
+    "coordinate_plan_id": {"type": "string", "pattern": "^fmrc_[0-9a-f]{24}$"},
+    "patch_id": {"type": "string", "pattern": "^fmrp_[0-9a-f]{24}$"},
+    "resolution_id": {"type": "string", "pattern": "^fmrr_[0-9a-f]{24}$"},
+    "target_resolution_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "coordinate_rules_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "size_bytes"],
+      "properties": {
+        "filename": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "layout_parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["forecast_period_count"],
+      "properties": {
+        "forecast_period_count": {"type": "integer", "minimum": 1, "maximum": 60}
+      }
+    },
+    "ready_for_executor": {"type": "boolean"},
+    "execution_supported_by_this_release": {"const": false},
+    "blockers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "operation_plans": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence", "operation_id", "source_operation", "specification_ref",
+          "coordinate_rule_ref", "semantic_role", "status", "target_status",
+          "allocations", "evidence", "blockers"
+        ],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 1},
+          "operation_id": {"type": "string", "pattern": "^op-[0-9]{3}$"},
+          "source_operation": {"type": "string", "minLength": 1},
+          "specification_ref": {"type": "string", "minLength": 1},
+          "coordinate_rule_ref": {"type": "string", "minLength": 1},
+          "semantic_role": {"type": "string", "minLength": 1},
+          "status": {
+            "enum": [
+              "blocked", "planned_column_extension", "planned_new_sheet",
+              "planned_range", "reference_only", "satisfied_existing"
+            ]
+          },
+          "target_status": {
+            "enum": [
+              "resolved_existing", "resolved_new", "resolved_planned",
+              "resolved_set", "blocked"
+            ]
+          },
+          "allocations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "sheet_name", "sheet_state", "sheet_position", "placement",
+                "range", "start", "end", "rows", "columns",
+                "occupied_before", "collision_checked"
+              ],
+              "properties": {
+                "sheet_name": {"type": "string", "minLength": 1},
+                "sheet_state": {"enum": ["existing", "planned"]},
+                "sheet_position": {"type": "integer", "minimum": 1},
+                "placement": {
+                  "enum": [
+                    "sheet_origin", "append_below_occupied_range",
+                    "append_right_of_occupied_range"
+                  ]
+                },
+                "range": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{1,3}[1-9][0-9]*:[A-Z]{1,3}[1-9][0-9]*$"
+                },
+                "start": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["row", "column"],
+                  "properties": {
+                    "row": {"type": "integer", "minimum": 1, "maximum": 1048576},
+                    "column": {"type": "integer", "minimum": 1, "maximum": 16384}
+                  }
+                },
+                "end": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["row", "column"],
+                  "properties": {
+                    "row": {"type": "integer", "minimum": 1, "maximum": 1048576},
+                    "column": {"type": "integer", "minimum": 1, "maximum": 16384}
+                  }
+                },
+                "rows": {"type": "integer", "minimum": 1},
+                "columns": {"type": "integer", "minimum": 1},
+                "occupied_before": {"type": "array", "items": {"type": "string"}},
+                "collision_checked": {"const": true}
+              }
+            }
+          },
+          "evidence": {"type": "array", "items": {"type": "string"}},
+          "blockers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        }
+      }
+    },
+    "sheet_plan": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sheet_name", "sheet_state", "sheet_position",
+          "source_used_range", "planned_ranges"
+        ],
+        "properties": {
+          "sheet_name": {"type": "string", "minLength": 1},
+          "sheet_state": {"enum": ["existing", "planned"]},
+          "sheet_position": {"type": "integer", "minimum": 1},
+          "source_used_range": {"type": ["string", "null"]},
+          "planned_ranges": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+        }
+      }
+    },
+    "controls": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}

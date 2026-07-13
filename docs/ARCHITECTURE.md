@@ -47,6 +47,14 @@ deterministic semantic target resolution
       v
 workbook-target-resolution.v1
       |
+      + workbook-coordinate-rule-registry.v1
+      + explicit layout parameters
+      v
+collision and Excel-bound checks
+      |
+      v
+workbook-coordinate-plan.v1
+      |
       v
 future executor
       |
@@ -67,6 +75,8 @@ future executor
 - `fmr.workbook.patch_validation`: patch and receipt validation.
 - `fmr.workbook.operation_specs`: versioned operation target policies.
 - `fmr.workbook.target_resolution`: semantic target resolution and validation.
+- `fmr.workbook.coordinate_rules`: versioned dimensions and allocation policies.
+- `fmr.workbook.coordinate_plan`: range allocation, collision checks and validation.
 - `fmr.contracts`: packaged JSON schemas.
 
 The deterministic core uses only the Python standard library.
@@ -80,8 +90,8 @@ HTTP API ----+
 Browser UI --HTTP API
 ```
 
-The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, planning, workbook-classification, patch-mapping or target-resolution rules.
+The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, planning, workbook-classification, patch-mapping, target-resolution or coordinate-allocation rules.
 
 ## Control boundary
 
-The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. Patch compilation emits additive operation intents without formulas, cells or workbook bytes. Target resolution identifies sheets and placement policies but does not assign write coordinates. This release does not include the workbook executor. Execution, output verification and rollback remain a separate acceptance boundary.
+The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. Patch compilation emits additive operation intents without formulas, cells or workbook bytes. Target resolution identifies sheets and placement policies. Coordinate planning reserves collision-checked A1 ranges and sheet positions but includes no values, formulas or write instructions. This release does not include the workbook executor. Execution, formula specifications, output verification and rollback remain separate acceptance boundaries.

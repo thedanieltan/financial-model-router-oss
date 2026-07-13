@@ -1,6 +1,6 @@
 # Financial Model Router
 
-Financial Model Router (FMR) is an open-source Python toolkit for selecting a financial-model architecture, checking whether the available inputs are sufficient, inspecting XLSX workbook structure, and producing controlled transformation, patch and target plans.
+Financial Model Router (FMR) is an open-source Python toolkit for selecting a financial-model architecture, checking whether the available inputs are sufficient, inspecting XLSX workbook structure, and producing controlled transformation, patch, target and coordinate plans.
 
 FMR does not provide accounting, tax, or investment advice. It does not modify workbooks in the current release. The core is deterministic and runs locally.
 
@@ -19,7 +19,9 @@ FMR can inspect an `.xlsx` workbook and return `workbook-map.v1`. It can derive 
 
 A valid analysis can be compiled into `workbook-patch.v1`. The patch pins the source and analysis hashes, maps approved additive operations, defines rollback receipt requirements and lists output checks.
 
-FMR publishes a versioned operation specification registry and resolves each patch operation to an existing, new, planned, set or blocked workbook target in `workbook-target-resolution.v1`. It does not assign write coordinates or execute the patch.
+FMR publishes versioned operation and coordinate-rule registries. It resolves patch operations to workbook targets in `workbook-target-resolution.v1`, then reserves collision-checked ranges and sheet positions in `workbook-coordinate-plan.v1`.
+
+Coordinate plans contain no values, formulas, macros or write instructions. FMR still does not execute the patch.
 
 Derived evidence never creates assumptions and never overrides explicit user input.
 
@@ -51,12 +53,18 @@ fmr compile-patch workbook-analysis.json --output workbook-patch.json
 fmr operation-specs --output operation-specs.json
 fmr resolve-targets workbook-analysis.json workbook-patch.json \
   --output target-resolution.json
-fmr validate-target-resolution target-resolution.json \
+fmr coordinate-rules --output coordinate-rules.json
+fmr plan-coordinates workbook-analysis.json workbook-patch.json target-resolution.json \
+  --forecast-period-count 5 \
+  --output coordinate-plan.json
+fmr validate-coordinate-plan coordinate-plan.json \
   --analysis workbook-analysis.json \
-  --patch workbook-patch.json
+  --patch workbook-patch.json \
+  --resolution target-resolution.json \
+  --forecast-period-count 5
 ```
 
-Only `.xlsx` files are accepted. Inspection, analysis, patch compilation and target resolution do not modify the source workbook.
+Only `.xlsx` files are accepted. Inspection, analysis, patch compilation, target resolution and coordinate planning do not modify the source workbook.
 
 ## Design rules
 
@@ -67,13 +75,15 @@ Only `.xlsx` files are accepted. Inspection, analysis, patch compilation and tar
 - Assumptions are never inferred from workbook labels.
 - Formulas are read as text and never executed.
 - Patch operations are additive, closed-vocabulary intents without formulas or cell writes.
-- Patch and target IDs pin their source contracts.
+- Patch, target and coordinate-plan IDs pin their source contracts.
 - Ambiguous semantic targets are blocked.
+- Coordinate ranges are checked against source occupancy, prior allocations and Excel bounds.
+- Variable forecast width must be supplied explicitly.
 - Workbook execution requires a separate accepted executor.
 - Public fixtures are synthetic and generated during tests.
 - CLI, Python and HTTP interfaces call the same deterministic functions.
 
-See [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/WORKBOOK_ANALYSIS.md](docs/WORKBOOK_ANALYSIS.md), [docs/WORKBOOK_PATCH.md](docs/WORKBOOK_PATCH.md), [docs/SEMANTIC_TARGET_RESOLUTION.md](docs/SEMANTIC_TARGET_RESOLUTION.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
+See [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/WORKBOOK_ANALYSIS.md](docs/WORKBOOK_ANALYSIS.md), [docs/WORKBOOK_PATCH.md](docs/WORKBOOK_PATCH.md), [docs/SEMANTIC_TARGET_RESOLUTION.md](docs/SEMANTIC_TARGET_RESOLUTION.md), [docs/COORDINATE_PLANNING.md](docs/COORDINATE_PLANNING.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
 
 ## Licence
 

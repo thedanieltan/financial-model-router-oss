@@ -11,7 +11,7 @@
     <div>
       <p class="eyebrow">Financial Model Router</p>
       <h1>Developer Workbench</h1>
-      <p>Test routing, workbook analysis, patch manifests and semantic target resolution locally.</p>
+      <p>Test routing, workbook analysis, patch manifests, target resolution and coordinate plans locally.</p>
     </div>
     <nav>
       <a href="/docs">API docs</a>
@@ -38,6 +38,9 @@
         <button id="analyse-button" type="button" class="secondary" disabled>Analyse with request</button>
         <button id="compile-patch-button" type="button" class="secondary" disabled>Compile patch</button>
         <button id="resolve-targets-button" type="button" class="secondary" disabled>Resolve targets</button>
+        <label for="forecast-period-count">Forecast periods</label>
+        <input id="forecast-period-count" type="number" min="1" max="60" value="5">
+        <button id="plan-coordinates-button" type="button" class="secondary" disabled>Plan coordinates</button>
       </div>
       <p id="workbook-status" class="status" aria-live="polite"></p>
 
