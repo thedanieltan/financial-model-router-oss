@@ -26,6 +26,8 @@ Defaults:
 | GET | `/api/v1/workbook-operation-specs` | return the versioned operation registry |
 | GET | `/api/v1/workbook-coordinate-rules` | return the versioned coordinate-rule registry |
 | GET | `/api/v1/workbook-content-specs` | return the versioned content-specification registry |
+| GET | `/api/v1/workbook-formula-specs` | return the formula and validation registry |
+| GET | `/api/v1/workbook-style-specs` | return the style and number-format registry |
 | GET | `/api/v1/fixtures` | list bundled synthetic requests |
 | GET | `/api/v1/fixtures/{fixture_id}` | load one fixture |
 | POST | `/api/v1/route` | route a model request |
@@ -42,6 +44,8 @@ Defaults:
 | POST | `/api/v1/workbooks/coordinate-plans/validate` | recompute and validate a coordinate plan |
 | POST | `/api/v1/workbooks/content-plans` | assign symbolic content slots to reserved ranges |
 | POST | `/api/v1/workbooks/content-plans/validate` | recompute and validate a content plan |
+| POST | `/api/v1/workbooks/realization-plans` | bind formula dependencies and declarative styles |
+| POST | `/api/v1/workbooks/realization-plans/validate` | recompute and validate a realization plan |
 
 The inspection endpoint accepts raw workbook bytes rather than multipart form data. The remaining workbook endpoints accept JSON contracts. Nothing is retained.
 
@@ -55,9 +59,10 @@ The inspection endpoint accepts raw workbook bytes rather than multipart form da
 6. Enter the explicit number of forecast periods.
 7. Plan collision-checked coordinates.
 8. Assign labels, placeholders and symbolic identifiers to the reserved ranges.
-9. Validate or copy the JSON.
+9. Bind formula dependencies, style roles, protection and number formats.
+10. Validate or copy the JSON.
 
-The browser does not execute the patch or write to the workbook.
+The browser does not execute the patch, compile Excel formulas or write to the workbook.
 
 ## Boundary
 
@@ -67,7 +72,7 @@ The interface:
 - enables no cross-origin access;
 - applies separate JSON and workbook request-size limits;
 - makes no external calls;
-- contains no financial-model, workbook-classification, patch-mapping, target-resolution, coordinate-allocation or content-placement rules of its own; and
+- contains no financial-model, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding or style-resolution rules of its own; and
 - exposes no workbook executor.
 
 ## Test it

@@ -62,8 +62,16 @@ symbolic content slot placement
       v
 workbook-content-plan.v1
       |
+      + workbook-formula-spec-registry.v1
+      + workbook-style-spec-registry.v1
       v
-future formula and style specifications
+dependency binding, cycle checks and style resolution
+      |
+      v
+workbook-realization-plan.v1
+      |
+      v
+future write-plan compiler
       |
       v
 future executor
@@ -89,6 +97,9 @@ future executor
 - `fmr.workbook.coordinate_plan`: range allocation, collision checks and validation.
 - `fmr.workbook.content_specs`: FMR-owned labels, identifiers and format roles.
 - `fmr.workbook.content_plan`: coordinate-bounded symbolic content placement.
+- `fmr.workbook.formula_specs`: restricted expression templates, dependencies and formula controls.
+- `fmr.workbook.style_specs`: palette, style roles, protection and number formats.
+- `fmr.workbook.realization_plan`: dependency binding, cycle detection and style realization.
 - `fmr.contracts`: packaged JSON schemas.
 
 The deterministic core uses only the Python standard library.
@@ -102,10 +113,10 @@ HTTP API ----+
 Browser UI --HTTP API
 ```
 
-The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, planning, workbook-classification, patch-mapping, target-resolution, coordinate-allocation or content-placement rules.
+The browser sends model-request JSON, XLSX bytes and versioned contracts to the local HTTP API. HTTP handlers contain no routing, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding or style-resolution rules.
 
 ## Control boundary
 
-The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. Patch compilation emits additive operation intents without formulas, cells or workbook bytes. Target resolution identifies sheets and placement policies. Coordinate planning reserves collision-checked A1 ranges and sheet positions. Content planning assigns FMR-owned labels and symbolic identifiers inside those ranges, but includes no input values, formula expressions, style definitions or write instructions.
+The workbook inspector reads ZIP and XML structures but does not execute formulas, macros or external links. Patch compilation emits additive operation intents. Target resolution identifies workbook targets. Coordinate planning reserves ranges. Content planning places symbolic slots. Realization planning binds those slots to restricted FMR expression templates and declarative styles.
 
-This release does not include the workbook executor. Formula definitions, style definitions, execution, output verification and rollback remain separate acceptance boundaries.
+`fmr-expression.v1` is not an Excel formula language. Realization plans contain no A1 formula strings, cell values, write ordering, workbook serialization or mutation. Those remain separate write-plan and executor acceptance boundaries.

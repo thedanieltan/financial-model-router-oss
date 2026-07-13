@@ -11,7 +11,7 @@
     <div>
       <p class="eyebrow">Financial Model Router</p>
       <h1>Developer Workbench</h1>
-      <p>Test routing, workbook analysis, patch manifests, target resolution, coordinate plans and content plans locally.</p>
+      <p>Test routing, workbook analysis and non-mutating plans through formula and style realization.</p>
     </div>
     <nav>
       <a href="/docs">API docs</a>
@@ -42,6 +42,7 @@
         <input id="forecast-period-count" type="number" min="1" max="60" value="5">
         <button id="plan-coordinates-button" type="button" class="secondary" disabled>Plan coordinates</button>
         <button id="plan-content-button" type="button" class="secondary" disabled>Plan content</button>
+        <button id="plan-realization-button" type="button" class="secondary" disabled>Plan formulas and styles</button>
       </div>
       <p id="workbook-status" class="status" aria-live="polite"></p>
 
@@ -87,5 +88,6 @@
   </footer>
 
   <script src="/assets/app.js" defer></script>
+  <script src="/assets/realization.js" defer></script>
 </body>
 </html>

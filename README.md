@@ -1,6 +1,6 @@
 # Financial Model Router
 
-Financial Model Router (FMR) is an open-source Python toolkit for selecting a financial-model architecture, checking whether the available inputs are sufficient, inspecting XLSX workbook structure, and producing controlled transformation, patch, target, coordinate and content plans.
+Financial Model Router (FMR) is an open-source Python toolkit for selecting a financial-model architecture, checking whether the available inputs are sufficient, inspecting XLSX workbook structure, and producing controlled transformation, patch, target, coordinate, content and realization plans.
 
 FMR does not provide accounting, tax, or investment advice. It does not modify workbooks in the current release. The core is deterministic and runs locally.
 
@@ -19,9 +19,9 @@ FMR can inspect an `.xlsx` workbook and return `workbook-map.v1`. It can derive 
 
 A valid analysis can be compiled into `workbook-patch.v1`. The patch pins the source and analysis hashes, maps approved additive operations, defines rollback receipt requirements and lists output checks.
 
-FMR publishes versioned operation, coordinate-rule and content-specification registries. It resolves patch operations to workbook targets in `workbook-target-resolution.v1`, reserves collision-checked ranges and sheet positions in `workbook-coordinate-plan.v1`, then assigns FMR-owned labels, input placeholders, symbolic formula identifiers, format roles and validation identifiers in `workbook-content-plan.v1`.
+FMR publishes versioned operation, coordinate, content, formula and style registries. It resolves patch operations to workbook targets in `workbook-target-resolution.v1`, reserves collision-checked ranges in `workbook-coordinate-plan.v1`, assigns labels and symbolic identifiers in `workbook-content-plan.v1`, then binds formula dependencies and declarative styles in `workbook-realization-plan.v1`.
 
-Content plans contain no input values, formula expressions, colours, number formats, macros or write instructions. FMR still does not execute the patch.
+Formula specifications use the restricted `fmr-expression.v1` language. They contain declared dependencies, output types, sign conventions and fill policies, but no Excel formula strings or workbook-specific references. Style specifications define an original FMR palette, protection rules and number formats.
 
 Derived evidence never creates assumptions and never overrides explicit user input.
 
@@ -59,11 +59,14 @@ fmr plan-coordinates workbook-analysis.json workbook-patch.json target-resolutio
   --output coordinate-plan.json
 fmr content-specs --output content-specs.json
 fmr plan-content coordinate-plan.json --output content-plan.json
-fmr validate-content-plan content-plan.json \
-  --coordinate-plan coordinate-plan.json
+fmr formula-specs --output formula-specs.json
+fmr style-specs --output style-specs.json
+fmr plan-realization content-plan.json --output realization-plan.json
+fmr validate-realization-plan realization-plan.json \
+  --content-plan content-plan.json
 ```
 
-Only `.xlsx` files are accepted. Inspection, analysis, patch compilation, target resolution, coordinate planning and content planning do not modify the source workbook.
+Only `.xlsx` files are accepted. Every command above is non-mutating.
 
 ## Design rules
 
@@ -72,19 +75,20 @@ Only `.xlsx` files are accepted. Inspection, analysis, patch compilation, target
 - Workbook classification includes evidence and confidence.
 - Workbook-derived inputs require medium or high confidence and sufficient period evidence.
 - Assumptions are never inferred from workbook labels.
-- Formulas are read as text and never executed.
-- Patch operations are additive, closed-vocabulary intents without formulas or cell writes.
-- Patch, target, coordinate and content-plan IDs pin their source contracts.
-- Ambiguous semantic targets are blocked.
+- Existing workbook formulas are read as text and never executed.
+- Patch operations are additive, closed-vocabulary intents.
+- Every plan pins its source contracts and registries.
+- Ambiguous semantic targets and dependency bindings are blocked.
 - Coordinate ranges are checked against source occupancy, prior allocations and Excel bounds.
 - Variable forecast width must be supplied explicitly.
-- Formula identifiers are symbolic; formula expressions remain undefined.
-- Format roles are semantic; colours, fonts and number formats remain undefined.
-- Workbook execution requires a separate accepted executor.
+- Formula templates use declared FMR dependencies and forbid raw cell references and circularity.
+- Style and number-format rules are separate from financial-model logic.
+- Input slots are editable; generated output and control slots are locked.
+- Workbook execution requires a separate accepted write-plan compiler and executor.
 - Public fixtures are synthetic and generated during tests.
 - CLI, Python and HTTP interfaces call the same deterministic functions.
 
-See [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/WORKBOOK_ANALYSIS.md](docs/WORKBOOK_ANALYSIS.md), [docs/WORKBOOK_PATCH.md](docs/WORKBOOK_PATCH.md), [docs/SEMANTIC_TARGET_RESOLUTION.md](docs/SEMANTIC_TARGET_RESOLUTION.md), [docs/COORDINATE_PLANNING.md](docs/COORDINATE_PLANNING.md), [docs/CONTENT_PLANNING.md](docs/CONTENT_PLANNING.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
+See [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/WORKBOOK_ANALYSIS.md](docs/WORKBOOK_ANALYSIS.md), [docs/WORKBOOK_PATCH.md](docs/WORKBOOK_PATCH.md), [docs/SEMANTIC_TARGET_RESOLUTION.md](docs/SEMANTIC_TARGET_RESOLUTION.md), [docs/COORDINATE_PLANNING.md](docs/COORDINATE_PLANNING.md), [docs/CONTENT_PLANNING.md](docs/CONTENT_PLANNING.md), [docs/FORMULA_STYLE_SPECIFICATIONS.md](docs/FORMULA_STYLE_SPECIFICATIONS.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
 
 ## Licence
 

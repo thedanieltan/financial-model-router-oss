@@ -115,6 +115,26 @@ class WorkbookContentPlanValidationPayload(BaseModel):
     coordinate_plan: dict[str, Any]
 
 
+class WorkbookRealizationPlanRequestPayload(BaseModel):
+    """Content plan used to bind formula dependencies and declarative styles."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    contract_version: Literal["workbook-realization-plan-request.v1"] = (
+        "workbook-realization-plan-request.v1"
+    )
+    content_plan: dict[str, Any]
+
+
+class WorkbookRealizationPlanValidationPayload(BaseModel):
+    """Realization plan plus its source content plan."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    realization_plan: dict[str, Any]
+    content_plan: dict[str, Any]
+
+
 class ValidationResultPayload(BaseModel):
     valid: bool
     issues: list[str]

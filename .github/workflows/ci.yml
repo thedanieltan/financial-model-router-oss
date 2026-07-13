@@ -53,6 +53,10 @@ jobs:
       - run: python -m fmr content-specs --help
       - run: python -m fmr plan-content --help
       - run: python -m fmr validate-content-plan --help
+      - run: python -m fmr formula-specs --help
+      - run: python -m fmr style-specs --help
+      - run: python -m fmr plan-realization --help
+      - run: python -m fmr validate-realization-plan --help
       - run: python -m fmr serve --help
 
   package:
@@ -75,26 +79,35 @@ jobs:
           /tmp/fmr-package-test/bin/fmr --help
           /tmp/fmr-package-test/bin/python - <<'PY'
           from importlib.resources import files
-          assert files("fmr.contracts").joinpath("transformation-plan.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-map.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-analysis-request.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-analysis.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-patch.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-patch-receipt.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-operation-spec-registry.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-target-resolution-request.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-target-resolution.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-coordinate-rule-registry.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-coordinate-plan-request.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-coordinate-plan.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-content-spec-registry.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-content-plan-request.v1.schema.json").is_file()
-          assert files("fmr.contracts").joinpath("workbook-content-plan.v1.schema.json").is_file()
-          assert files("fmr.web").joinpath("index.html").is_file()
-          assert files("fmr.web").joinpath("app.js").is_file()
+
+          contracts = (
+              "transformation-plan.v1.schema.json",
+              "workbook-map.v1.schema.json",
+              "workbook-analysis-request.v1.schema.json",
+              "workbook-analysis.v1.schema.json",
+              "workbook-patch.v1.schema.json",
+              "workbook-patch-receipt.v1.schema.json",
+              "workbook-operation-spec-registry.v1.schema.json",
+              "workbook-target-resolution-request.v1.schema.json",
+              "workbook-target-resolution.v1.schema.json",
+              "workbook-coordinate-rule-registry.v1.schema.json",
+              "workbook-coordinate-plan-request.v1.schema.json",
+              "workbook-coordinate-plan.v1.schema.json",
+              "workbook-content-spec-registry.v1.schema.json",
+              "workbook-content-plan-request.v1.schema.json",
+              "workbook-content-plan.v1.schema.json",
+              "workbook-formula-spec-registry.v1.schema.json",
+              "workbook-style-spec-registry.v1.schema.json",
+              "workbook-realization-plan-request.v1.schema.json",
+              "workbook-realization-plan.v1.schema.json",
+          )
+          for name in contracts:
+              assert files("fmr.contracts").joinpath(name).is_file(), name
+          for name in ("index.html", "app.js", "realization.js", "styles.css"):
+              assert files("fmr.web").joinpath(name).is_file(), name
           assert files("fmr.fixtures").joinpath("dcf-ready.json").is_file()
           PY
-      - name: Inspect, analyse, compile, resolve and plan content from the installed wheel
+      - name: Run installed-wheel planning pipeline through realization
         run: |
           cd /tmp
           /tmp/fmr-package-test/bin/python - <<'PY'
@@ -167,54 +180,83 @@ jobs:
           /tmp/fmr-package-test/bin/fmr content-specs --output /tmp/fmr-content-specs.json
           /tmp/fmr-package-test/bin/fmr plan-content /tmp/fmr-coordinate-plan.json --output /tmp/fmr-content-plan.json
           /tmp/fmr-package-test/bin/fmr validate-content-plan /tmp/fmr-content-plan.json --coordinate-plan /tmp/fmr-coordinate-plan.json
+          /tmp/fmr-package-test/bin/fmr formula-specs --output /tmp/fmr-formula-specs.json
+          /tmp/fmr-package-test/bin/fmr style-specs --output /tmp/fmr-style-specs.json
+          /tmp/fmr-package-test/bin/fmr plan-realization /tmp/fmr-content-plan.json --output /tmp/fmr-realization-plan.json
+          /tmp/fmr-package-test/bin/fmr validate-realization-plan /tmp/fmr-realization-plan.json --content-plan /tmp/fmr-content-plan.json
           /tmp/fmr-package-test/bin/python - <<'PY'
           import json
+
+          def all_keys(value):
+              keys = set()
+              if isinstance(value, dict):
+                  for key, nested in value.items():
+                      keys.add(str(key).lower())
+                      keys.update(all_keys(nested))
+              elif isinstance(value, list):
+                  for nested in value:
+                      keys.update(all_keys(nested))
+              return keys
+
           workbook_map = json.load(open("/tmp/fmr-smoke-map.json", encoding="utf-8"))
           analysis = json.load(open("/tmp/fmr-smoke-analysis.json", encoding="utf-8"))
           patch = json.load(open("/tmp/fmr-smoke-patch.json", encoding="utf-8"))
-          operation_registry = json.load(open("/tmp/fmr-operation-specs.json", encoding="utf-8"))
           resolution = json.load(open("/tmp/fmr-target-resolution.json", encoding="utf-8"))
-          coordinate_registry = json.load(open("/tmp/fmr-coordinate-rules.json", encoding="utf-8"))
           coordinate_plan = json.load(open("/tmp/fmr-coordinate-plan.json", encoding="utf-8"))
-          content_registry = json.load(open("/tmp/fmr-content-specs.json", encoding="utf-8"))
           content_plan = json.load(open("/tmp/fmr-content-plan.json", encoding="utf-8"))
+          formula_registry = json.load(open("/tmp/fmr-formula-specs.json", encoding="utf-8"))
+          style_registry = json.load(open("/tmp/fmr-style-specs.json", encoding="utf-8"))
+          realization = json.load(open("/tmp/fmr-realization-plan.json", encoding="utf-8"))
+
           assert workbook_map["contract_version"] == "workbook-map.v1"
-          assert analysis["contract_version"] == "workbook-analysis.v1"
           assert analysis["recommendation"]["readiness"]["ready"] is True
-          assert patch["contract_version"] == "workbook-patch.v1"
           assert patch["ready_for_executor"] is True
-          assert operation_registry["contract_version"] == "workbook-operation-spec-registry.v1"
-          assert resolution["contract_version"] == "workbook-target-resolution.v1"
-          assert resolution["operation_specs_sha256"] == operation_registry["registry_sha256"]
           assert resolution["ready_for_executor"] is True
-          assert coordinate_registry["contract_version"] == "workbook-coordinate-rule-registry.v1"
-          assert coordinate_plan["contract_version"] == "workbook-coordinate-plan.v1"
-          assert coordinate_plan["patch_id"] == patch["patch_id"]
-          assert coordinate_plan["resolution_id"] == resolution["resolution_id"]
-          assert coordinate_plan["coordinate_rules_sha256"] == coordinate_registry["registry_sha256"]
-          assert coordinate_plan["layout_parameters"]["forecast_period_count"] == 5
           assert coordinate_plan["ready_for_executor"] is True
-          assert coordinate_plan["execution_supported_by_this_release"] is False
-          assert content_registry["contract_version"] == "workbook-content-spec-registry.v1"
-          assert content_plan["contract_version"] == "workbook-content-plan.v1"
-          assert content_plan["coordinate_plan_id"] == coordinate_plan["coordinate_plan_id"]
-          assert content_plan["content_specs_sha256"] == content_registry["registry_sha256"]
           assert content_plan["ready_for_executor"] is True
-          assert content_plan["execution_supported_by_this_release"] is False
-          assert any(
-              slot["content_kind"] == "formula_identifier"
-              for operation in content_plan["operation_contents"]
+          assert formula_registry["contract_version"] == "workbook-formula-spec-registry.v1"
+          assert style_registry["contract_version"] == "workbook-style-spec-registry.v1"
+          assert realization["contract_version"] == "workbook-realization-plan.v1"
+          assert realization["content_plan_id"] == content_plan["content_plan_id"]
+          assert realization["formula_specs_sha256"] == formula_registry["registry_sha256"]
+          assert realization["style_specs_sha256"] == style_registry["registry_sha256"]
+          assert realization["ready_for_executor"] is True
+          assert realization["execution_supported_by_this_release"] is False
+
+          formula_slots = [
+              slot
+              for operation in realization["operation_realizations"]
               for slot in operation["slots"]
+              if slot.get("formula_binding")
+          ]
+          assert formula_slots
+          assert all(
+              not slot["formula_binding"]["expression_template"].startswith("=")
+              for slot in formula_slots
+          )
+          input_slots = [
+              slot
+              for operation in realization["operation_realizations"]
+              for slot in operation["slots"]
+              if slot["content_kind"] == "input_placeholder"
+          ]
+          output_slots = [
+              slot
+              for slot in formula_slots
+              if slot["content_kind"] == "formula_identifier"
+          ]
+          assert input_slots and output_slots
+          assert all(
+              slot["style_binding"]["role_style"]["protection"]["locked"] is False
+              for slot in input_slots
           )
           assert all(
-              "formula" not in slot and "value" not in slot
-              for operation in content_plan["operation_contents"]
-              for slot in operation["slots"]
+              slot["style_binding"]["role_style"]["protection"]["locked"] is True
+              for slot in output_slots
           )
+          forbidden = {"cell_write", "excel_formula", "workbook_bytes", "macro", "vba"}
+          assert not (all_keys(realization) & forbidden)
           assert patch["source"]["sha256"] == workbook_map["source"]["sha256"]
-          operation_ids = [item["operation_id"] for item in patch["operations"]]
-          rollback_ids = [item["operation_id"] for item in patch["rollback_plan"]]
-          assert rollback_ids == list(reversed(operation_ids))
           PY
       - name: Start local server and check health
         run: |

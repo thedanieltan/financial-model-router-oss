@@ -1,4 +1,4 @@
-"""Deterministic XLSX inspection, analysis, patch, target, coordinate and content planning."""
+"""Deterministic XLSX inspection, analysis and non-mutating workbook planning."""
 
 from fmr.workbook.analyse import WorkbookAnalysis, analyse_workbook_map
 from fmr.workbook.content_plan import (
@@ -22,6 +22,13 @@ from fmr.workbook.coordinate_rules import (
     coordinate_rule_registry_payload,
 )
 from fmr.workbook.evidence import EvidenceItem, WorkbookEvidence, derive_workbook_evidence
+from fmr.workbook.formula_specs import (
+    FORMULA_SPECS,
+    FormulaDependency,
+    WorkbookFormulaSpec,
+    formula_spec_registry_payload,
+    resolve_formula_spec,
+)
 from fmr.workbook.inspect import inspect_workbook, inspect_workbook_bytes
 from fmr.workbook.operation_specs import (
     OPERATION_SPECS,
@@ -38,6 +45,20 @@ from fmr.workbook.patch_validation import (
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
 )
+from fmr.workbook.realization_plan import plan_workbook_realization
+from fmr.workbook.realization_validation import (
+    validate_workbook_realization_plan_payload,
+)
+from fmr.workbook.style_specs import (
+    IDENTIFIER_SEMANTIC_TYPES,
+    NUMBER_FORMAT_SPECS,
+    PALETTE,
+    STYLE_SPECS,
+    NumberFormatSpec,
+    WorkbookStyleSpec,
+    semantic_type_for_slot,
+    style_spec_registry_payload,
+)
 from fmr.workbook.target_resolution import (
     OperationTargetResolution,
     ResolutionAnchor,
@@ -50,10 +71,17 @@ from fmr.workbook.types import Classification, SheetMap, WorkbookMap
 __all__ = [
     "CONTENT_SPECS",
     "COORDINATE_RULES",
+    "FORMULA_SPECS",
+    "IDENTIFIER_SEMANTIC_TYPES",
+    "NUMBER_FORMAT_SPECS",
+    "OPERATION_SPECS",
+    "PALETTE",
+    "STYLE_SPECS",
     "Classification",
     "ContentSlotSpec",
     "EvidenceItem",
-    "OPERATION_SPECS",
+    "FormulaDependency",
+    "NumberFormatSpec",
     "OperationTargetResolution",
     "PatchCheck",
     "PatchOperation",
@@ -64,24 +92,32 @@ __all__ = [
     "WorkbookContentSpec",
     "WorkbookCoordinateRule",
     "WorkbookEvidence",
+    "WorkbookFormulaSpec",
     "WorkbookMap",
     "WorkbookOperationSpec",
     "WorkbookPatch",
+    "WorkbookStyleSpec",
     "WorkbookTargetResolution",
     "analyse_workbook_map",
     "compile_workbook_patch",
     "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
     "derive_workbook_evidence",
+    "formula_spec_registry_payload",
     "inspect_workbook",
     "inspect_workbook_bytes",
     "operation_spec_registry_payload",
     "plan_workbook_content",
     "plan_workbook_coordinates",
+    "plan_workbook_realization",
+    "resolve_formula_spec",
     "resolve_workbook_patch_targets",
+    "semantic_type_for_slot",
+    "style_spec_registry_payload",
     "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",
     "validate_workbook_patch_payload",
     "validate_workbook_patch_receipt_payload",
+    "validate_workbook_realization_plan_payload",
     "validate_workbook_target_resolution_payload",
 ]
