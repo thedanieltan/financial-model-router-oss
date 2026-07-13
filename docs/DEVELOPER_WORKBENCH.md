@@ -4,8 +4,17 @@ The developer workbench is a local browser and HTTP interface over the same func
 
 ## Start it
 
+Planning only:
+
 ```bash
 python -m pip install -e ".[dev-ui]"
+fmr serve
+```
+
+Planning and copied-workbook execution:
+
+```bash
+python -m pip install -e ".[dev-ui,executor]"
 fmr serve
 ```
 
@@ -19,56 +28,47 @@ Defaults:
 
 ## HTTP endpoints
 
+The workbench exposes the routing and workbook-planning endpoints plus:
+
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/health` | service and version check |
-| GET | `/api/v1/model-families` | list supported model definitions |
-| GET | `/api/v1/workbook-operation-specs` | return the versioned operation registry |
-| GET | `/api/v1/workbook-coordinate-rules` | return the versioned coordinate-rule registry |
-| GET | `/api/v1/workbook-content-specs` | return the versioned content-specification registry |
-| GET | `/api/v1/workbook-formula-specs` | return the formula and validation registry |
-| GET | `/api/v1/workbook-style-specs` | return the style and number-format registry |
-| GET | `/api/v1/fixtures` | list bundled synthetic requests |
-| GET | `/api/v1/fixtures/{fixture_id}` | load one fixture |
-| POST | `/api/v1/route` | route a model request |
-| POST | `/api/v1/plan` | build a transformation plan |
-| POST | `/api/v1/validate-plan` | validate a plan payload |
-| POST | `/api/v1/workbooks/inspect?filename=...` | inspect an XLSX workbook |
-| POST | `/api/v1/workbooks/analyse` | combine a workbook map and model request |
-| POST | `/api/v1/workbooks/patches` | compile `workbook-analysis.v1` into a patch manifest |
-| POST | `/api/v1/workbooks/patches/validate` | validate a patch manifest |
-| POST | `/api/v1/workbooks/patch-receipts/validate` | validate a receipt, optionally against its patch |
-| POST | `/api/v1/workbooks/target-resolutions` | resolve patch operations to semantic workbook targets |
-| POST | `/api/v1/workbooks/target-resolutions/validate` | recompute and validate a target resolution |
-| POST | `/api/v1/workbooks/coordinate-plans` | reserve deterministic sheet positions and A1 ranges |
-| POST | `/api/v1/workbooks/coordinate-plans/validate` | recompute and validate a coordinate plan |
-| POST | `/api/v1/workbooks/content-plans` | assign symbolic content slots to reserved ranges |
-| POST | `/api/v1/workbooks/content-plans/validate` | recompute and validate a content plan |
-| POST | `/api/v1/workbooks/realization-plans` | bind formula dependencies and declarative styles |
-| POST | `/api/v1/workbooks/realization-plans/validate` | recompute and validate a realization plan |
-| POST | `/api/v1/workbooks/write-plans` | compile explicit, ordered dry-run write records |
-| POST | `/api/v1/workbooks/write-plans/validate` | recompute and validate a dry-run write plan |
+| POST | `/api/v1/workbooks/executions` | apply a ready write plan to a copied workbook |
+| POST | `/api/v1/workbooks/execution-receipts/validate` | validate an execution receipt |
 
-The inspection endpoint accepts raw workbook bytes rather than multipart form data. The remaining workbook endpoints accept JSON contracts. Nothing is retained.
+The execution request uses `workbook-execution-request.v1` and transports workbook bytes as base64 JSON. The decoded workbook limit is 20 MiB. Python and CLI execution should be used for larger files.
+
+Nothing is retained by the service.
 
 ## Browser sequence
 
 1. Select and inspect an `.xlsx` workbook.
 2. Edit or load a model request.
 3. Analyse the workbook with the request.
-4. Compile the resulting analysis into a patch manifest.
-5. Resolve every patch operation to an existing, new, planned, set or blocked target.
+4. Compile the analysis into a patch manifest.
+5. Resolve patch operations to workbook targets.
 6. Enter the explicit number of forecast periods.
 7. Plan collision-checked coordinates.
-8. Assign labels, placeholders and symbolic identifiers to the reserved ranges.
+8. Assign labels, placeholders and symbolic identifiers.
 9. Bind formula dependencies, style roles, protection and number formats.
 10. Review or replace the visible synthetic write context.
-11. Compile ordered sheet, value, input, formula and style records.
-12. Validate or copy the JSON.
+11. Compile ordered dry-run write records.
+12. Select **Execute copied workbook**.
+13. Download the `-fmr.xlsx` output.
+14. Review and validate `workbook-execution-receipt.v1`.
 
 The synthetic write context is generated only for local testing. It is visible in the editor and never treated as a production binding source.
 
-The browser does not execute the write plan or modify the workbook.
+## Execution behavior
+
+The browser sends the selected workbook and accepted write plan to the local process. The process:
+
+- verifies the source hash;
+- executes in memory;
+- reopens and verifies the output;
+- returns the output workbook and receipt; and
+- retains neither file.
+
+The browser immediately downloads the output workbook and displays only the receipt. The selected source file is never modified.
 
 ## Boundary
 
@@ -78,13 +78,14 @@ The interface:
 - enables no cross-origin access;
 - applies request-size limits;
 - makes no external calls;
-- contains no financial-model, workbook-classification, patch-mapping, target-resolution, coordinate-allocation, content-placement, dependency-binding, style-resolution or write-compilation rules of its own; and
-- exposes no workbook executor.
+- contains no financial-model, workbook-classification, planning or execution rules of its own;
+- requires an explicit ready write plan before execution; and
+- does not calculate Excel formulas.
 
 ## Test it
 
 ```bash
-python -m pip install -e ".[dev-ui,test-ui]"
+python -m pip install -e ".[dev-ui,test-ui,executor]"
 python -m unittest discover -s tests -v
 ```
 
