@@ -23,17 +23,29 @@ Given a JSON request, FMR returns:
 
 It does not yet modify an Excel file. Workbook writing is a later, separately validated layer.
 
-## Install
+## Install the core
 
 ```bash
 python -m pip install -e .
 ```
 
-## Use
+## Run the developer workbench
 
 ```bash
-python -m fmr route tests/fixtures/request-dcf-ready.json
-python -m fmr plan tests/fixtures/request-dcf-ready.json
+python -m pip install -e ".[dev-ui]"
+fmr serve
+```
+
+Open `http://127.0.0.1:8000` for the browser workbench or `http://127.0.0.1:8000/docs` for the interactive API documentation.
+
+The server binds to the loopback interface by default, stores no requests, sends no telemetry, and makes no outbound network calls.
+
+## Use the CLI
+
+```bash
+fmr route tests/fixtures/request-dcf-ready.json
+fmr plan tests/fixtures/request-dcf-ready.json
+fmr validate-plan plan.json
 python -m unittest discover -s tests -v
 ```
 
@@ -73,8 +85,9 @@ python -m unittest discover -s tests -v
 - Formulas and workbook mutations require approved specifications.
 - Existing workbooks must be copied rather than overwritten.
 - Public fixtures are synthetic and independently authored.
+- CLI, Python and HTTP interfaces use the same deterministic functions.
 
-See [docs/SERVICE.md](docs/SERVICE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
+See [docs/SERVICE.md](docs/SERVICE.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
 
 ## Licence
 

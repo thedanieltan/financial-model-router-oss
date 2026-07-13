@@ -17,7 +17,7 @@ model definition registry
        transformation-plan.v1
 ```
 
-## Modules
+## Core modules
 
 - `fmr.router`: objective normalization and model selection.
 - `fmr.readiness`: required-input comparison.
@@ -25,7 +25,18 @@ model definition registry
 - `fmr.model_specs`: supported model definitions.
 - `fmr.contracts`: packaged JSON schemas.
 
-The core uses only the Python standard library.
+The deterministic core uses only the Python standard library.
+
+## Interfaces
+
+```text
+CLI ---------+
+Python API --+--> deterministic core
+HTTP API ----+
+Browser UI --HTTP API
+```
+
+`fmr.api` and `fmr.web` are optional developer interfaces. They do not duplicate routing or planning logic. The browser workbench sends JSON to the local HTTP API, which calls the same functions exported by the package.
 
 ## Control boundary
 

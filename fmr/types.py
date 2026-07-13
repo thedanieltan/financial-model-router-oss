@@ -27,7 +27,10 @@ class ModelRequest:
             objective=objective.strip(),
             role=role.strip(),
             available_data=_string_tuple(data.get("available_data"), "available_data"),
-            workbook_capabilities=_string_tuple(data.get("workbook_capabilities"), "workbook_capabilities"),
+            workbook_capabilities=_string_tuple(
+                data.get("workbook_capabilities"),
+                "workbook_capabilities",
+            ),
             assumptions=_string_tuple(data.get("assumptions"), "assumptions"),
         )
 
@@ -55,7 +58,20 @@ class ReadinessReport:
     blockers: tuple[str, ...]
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "ready": self.ready,
+            "available_data": list(self.available_data),
+            "missing_data": list(self.missing_data),
+            "available_assumptions": list(self.available_assumptions),
+            "missing_assumptions": list(self.missing_assumptions),
+            "available_workbook_capabilities": list(
+                self.available_workbook_capabilities
+            ),
+            "missing_workbook_capabilities": list(
+                self.missing_workbook_capabilities
+            ),
+            "blockers": list(self.blockers),
+        }
 
 
 @dataclass(frozen=True)

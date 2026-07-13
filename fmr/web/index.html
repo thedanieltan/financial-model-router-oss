@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FMR Developer Workbench</title>
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">Financial Model Router</p>
+      <h1>Developer Workbench</h1>
+      <p>Run the public request contracts against the local deterministic engine.</p>
+    </div>
+    <nav>
+      <a href="/docs">API docs</a>
+      <a href="/redoc">ReDoc</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel input-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Request</h2>
+          <p>Edit JSON or load a bundled synthetic fixture.</p>
+        </div>
+        <div class="fixture-control">
+          <label for="fixture-select">Fixture</label>
+          <select id="fixture-select"></select>
+        </div>
+      </div>
+
+      <textarea id="request-editor" spellcheck="false" aria-label="Model request JSON"></textarea>
+
+      <div class="actions">
+        <button id="route-button" type="button">Route</button>
+        <button id="plan-button" type="button">Build plan</button>
+        <button id="validate-button" type="button" class="secondary">Validate displayed plan</button>
+        <button id="reset-button" type="button" class="quiet">Reset</button>
+      </div>
+      <p id="request-status" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="panel result-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Result</h2>
+          <p id="result-kind">No request has been run.</p>
+        </div>
+        <button id="copy-button" type="button" class="quiet" disabled>Copy JSON</button>
+      </div>
+
+      <div id="summary" class="summary empty">Run a route or plan request.</div>
+      <pre id="result-output">{}</pre>
+    </section>
+  </main>
+
+  <footer>
+    <span id="health-indicator">Checking local service…</span>
+    <span>No data leaves this process.</span>
+  </footer>
+
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>

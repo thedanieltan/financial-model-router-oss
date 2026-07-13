@@ -1,0 +1,24 @@
+{
+  "contract_version": "model-request.v1",
+  "objective": "Value an operating company using a DCF",
+  "role": "finance_manager",
+  "available_data": [
+    "income_statement_history",
+    "balance_sheet_history",
+    "cash_flow_history",
+    "revenue_drivers",
+    "capital_expenditure_schedule",
+    "working_capital_schedule",
+    "net_debt"
+  ],
+  "workbook_capabilities": [
+    "historical_periods",
+    "assumptions_section"
+  ],
+  "assumptions": [
+    "forecast_horizon",
+    "tax_rate",
+    "discount_rate",
+    "terminal_value_assumption"
+  ]
+}
