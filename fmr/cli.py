@@ -14,15 +14,19 @@ from fmr.workbook import (
     compile_workbook_patch,
     content_spec_registry_payload,
     coordinate_rule_registry_payload,
+    formula_spec_registry_payload,
     inspect_workbook,
     operation_spec_registry_payload,
     plan_workbook_content,
     plan_workbook_coordinates,
+    plan_workbook_realization,
     resolve_workbook_patch_targets,
+    style_spec_registry_payload,
     validate_workbook_content_plan_payload,
     validate_workbook_coordinate_plan_payload,
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
+    validate_workbook_realization_plan_payload,
     validate_workbook_target_resolution_payload,
 )
 
@@ -151,6 +155,32 @@ def build_parser() -> argparse.ArgumentParser:
     )
     validate_content.add_argument("content_plan")
     validate_content.add_argument("--coordinate-plan", required=True)
+
+    formula_specs = subparsers.add_parser(
+        "formula-specs",
+        help="Print the versioned formula and validation specification registry",
+    )
+    formula_specs.add_argument("--output")
+
+    style_specs = subparsers.add_parser(
+        "style-specs",
+        help="Print the versioned workbook style and number-format registry",
+    )
+    style_specs.add_argument("--output")
+
+    plan_realization = subparsers.add_parser(
+        "plan-realization",
+        help="Bind content slots to formula dependencies and declarative styles",
+    )
+    plan_realization.add_argument("content_plan")
+    plan_realization.add_argument("--output")
+
+    validate_realization = subparsers.add_parser(
+        "validate-realization-plan",
+        help="Validate and deterministically recompute workbook-realization-plan.v1",
+    )
+    validate_realization.add_argument("realization_plan")
+    validate_realization.add_argument("--content-plan", required=True)
 
     serve = subparsers.add_parser("serve", help="Run the local developer API and browser workbench")
     serve.add_argument("--host", default="127.0.0.1")
@@ -287,6 +317,31 @@ def main(argv: list[str] | None = None) -> int:
             issues = validate_workbook_content_plan_payload(
                 _load_object(args.content_plan),
                 coordinate_plan=coordinate_plan,
+            )
+            _write({"valid": not issues, "issues": list(issues)})
+            return 0 if not issues else 2
+        if args.command == "formula-specs":
+            _write(formula_spec_registry_payload(), args.output)
+            return 0
+        if args.command == "style-specs":
+            _write(style_spec_registry_payload(), args.output)
+            return 0
+        if args.command == "plan-realization":
+            content_plan = _load_object(args.content_plan)
+            realization_plan = plan_workbook_realization(content_plan)
+            issues = validate_workbook_realization_plan_payload(
+                realization_plan,
+                content_plan=content_plan,
+            )
+            if issues:
+                raise ValueError(f"compiled realization plan is invalid: {'; '.join(issues)}")
+            _write(realization_plan, args.output)
+            return 0
+        if args.command == "validate-realization-plan":
+            content_plan = _load_object(args.content_plan)
+            issues = validate_workbook_realization_plan_payload(
+                _load_object(args.realization_plan),
+                content_plan=content_plan,
             )
             _write({"valid": not issues, "issues": list(issues)})
             return 0 if not issues else 2
