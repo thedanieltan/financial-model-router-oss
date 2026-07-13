@@ -8,6 +8,8 @@ from fmr.workbook.patch import (
     PatchOperation,
     WorkbookPatch,
     compile_workbook_patch,
+)
+from fmr.workbook.patch_validation import (
     validate_workbook_patch_payload,
     validate_workbook_patch_receipt_payload,
 )
