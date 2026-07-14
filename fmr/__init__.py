@@ -30,6 +30,7 @@ from fmr.registry import ProviderRegistry
 from fmr.vocabulary import VocabularyRegistry
 from fmr.organization import OrganizationPolicy, route_organization_job
 from fmr.qualification import qualify_local_release, validate_deployment_evidence
+from fmr.acceptance import run_acceptance_corpus, validate_acceptance_corpus
 from fmr.router import route_request
 from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
@@ -84,6 +85,7 @@ __all__ = [
     "VocabularyRegistry",
     "OrganizationPolicy",
     "qualify_local_release",
+    "run_acceptance_corpus",
     "CONCEPTS",
     "accept_calculated_workbook_bytes",
     "analyse_workbook_map",
@@ -144,6 +146,7 @@ __all__ = [
     "validate_execution_result",
     "validate_provider_handoff",
     "validate_deployment_evidence",
+    "validate_acceptance_corpus",
     "validate_route_decision",
 ]
 __version__ = "1.0.0a1"

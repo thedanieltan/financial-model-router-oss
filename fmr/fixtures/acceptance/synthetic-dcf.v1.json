@@ -1,0 +1,43 @@
+{
+  "contract_version": "model-acceptance-corpus.v1",
+  "corpus_id": "bundled-synthetic-dcf-v1",
+  "cases": [{
+    "case_id": "synthetic-dcf-base",
+    "data_classification": "synthetic",
+    "job": {
+      "contract_version": "model-job.v2",
+      "objective": "Synthetic DCF acceptance",
+      "model_family": "operating_company_dcf",
+      "requested_deliverables": ["enterprise_value", "equity_value", "operating_forecast"],
+      "available_data": ["capital_expenditure", "cash_flow_history", "income_statement_history", "net_debt", "revenue_drivers", "working_capital"],
+      "available_assumptions": ["capital_expenditure_rate", "depreciation_rate", "discount_rate", "forecast_horizon", "net_debt", "operating_margin_rate", "revenue_growth_rate", "tax_rate", "terminal_growth_rate", "terminal_value_assumption", "working_capital_rate"],
+      "input_references": {},
+      "output_formats": ["json"]
+    },
+    "canonical_input": {
+      "contract_version": "canonical-financial-data.v2",
+      "entity": {"entity_id": "synthetic-acceptance", "currency": "USD"},
+      "periods": ["2025"],
+      "financial_statements": {
+        "income_statement": {"revenue": ["1000"], "ebitda": ["200"]},
+        "balance_sheet": {"cash": ["100"], "debt": ["300"], "equity": ["500"]},
+        "cash_flow": {"operating_cash_flow": ["150"]}
+      },
+      "trial_balance": [], "account_balances": [], "debt_schedules": [],
+      "capital_expenditure": [], "working_capital": [], "operational_drivers": {},
+      "assumptions": {
+        "forecast_horizon": 2, "tax_rate": "0.20", "revenue_growth_rate": "0.10",
+        "operating_margin_rate": "0.20", "depreciation_rate": "0.03",
+        "capital_expenditure_rate": "0.05", "working_capital_rate": "0.10",
+        "discount_rate": "0.10", "terminal_growth_rate": "0.02", "net_debt": "200"
+      },
+      "provenance": [{"source": "bundled-synthetic-acceptance"}]
+    },
+    "assertions": [
+      {"assertion_id": "contract", "path": "/contract_version", "operator": "equals", "expected": "operating-company-dcf-result.v1"},
+      {"assertion_id": "enterprise-value-positive", "path": "/enterprise_value", "operator": "greater_than_or_equal", "expected": "0"},
+      {"assertion_id": "equity-bridge", "path": "/net_debt", "operator": "approximately_equals", "expected": "200.00", "tolerance": "0.01"}
+    ]
+  }],
+  "practitioner_reviews": []
+}

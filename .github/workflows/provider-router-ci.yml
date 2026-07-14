@@ -48,6 +48,7 @@ jobs:
           assert files("fmr.providers.native_xlsx.contracts").joinpath("workbook-map.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("organization-routing-policy.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("release-qualification.v1.schema.json").is_file()
+          assert files("fmr.fixtures").joinpath("acceptance/synthetic-dcf.v1.json").is_file()
           assert "fmr.providers.native_xlsx.provider" not in sys.modules
 
           assumptions = ["forecast_horizon", "operating_cost_growth_rate", "revenue_growth_rate", "scenario", "scenario_adjustments"]
@@ -164,4 +165,18 @@ jobs:
           assert report["implementation_status"] == "passed"
           assert report["production_status"] == "not_accepted"
           assert "stable_release_version_not_declared" in report["blockers"]
+          PY
+          CORPUS="$(/tmp/fmr-provider-test/bin/python - <<'PY'
+          from importlib.resources import files
+          print(files("fmr.fixtures").joinpath("acceptance/synthetic-dcf.v1.json"))
+          PY
+          )"
+          /tmp/fmr-provider-test/bin/fmr run-acceptance-corpus "$CORPUS" \
+            --output /tmp/fmr-model-acceptance.json
+          /tmp/fmr-provider-test/bin/python - <<'PY'
+          import json
+          result = json.load(open("/tmp/fmr-model-acceptance.json", encoding="utf-8"))
+          assert result["implementation_status"] == "passed"
+          assert result["production_status"] == "not_accepted"
+          assert "practitioner_review_incomplete" in result["blockers"]
           PY

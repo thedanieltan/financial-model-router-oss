@@ -12,6 +12,7 @@ from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
 from fmr.organization import OrganizationPolicy, route_organization_job
 from fmr.qualification import qualify_local_release
+from fmr.acceptance import run_acceptance_corpus
 
 PROVIDER_COMMANDS = {
     "backup-execution-ledger",
@@ -24,6 +25,7 @@ PROVIDER_COMMANDS = {
     "recover-executions",
     "route-job",
     "validate-job-result",
+    "run-acceptance-corpus",
 }
 
 
@@ -85,6 +87,10 @@ def _parser() -> argparse.ArgumentParser:
     qualify.add_argument("--deployment-evidence")
     qualify.add_argument("--require-production", action="store_true")
     qualify.add_argument("--output")
+    acceptance = commands.add_parser("run-acceptance-corpus")
+    acceptance.add_argument("corpus")
+    acceptance.add_argument("--require-practitioner", action="store_true")
+    acceptance.add_argument("--output")
     return parser
 
 
@@ -139,6 +145,11 @@ def run_provider_command(argv: list[str]) -> int:
             report = qualify_local_release(_load(args.deployment_evidence) if args.deployment_evidence else None)
             _write(report, args.output)
             accepted = report["production_status"] == "accepted" if args.require_production else report["implementation_status"] == "passed"
+            return 0 if accepted else 2
+        if args.command == "run-acceptance-corpus":
+            report = run_acceptance_corpus(_load(args.corpus))
+            _write(report, args.output)
+            accepted = report["production_status"] == "accepted" if args.require_practitioner else report["implementation_status"] == "passed"
             return 0 if accepted else 2
         issues = validate_execution_result(_load(args.result), handoff=_load(args.handoff))
         _write({"valid": not issues, "issues": list(issues)}, args.output)

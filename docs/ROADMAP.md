@@ -28,6 +28,7 @@ contract tests does not claim that an optional provider runtime is installed.
 | 1.6 Agent access | Python, CLI, HTTP and optional MCP lifecycle access | Built in WP-AGT-18 |
 | Local release qualification | Automated implementation gates plus deployment-evidence contract | Built in WP-REL-19; production evidence pending |
 | Executable family coverage | Python implementations for all four initial analytical families | Built in WP-MDL-20 |
+| Model acceptance framework | Deterministic cases, tolerances and value-free practitioner evidence ledger | Built in WP-ACC-21; live reviews pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -218,3 +219,15 @@ remain pending until evidence is collected in a real target environment.
 
 These are deterministic generic packages, not industry-specific professional
 opinions. Real-world practitioner acceptance remains WP-ACC-21.
+
+## WP-ACC-21 — model acceptance evidence
+
+- versioned synthetic or anonymized acceptance corpora;
+- provider-neutral jobs executed through the full routed lifecycle;
+- exact, bounded-tolerance and threshold assertions;
+- value-free case receipts with pinned provider/package versions; and
+- practitioner review coverage recorded through external evidence references.
+
+The framework is implemented. No bundled synthetic fixture constitutes
+practitioner or production acceptance; representative anonymized cases and
+external review evidence remain pending.

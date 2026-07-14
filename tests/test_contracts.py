@@ -45,6 +45,8 @@ class ContractTests(unittest.TestCase):
             "organization-routing-policy.v1.schema.json",
             "release-qualification.v1.schema.json",
             "deployment-acceptance-evidence.v1.schema.json",
+            "model-acceptance-corpus.v1.schema.json",
+            "model-acceptance-result.v1.schema.json",
             "execution-request.v1.schema.json",
             "execution-result.v1.schema.json",
             "execution-operations-status.v1.schema.json",
