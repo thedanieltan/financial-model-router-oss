@@ -1,0 +1,17 @@
+{
+  "contract_version": "provider-manifest.v1",
+  "provider_id": "invalid-provider",
+  "version": "latest",
+  "execution_mode": "magic",
+  "network_required": false,
+  "license": "Apache-2.0",
+  "open_source": true,
+  "privacy_behavior": [],
+  "runtime_dependencies": [],
+  "determinism_level": "unknown",
+  "validation_capabilities": [],
+  "limitations": [],
+  "secret_requirements": [],
+  "executor_entry_point": "missing",
+  "packages": []
+}

@@ -1,14 +1,12 @@
 from __future__ import annotations
 
 from typing import Any
-import tempfile
-from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
 
 from fmr.core import FAMILIES, ModelJob, route_job, routing_policy
 from fmr.core.receipts import validate_execution_result
-from fmr.execution import DEFAULT_ORCHESTRATOR
+from fmr.execution import DEFAULT_ORCHESTRATOR, ExecutionRequest
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
 
@@ -48,20 +46,17 @@ def prepare_model_handoff(payload: dict[str, Any], policy: str = Query("default"
 @router.post("/jobs/executions")
 def execute_model_job(payload: dict[str, Any]) -> dict[str, Any]:
     try:
-        if payload.get("contract_version") != "execution-request.v1":
-            raise ValueError("execution-request.v1 is required")
-        return DEFAULT_ORCHESTRATOR.execute(
-            payload.get("handoff", {}),
-            idempotency_key=payload.get("idempotency_key", ""),
-            output_dir=Path(tempfile.gettempdir()) / "fmr-http-outputs",
-            timeout_seconds=payload.get("timeout_seconds", 120),
-            secret_references=tuple(payload.get("secret_references", ())),
-        )
+        request = ExecutionRequest.from_mapping(payload)
+        if request.output_policy.mode != "managed":
+            raise ValueError("HTTP execution supports managed output policy only")
+        return DEFAULT_ORCHESTRATOR.execute_request(request)
     except (ValueError, RuntimeError) as exc:
         raise _invalid(ValueError(str(exc))) from exc
 
 
 @router.post("/job-results/validate")
 def validate_model_job_result(payload: dict[str, Any]) -> dict[str, Any]:
-    issues = validate_execution_result(payload)
+    if set(payload) != {"result", "handoff"}:
+        raise _invalid(ValueError("validation payload must contain result and handoff"))
+    issues = validate_execution_result(payload["result"], handoff=payload["handoff"])
     return {"valid": not issues, "issues": list(issues)}

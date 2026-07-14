@@ -4,5 +4,25 @@
   "title": "FMR execution request v1",
   "type": "object",
   "required": ["contract_version", "handoff", "idempotency_key", "execution_mode", "timeout_seconds", "secret_references", "output_policy"],
-  "properties": {"contract_version": {"const": "execution-request.v1"}, "idempotency_key": {"type": "string", "minLength": 1}, "secret_references": {"type": "array", "items": {"type": "string"}}}
+  "properties": {
+    "contract_version": {"const": "execution-request.v1"},
+    "handoff": {"$ref": "provider-handoff.v1.schema.json"},
+    "idempotency_key": {"type": "string", "minLength": 1, "maxLength": 256},
+    "execution_mode": {"enum": ["local", "remote", "handoff_only"]},
+    "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 86400},
+    "secret_references": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "output_policy": {"$ref": "#/$defs/outputPolicy"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "outputPolicy": {
+      "type": "object", "required": ["mode", "overwrite", "publish"],
+      "properties": {"mode": {"enum": ["managed", "specified_directory"]}, "directory": {"type": ["string", "null"], "minLength": 1}, "overwrite": {"const": false}, "publish": {"const": false}},
+      "allOf": [
+        {"if": {"properties": {"mode": {"const": "managed"}}}, "then": {"properties": {"directory": {"type": "null"}}}},
+        {"if": {"properties": {"mode": {"const": "specified_directory"}}}, "then": {"required": ["directory"], "properties": {"directory": {"type": "string", "minLength": 1}}}}
+      ],
+      "additionalProperties": false
+    }
+  }
 }

@@ -6,27 +6,31 @@
   "network_required": false,
   "license": "Apache-2.0",
   "open_source": true,
-  "privacy_behavior": ["local_only", "no_telemetry", "value_free_receipts"],
-  "runtime_dependencies": ["openpyxl>=3.1,<4"],
-  "determinism_level": "deterministic_with_pinned_inputs",
-  "validation_capabilities": ["artifact_hash", "formula_structure", "workbook_structure"],
-  "limitations": ["formula recalculation requires a spreadsheet engine"],
-  "packages": [
-    {
-      "contract_version": "model-package-manifest.v1",
-      "package_id": "native-xlsx/generic-budget-forecast",
-      "version": "1.0.0",
-      "model_family": "budget_forecast",
-      "industries": ["*"],
-      "deliverables": ["budget_forecast"],
-      "required_data": ["income_statement_history", "operating_cost_drivers", "revenue_drivers"],
-      "required_assumptions": ["forecast_horizon"],
-      "accepted_inputs": ["canonical-financial-data.v2"],
-      "output_artifacts": ["budget_forecast_workbook"],
-      "output_formats": ["xlsx"],
-      "validation_checks": ["artifact_hash", "formula_structure", "workbook_structure"],
-      "execution_capabilities": ["local_execute", "validate"],
-      "adapter_id": "native-xlsx/generic-budget-forecast.v1"
-    }
-  ]
+  "privacy_behavior": ["local_only", "value_free_receipts"],
+  "runtime_dependencies": ["openpyxl"],
+  "determinism_level": "deterministic_given_pinned_runtime",
+  "validation_capabilities": ["artifact_hash", "forecast_reconciliation", "workbook_structure"],
+  "limitations": ["Generic driver-based operating forecast; no integrated balance sheet or cash flow."],
+  "secret_requirements": [],
+  "executor_entry_point": "native-xlsx",
+  "packages": [{
+    "contract_version": "model-package-manifest.v1",
+    "package_id": "native-xlsx/generic-budget-forecast",
+    "version": "1.1.0",
+    "model_family": "budget_forecast",
+    "industries": ["*"],
+    "deliverables": ["budget_forecast"],
+    "required_data": ["income_statement_history", "operating_cost_drivers", "revenue_drivers"],
+    "required_assumptions": ["forecast_horizon", "operating_cost_growth_rate", "revenue_growth_rate", "scenario", "scenario_adjustments"],
+    "accepted_inputs": ["canonical-financial-data.v2"],
+    "output_artifacts": [
+      {"kind": "budget_forecast_workbook", "format": "xlsx", "required": true},
+      {"kind": "budget_forecast", "format": "json", "required": true}
+    ],
+    "output_formats": ["json", "xlsx"],
+    "validation_checks": ["artifact_hash", "forecast_reconciliation", "period_continuity", "scenario_applied", "workbook_structure"],
+    "execution_capabilities": ["execute_local"],
+    "adapter_id": "native-xlsx/generic-budget-forecast.v2",
+    "adapter_entry_point": "native-xlsx-budget-forecast"
+  }]
 }

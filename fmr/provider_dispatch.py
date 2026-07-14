@@ -7,7 +7,7 @@ from typing import Any
 
 from fmr.core import FAMILIES, ModelJob, route_job, routing_policy
 from fmr.core.receipts import validate_execution_result
-from fmr.execution import DEFAULT_ORCHESTRATOR
+from fmr.execution import ExecutionOrchestrator, SqliteExecutionLedger
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
 
@@ -43,9 +43,11 @@ def _parser() -> argparse.ArgumentParser:
     execute.add_argument("handoff")
     execute.add_argument("--idempotency-key", required=True)
     execute.add_argument("--output-dir", default=".")
+    execute.add_argument("--execution-mode", choices=("local", "remote", "handoff_only"))
     execute.add_argument("--receipt")
     validate = commands.add_parser("validate-job-result")
     validate.add_argument("result")
+    validate.add_argument("--handoff", required=True)
     validate.add_argument("--output")
     return parser
 
@@ -65,10 +67,19 @@ def run_provider_command(argv: list[str]) -> int:
             _write(prepare_handoff(_load(args.job), policy_name=args.policy), args.output)
             return 0
         if args.command == "execute-job":
-            result = DEFAULT_ORCHESTRATOR.execute(_load(args.handoff), idempotency_key=args.idempotency_key, output_dir=args.output_dir)
+            handoff = _load(args.handoff)
+            output_directory = Path(args.output_dir)
+            orchestrator = ExecutionOrchestrator(ledger=SqliteExecutionLedger(output_directory.parent / ".fmr-execution-ledger.sqlite3"))
+            result = orchestrator.execute_request({
+                "contract_version": "execution-request.v1", "handoff": handoff,
+                "idempotency_key": args.idempotency_key,
+                "execution_mode": args.execution_mode or handoff.get("execution_configuration", {}).get("mode"),
+                "timeout_seconds": 120, "secret_references": [],
+                "output_policy": {"mode": "specified_directory", "directory": str(output_directory), "overwrite": False, "publish": False},
+            })
             _write(result, args.receipt)
             return 0 if result["state"] == "completed" else 2
-        issues = validate_execution_result(_load(args.result))
+        issues = validate_execution_result(_load(args.result), handoff=_load(args.handoff))
         _write({"valid": not issues, "issues": list(issues)}, args.output)
         return 0 if not issues else 2
     except (OSError, ValueError, RuntimeError, json.JSONDecodeError) as exc:

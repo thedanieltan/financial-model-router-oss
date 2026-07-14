@@ -62,6 +62,7 @@ def _evaluate(job: ModelJob, item: RegisteredPackage, policy: RoutingPolicy) -> 
     }
     source_adapter_available = bool(set(package.accepted_inputs).intersection(reference_contracts)) or not package.accepted_inputs
     provider_adapter_available = item.provider_adapter_available
+    provider_executor_available = item.provider_executor_available
     readiness = {
         "required_data_available": sorted(set(package.required_data).intersection(job.available_data)),
         "required_data_missing": list(missing_data),
@@ -69,6 +70,7 @@ def _evaluate(job: ModelJob, item: RegisteredPackage, policy: RoutingPolicy) -> 
         "assumptions_missing": list(missing_assumptions),
         "source_adapter_available": source_adapter_available,
         "provider_adapter_available": provider_adapter_available,
+        "provider_executor_available": provider_executor_available,
         "runtime_available": item.runtime_available,
         "validation_available": bool(package.validation_checks),
     }
@@ -78,6 +80,8 @@ def _evaluate(job: ModelJob, item: RegisteredPackage, policy: RoutingPolicy) -> 
         blockers.append("source_adapter_unavailable")
     if not provider_adapter_available:
         blockers.append("provider_adapter_unavailable")
+    if not provider_executor_available:
+        blockers.append("provider_executor_unavailable")
 
     preference_points = 0
     if provider.provider_id in policy.preferred_providers:

@@ -29,8 +29,15 @@ def compile_provider_handoff(
     decision: dict[str, Any],
     registered: RegisteredPackage,
     provider_payload: dict[str, Any],
+    *,
+    registry: Any = None,
 ) -> dict[str, Any]:
     selected = decision.get("selected")
+    from fmr.core.receipts import validate_route_decision
+
+    route_issues = validate_route_decision(decision, job=job, registry=registry)
+    if route_issues:
+        raise ValueError("invalid route decision: " + "; ".join(route_issues))
     if decision.get("contract_version") != "route-decision.v2" or decision.get("status") not in {"selected", "no_route"}:
         raise ValueError("a selected or readiness-blocked route-decision.v2 is required")
     expected = (registered.provider.provider_id, registered.package.package_id)
@@ -53,6 +60,8 @@ def compile_provider_handoff(
     _reject_embedded_secrets(normalized_refs, "normalized_input_references")
     provisional = {
         "contract_version": "provider-handoff.v1",
+        "job": job.to_dict(),
+        "route_decision": decision,
         "job_reference": {"sha256": digest(job.to_dict())},
         "route_decision_reference": {"decision_id": decision["decision_id"], "sha256": digest(decision)},
         "provider": {"provider_id": registered.provider.provider_id, "version": registered.provider.version},
@@ -62,7 +71,7 @@ def compile_provider_handoff(
         "provider_adapter": {"adapter_id": provider_payload.get("adapter_id")},
         "provider_payload": provider_payload,
         "execution_configuration": {"mode": registered.provider.execution_mode, "network_required": registered.provider.network_required},
-        "expected_outputs": list(registered.package.output_artifacts),
+        "expected_outputs": [item.to_dict() for item in registered.package.output_artifacts],
         "validation_requirements": list(registered.package.validation_checks),
         "source_hashes": sorted({str(item.get("sha256")) for item in normalized_refs if item.get("sha256")}),
         "unresolved_requirements": list(unresolved),

@@ -4,5 +4,25 @@
   "title": "FMR canonical financial data v2",
   "type": "object",
   "required": ["contract_version", "entity", "periods", "financial_statements", "trial_balance", "account_balances", "debt_schedules", "capital_expenditure", "working_capital", "operational_drivers", "assumptions", "provenance"],
-  "properties": {"contract_version": {"const": "canonical-financial-data.v2"}, "entity": {"type": "object"}, "periods": {"type": "array", "minItems": 1}, "financial_statements": {"type": "object"}, "trial_balance": {"type": "array"}, "account_balances": {"type": "array"}, "debt_schedules": {"type": "array"}, "capital_expenditure": {"type": "array"}, "working_capital": {"type": "array"}, "operational_drivers": {"type": "object"}, "assumptions": {"type": "object"}, "provenance": {"type": "array", "minItems": 1}}
+  "properties": {
+    "contract_version": {"const": "canonical-financial-data.v2"},
+    "entity": {"type": "object", "required": ["entity_id", "currency"], "properties": {"entity_id": {"type": "string", "minLength": 1}, "entity_name": {"type": ["string", "null"]}, "currency": {"type": "string", "pattern": "^[A-Z]{3}$"}}, "additionalProperties": false},
+    "periods": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "financial_statements": {"type": "object", "propertyNames": {"enum": ["income_statement", "balance_sheet", "cash_flow"]}, "additionalProperties": {"$ref": "#/$defs/conceptSeries"}},
+    "trial_balance": {"$ref": "#/$defs/records"},
+    "account_balances": {"$ref": "#/$defs/records"},
+    "debt_schedules": {"$ref": "#/$defs/records"},
+    "capital_expenditure": {"$ref": "#/$defs/records"},
+    "working_capital": {"$ref": "#/$defs/records"},
+    "operational_drivers": {"$ref": "#/$defs/conceptSeries"},
+    "assumptions": {"type": "object"},
+    "provenance": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["source"], "properties": {"source": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "package_id": {"type": "string"}, "mapping_id": {"type": "string"}}, "additionalProperties": false}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "decimal": {"oneOf": [{"type": "number"}, {"type": "string", "pattern": "^-?(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)$"}]},
+    "series": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/decimal"}},
+    "conceptSeries": {"type": "object", "propertyNames": {"pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}, "additionalProperties": {"$ref": "#/$defs/series"}},
+    "records": {"type": "array", "items": {"type": "object"}}
+  }
 }

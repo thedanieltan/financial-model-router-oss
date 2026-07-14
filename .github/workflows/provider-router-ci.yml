@@ -1,0 +1,103 @@
+name: Provider router CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  clean-wheel-provider-lifecycle:
+    name: Clean wheel provider lifecycle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade build
+      - run: python -m build --wheel
+      - name: Install only the built wheel
+        run: |
+          python -m venv /tmp/fmr-provider-test
+          WHEEL="$(ls dist/*.whl)"
+          /tmp/fmr-provider-test/bin/pip install "${WHEEL}[executor]"
+      - name: Exercise provider routing, handoff, execution and validation
+        working-directory: /tmp
+        run: |
+          /tmp/fmr-provider-test/bin/python - <<'PY'
+          import copy
+          import hashlib
+          import json
+          import tempfile
+          from pathlib import Path
+
+          import fmr
+          from fmr.core.receipts import validate_execution_result, validate_provider_handoff
+          from fmr.execution import ExecutionOrchestrator, SqliteExecutionLedger
+
+          assumptions = ["forecast_horizon", "operating_cost_growth_rate", "revenue_growth_rate", "scenario", "scenario_adjustments"]
+
+          with tempfile.TemporaryDirectory() as temporary:
+              root = Path(temporary)
+              source = root / "canonical.json"
+              source.write_text(json.dumps({
+                  "contract_version": "canonical-financial-data.v2",
+                  "entity": {"entity_id": "clean-wheel", "currency": "USD"},
+                  "periods": ["2025", "2026"],
+                  "financial_statements": {"income_statement": {"revenue": ["100", "110"], "operating_costs": ["60", "63"]}},
+                  "trial_balance": [], "account_balances": [], "debt_schedules": [], "capital_expenditure": [], "working_capital": [],
+                  "operational_drivers": {"units": ["100", "105"]},
+                  "assumptions": {
+                      "forecast_horizon": 2, "revenue_growth_rate": "0.10", "operating_cost_growth_rate": "0.05", "scenario": "base",
+                      "scenario_adjustments": {"base": {"revenue_growth_delta": "0", "operating_cost_growth_delta": "0"}}
+                  },
+                  "provenance": [{"source": "clean-wheel-ci"}]
+              }), encoding="utf-8")
+              reference = {"contract_version": "canonical-financial-data.v2", "path": str(source), "sha256": hashlib.sha256(source.read_bytes()).hexdigest()}
+              budget = {
+                  "contract_version": "model-job.v2", "objective": "Prepare an operating budget and forecast",
+                  "model_family": "budget_forecast", "requested_deliverables": ["budget_forecast"],
+                  "available_data": ["income_statement_history", "operating_cost_drivers", "revenue_drivers"],
+                  "available_assumptions": assumptions, "input_references": {"canonical_financial_data": reference},
+                  "output_formats": ["json"], "constraints": {"open_source_only": True}
+              }
+              providers = [item.provider_id for item in fmr.ProviderRegistry.builtins().providers()]
+              assert providers == ["native-xlsx", "python-forecast", "reference-handoff"]
+              assert fmr.route_job(budget, policy=fmr.routing_policy("json-first"))["selected"]["provider_id"] == "python-forecast"
+              assert fmr.route_job(budget, policy=fmr.routing_policy("spreadsheet-first"))["selected"]["provider_id"] == "native-xlsx"
+
+              native_handoff = fmr.prepare_handoff(budget, policy_name="spreadsheet-first")
+              orchestrator = ExecutionOrchestrator(ledger=SqliteExecutionLedger(root / "ledger.sqlite3"), managed_output_root=root / "outputs")
+              native_result = orchestrator.execute_request({
+                  "contract_version": "execution-request.v1", "handoff": native_handoff, "idempotency_key": "native",
+                  "execution_mode": "local", "timeout_seconds": 30, "secret_references": [],
+                  "output_policy": {"mode": "managed", "overwrite": False, "publish": False}
+              })
+              assert native_result["state"] == "completed"
+              assert {item["kind"] for item in native_result["output_artifact_references"]} == {"budget_forecast", "budget_forecast_workbook"}
+              assert not validate_execution_result(native_result, handoff=native_handoff)
+
+              external = {
+                  "contract_version": "model-job.v2", "objective": "Prepare external DCF handoff",
+                  "model_family": "operating_company_dcf", "requested_deliverables": ["external_provider_handoff"],
+                  "available_data": [], "available_assumptions": [], "input_references": {}, "output_formats": ["json"]
+              }
+              external_handoff = fmr.prepare_handoff(external)
+              external_result = orchestrator.execute_request({
+                  "contract_version": "execution-request.v1", "handoff": external_handoff, "idempotency_key": "external",
+                  "execution_mode": "handoff_only", "timeout_seconds": 30, "secret_references": [],
+                  "output_policy": {"mode": "managed", "overwrite": False, "publish": False}
+              })
+              assert [item["kind"] for item in external_result["output_artifact_references"]] == ["external_provider_handoff"]
+              assert not validate_execution_result(external_result, handoff=external_handoff)
+
+              no_route = dict(budget, available_data=[], available_assumptions=[])
+              assert fmr.route_job(no_route)["status"] == "no_route"
+              forged = copy.deepcopy(external_handoff)
+              forged["provider_payload"]["external_request"]["objective"] = "forged"
+              assert validate_provider_handoff(forged)
+          PY

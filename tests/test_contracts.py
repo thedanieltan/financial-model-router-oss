@@ -1,8 +1,23 @@
 from __future__ import annotations
 
 import json
+import copy
+import tempfile
 import unittest
 from importlib.resources import files
+from pathlib import Path
+
+from jsonschema import Draft202012Validator
+from referencing import Registry, Resource
+
+from fmr.core import FAMILIES, ModelJob, route_job
+from fmr.data import validate_canonical_financial_data
+from fmr.core.receipts import validate_execution_result, validate_provider_handoff, validate_route_decision
+from fmr.execution import ExecutionOrchestrator, ExecutionRequest, SqliteExecutionLedger
+from fmr.provider_service import prepare_handoff
+from fmr.registry import ProviderManifest, ProviderRegistry
+from fmr.sdk import run_manifest_conformance
+from tests.test_provider_router import _canonical_file, _job
 
 
 class ContractTests(unittest.TestCase):
@@ -68,6 +83,90 @@ class ContractTests(unittest.TestCase):
                     "https://github.com/thedanieltan/financial-model-router-oss/"
                 )
             )
+
+    def test_router_contract_schemas_accept_generated_lifecycle(self) -> None:
+        validators = _validators()
+        fixture_root = files("fmr.fixtures").joinpath("contracts")
+        valid_job = json.loads(fixture_root.joinpath("valid-model-job.v2.json").read_text(encoding="utf-8"))
+        validators["model-job.v2.schema.json"].validate(valid_job)
+        ModelJob.from_mapping(valid_job)
+        for manifest in ProviderRegistry.builtins().providers():
+            validators["provider-manifest.v1.schema.json"].validate(manifest.to_dict())
+            ProviderManifest.from_mapping(manifest.to_dict())
+            validators["provider-conformance-result.v1.schema.json"].validate(run_manifest_conformance(manifest.to_dict()))
+            for package in manifest.packages:
+                validators["model-package-manifest.v1.schema.json"].validate(package.to_dict())
+        for family in FAMILIES:
+            validators["model-family-definition.v1.schema.json"].validate(family.to_dict())
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            job = _job(_canonical_file(root), output_formats=["json"])
+            canonical = json.loads(Path(job["input_references"]["canonical_financial_data"]["path"]).read_text())
+            validators["canonical-financial-data.v2.schema.json"].validate(canonical)
+            self.assertEqual(validate_canonical_financial_data(canonical), ())
+            decision = route_job(job)
+            handoff = prepare_handoff(job)
+            request = {
+                "contract_version": "execution-request.v1", "handoff": handoff, "idempotency_key": "schema",
+                "execution_mode": handoff["execution_configuration"]["mode"], "timeout_seconds": 30,
+                "secret_references": [], "output_policy": {"mode": "managed", "overwrite": False, "publish": False},
+            }
+            result = ExecutionOrchestrator(ledger=SqliteExecutionLedger(root / "ledger.sqlite3"), managed_output_root=root / "outputs").execute_request(request)
+            for schema_name, payload in (
+                ("model-job.v2.schema.json", ModelJob.from_mapping(job).to_dict()),
+                ("route-decision.v2.schema.json", decision),
+                ("provider-handoff.v1.schema.json", handoff),
+                ("execution-request.v1.schema.json", request),
+                ("execution-result.v1.schema.json", result),
+            ):
+                validators[schema_name].validate(payload)
+            self.assertEqual(validate_route_decision(decision, job=job), ())
+            self.assertEqual(validate_provider_handoff(handoff), ())
+            self.assertEqual(validate_execution_result(result, handoff=handoff), ())
+
+    def test_invalid_fixture_corpus_and_python_validation_agree(self) -> None:
+        validators = _validators()
+        fixture_root = files("fmr.fixtures").joinpath("contracts")
+        invalid_job = json.loads(fixture_root.joinpath("invalid-model-job-extra-field.v2.json").read_text(encoding="utf-8"))
+        self.assertFalse(validators["model-job.v2.schema.json"].is_valid(invalid_job))
+        with self.assertRaises(ValueError):
+            ModelJob.from_mapping(invalid_job)
+        invalid_manifest = json.loads(fixture_root.joinpath("invalid-provider-manifest.v1.json").read_text(encoding="utf-8"))
+        self.assertFalse(validators["provider-manifest.v1.schema.json"].is_valid(invalid_manifest))
+        with self.assertRaises(ValueError):
+            ProviderManifest.from_mapping(invalid_manifest)
+        handoff = prepare_handoff({
+            "contract_version": "model-job.v2", "objective": "Prepare external DCF handoff",
+            "model_family": "operating_company_dcf", "requested_deliverables": ["external_provider_handoff"],
+            "available_data": [], "available_assumptions": [], "input_references": {}, "output_formats": ["json"]
+        })
+        bad_handoff = copy.deepcopy(handoff)
+        bad_handoff["unexpected"] = True
+        self.assertFalse(validators["provider-handoff.v1.schema.json"].is_valid(bad_handoff))
+        self.assertTrue(validate_provider_handoff(bad_handoff))
+        bad_route = copy.deepcopy(handoff["route_decision"])
+        bad_route["unexpected"] = True
+        self.assertFalse(validators["route-decision.v2.schema.json"].is_valid(bad_route))
+        self.assertTrue(validate_route_decision(bad_route, job=handoff["job"]))
+        bad_request = {"contract_version": "execution-request.v1", "handoff": handoff, "idempotency_key": "x", "execution_mode": "handoff_only", "timeout_seconds": 30, "secret_references": [], "output_policy": {"mode": "managed", "overwrite": False, "publish": False}, "ignored": True}
+        self.assertFalse(validators["execution-request.v1.schema.json"].is_valid(bad_request))
+        with self.assertRaises(ValueError):
+            ExecutionRequest.from_mapping(bad_request)
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            result = ExecutionOrchestrator(ledger=SqliteExecutionLedger(root / "ledger.sqlite3"), managed_output_root=root / "outputs").execute_request({key: value for key, value in bad_request.items() if key != "ignored"})
+            bad_result = copy.deepcopy(result)
+            bad_result["output_artifact_references"][0]["kind"] = "forged_output"
+            self.assertFalse(validators["execution-result.v1.schema.json"].is_valid({**bad_result, "unexpected": True}))
+            self.assertTrue(validate_execution_result(bad_result, handoff=handoff))
+
+
+def _validators() -> dict[str, Draft202012Validator]:
+    root = files("fmr.contracts")
+    names = ("canonical-financial-data.v2.schema.json", "model-family-definition.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
+    documents = {name: json.loads(root.joinpath(name).read_text(encoding="utf-8")) for name in names}
+    registry = Registry().with_resources((document["$id"], Resource.from_contents(document)) for document in documents.values())
+    return {name: Draft202012Validator(document, registry=registry) for name, document in documents.items()}
 
 
 if __name__ == "__main__":

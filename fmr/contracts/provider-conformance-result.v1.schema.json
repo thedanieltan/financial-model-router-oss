@@ -3,6 +3,20 @@
   "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/provider-conformance-result.v1.schema.json",
   "title": "FMR provider conformance result v1",
   "type": "object",
-  "required": ["contract_version", "status", "provider_id", "checks"],
-  "properties": {"contract_version": {"const": "provider-conformance-result.v1"}, "status": {"enum": ["passed", "failed"]}, "checks": {"type": "array"}}
+  "required": ["contract_version", "conformance_level", "status", "provider_id", "checks"],
+  "properties": {
+    "contract_version": {"const": "provider-conformance-result.v1"},
+    "conformance_level": {"enum": ["manifest", "executable"]},
+    "status": {"enum": ["passed", "failed"]},
+    "provider_id": {"type": ["string", "null"]},
+    "checks": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["check", "status", "details"],
+        "properties": {"check": {"type": "string", "minLength": 1}, "status": {"enum": ["passed", "failed"]}, "details": {"type": "object"}},
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
 }

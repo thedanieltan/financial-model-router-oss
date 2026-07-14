@@ -3,6 +3,35 @@
   "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/model-package-manifest.v1.schema.json",
   "title": "FMR model package manifest v1",
   "type": "object",
-  "required": ["contract_version", "package_id", "version", "model_family", "industries", "deliverables", "required_data", "required_assumptions", "output_artifacts", "output_formats", "validation_checks", "execution_capabilities", "adapter_id"],
-  "properties": {"contract_version": {"const": "model-package-manifest.v1"}}
+  "required": ["contract_version", "package_id", "version", "model_family", "industries", "deliverables", "required_data", "required_assumptions", "accepted_inputs", "output_artifacts", "output_formats", "validation_checks", "execution_capabilities", "adapter_id", "adapter_entry_point"],
+  "properties": {
+    "contract_version": {"const": "model-package-manifest.v1"},
+    "package_id": {"$ref": "#/$defs/namespacedId"},
+    "version": {"$ref": "#/$defs/version"},
+    "model_family": {"$ref": "#/$defs/id"},
+    "industries": {"$ref": "#/$defs/nonEmptyStrings"},
+    "deliverables": {"$ref": "#/$defs/nonEmptyStrings"},
+    "required_data": {"$ref": "#/$defs/strings"},
+    "required_assumptions": {"$ref": "#/$defs/strings"},
+    "accepted_inputs": {"$ref": "#/$defs/strings"},
+    "output_artifacts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/artifact"}},
+    "output_formats": {"$ref": "#/$defs/nonEmptyStrings"},
+    "validation_checks": {"$ref": "#/$defs/nonEmptyStrings"},
+    "execution_capabilities": {"$ref": "#/$defs/nonEmptyStrings"},
+    "adapter_id": {"type": "string", "minLength": 1},
+    "adapter_entry_point": {"$ref": "#/$defs/id"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[a-z]+[0-9]+)?$"},
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "namespacedId": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*/[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "strings": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "nonEmptyStrings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "artifact": {
+      "type": "object", "required": ["kind", "format", "required"],
+      "properties": {"kind": {"$ref": "#/$defs/id"}, "format": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._+-]*$"}, "required": {"type": "boolean"}},
+      "additionalProperties": false
+    }
+  }
 }
