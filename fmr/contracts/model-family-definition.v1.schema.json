@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/model-family-definition.v1.schema.json",
+  "title": "FMR model family definition v1",
+  "type": "object",
+  "required": ["contract_version", "family_id", "analytical_objective", "required_deliverables", "required_data", "required_assumptions", "expected_checks", "limitations"],
+  "properties": {"contract_version": {"const": "model-family-definition.v1"}, "family_id": {"type": "string"}, "analytical_objective": {"type": "string"}, "required_deliverables": {"type": "array"}, "required_data": {"type": "array"}, "required_assumptions": {"type": "array"}, "expected_checks": {"type": "array"}, "limitations": {"type": "array"}},
+  "additionalProperties": true
+}

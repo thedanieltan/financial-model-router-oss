@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/execution-request.v1.schema.json",
+  "title": "FMR execution request v1",
+  "type": "object",
+  "required": ["contract_version", "handoff", "idempotency_key", "execution_mode", "timeout_seconds", "secret_references", "output_policy"],
+  "properties": {"contract_version": {"const": "execution-request.v1"}, "idempotency_key": {"type": "string", "minLength": 1}, "secret_references": {"type": "array", "items": {"type": "string"}}}
+}

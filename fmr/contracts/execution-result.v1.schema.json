@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/execution-result.v1.schema.json",
+  "title": "FMR execution result v1",
+  "type": "object",
+  "required": ["contract_version", "execution_id", "handoff_reference", "provider", "package", "state", "output_artifact_references", "validation_status", "errors_and_blockers", "retry_eligible", "output_hashes", "provider_receipt", "idempotency_key_sha256"],
+  "properties": {"contract_version": {"const": "execution-result.v1"}, "state": {"enum": ["accepted", "preparing", "blocked", "running", "validating", "completed", "failed", "cancelled"]}}
+}

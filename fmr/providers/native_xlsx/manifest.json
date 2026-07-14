@@ -1,0 +1,32 @@
+{
+  "contract_version": "provider-manifest.v1",
+  "provider_id": "native-xlsx",
+  "version": "1.0.0",
+  "execution_mode": "local",
+  "network_required": false,
+  "license": "Apache-2.0",
+  "open_source": true,
+  "privacy_behavior": ["local_only", "no_telemetry", "value_free_receipts"],
+  "runtime_dependencies": ["openpyxl>=3.1,<4"],
+  "determinism_level": "deterministic_with_pinned_inputs",
+  "validation_capabilities": ["artifact_hash", "formula_structure", "workbook_structure"],
+  "limitations": ["formula recalculation requires a spreadsheet engine"],
+  "packages": [
+    {
+      "contract_version": "model-package-manifest.v1",
+      "package_id": "native-xlsx/generic-budget-forecast",
+      "version": "1.0.0",
+      "model_family": "budget_forecast",
+      "industries": ["*"],
+      "deliverables": ["budget_forecast"],
+      "required_data": ["income_statement_history", "operating_cost_drivers", "revenue_drivers"],
+      "required_assumptions": ["forecast_horizon"],
+      "accepted_inputs": ["canonical-financial-data.v2"],
+      "output_artifacts": ["budget_forecast_workbook"],
+      "output_formats": ["xlsx"],
+      "validation_checks": ["artifact_hash", "formula_structure", "workbook_structure"],
+      "execution_capabilities": ["local_execute", "validate"],
+      "adapter_id": "native-xlsx/generic-budget-forecast.v1"
+    }
+  ]
+}

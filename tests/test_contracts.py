@@ -9,6 +9,16 @@ class ContractTests(unittest.TestCase):
     def test_contracts_are_packaged_and_owned_by_this_repository(self) -> None:
         root = files("fmr.contracts")
         for name in (
+            "model-job.v2.schema.json",
+            "canonical-financial-data.v2.schema.json",
+            "model-family-definition.v1.schema.json",
+            "provider-manifest.v1.schema.json",
+            "model-package-manifest.v1.schema.json",
+            "route-decision.v2.schema.json",
+            "provider-handoff.v1.schema.json",
+            "provider-conformance-result.v1.schema.json",
+            "execution-request.v1.schema.json",
+            "execution-result.v1.schema.json",
             "model-request.v1.schema.json",
             "model-recommendation.v1.schema.json",
             "transformation-plan.v1.schema.json",

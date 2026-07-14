@@ -8,10 +8,13 @@ from fmr.financial_data_dispatch import (
     run_financial_data_command,
 )
 from fmr.input_dispatch import INPUT_COMMANDS, run_input_command
+from fmr.provider_dispatch import PROVIDER_COMMANDS, run_provider_command
 
 
 def main(argv: list[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments and arguments[0] in PROVIDER_COMMANDS:
+        return run_provider_command(arguments)
     if arguments and arguments[0] in FINANCIAL_DATA_COMMANDS:
         return run_financial_data_command(arguments)
     if arguments and arguments[0] in INPUT_COMMANDS:

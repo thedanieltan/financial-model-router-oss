@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/provider-manifest.v1.schema.json",
+  "title": "FMR provider manifest v1",
+  "type": "object",
+  "required": ["contract_version", "provider_id", "version", "execution_mode", "network_required", "license", "open_source", "privacy_behavior", "determinism_level", "validation_capabilities", "packages"],
+  "properties": {"contract_version": {"const": "provider-manifest.v1"}, "provider_id": {"type": "string"}, "version": {"type": "string"}, "execution_mode": {"enum": ["local", "remote", "handoff_only"]}, "network_required": {"type": "boolean"}, "open_source": {"type": "boolean"}, "packages": {"type": "array", "minItems": 1}},
+  "additionalProperties": true
+}

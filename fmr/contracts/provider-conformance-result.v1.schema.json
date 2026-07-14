@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/provider-conformance-result.v1.schema.json",
+  "title": "FMR provider conformance result v1",
+  "type": "object",
+  "required": ["contract_version", "status", "provider_id", "checks"],
+  "properties": {"contract_version": {"const": "provider-conformance-result.v1"}, "status": {"enum": ["passed", "failed"]}, "checks": {"type": "array"}}
+}
