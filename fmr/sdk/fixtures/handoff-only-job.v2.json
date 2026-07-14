@@ -1,0 +1,10 @@
+{
+  "available_assumptions": [],
+  "available_data": [],
+  "contract_version": "model-job.v2",
+  "input_references": {},
+  "model_family": "operating_company_dcf",
+  "objective": "Prepare an external operating-company DCF handoff",
+  "output_formats": ["json"],
+  "requested_deliverables": ["external_provider_handoff"]
+}
