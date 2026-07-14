@@ -20,7 +20,8 @@ contract tests does not claim that an optional provider runtime is installed.
 | Interchangeable model proof | Native XLSX and Python Forecast execute the same budget family under policy | Built with synthetic acceptance |
 | FMR `1.0.0-alpha` | Provider-router integrity and local execution preview | Current maturity |
 | Production FMR 1.0 | Remote execution security and deployment-specific operational acceptance | Not accepted |
-| 1.1–1.6 Ecosystem | SDK, registry, industries, sources, organization policies and agents | Pending |
+| 1.1 Provider SDK | Scaffolding, static validation, executable conformance and deterministic bundles | Built in WP-SDK-13 |
+| 1.2–1.6 Ecosystem | Registry, industries, sources, organization policies and agents | Pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -91,6 +92,19 @@ supervision and secret-manager acceptance remain open.
 - SQLite-backed cross-process idempotency revalidates cached artifacts;
 - controlled JSON Schemas and valid/invalid fixtures are exercised in CI; and
 - a clean-wheel provider lifecycle workflow covers discovery through execution.
+
+## WP-SDK-13 — public provider authoring
+
+- `fmr-provider init`, `validate`, `test` and `package` commands;
+- public typed adapter and executor protocols;
+- executable handoff-only scaffold and synthetic fixture;
+- code-free static project validation separated from explicit executable tests;
+- deterministic, non-overwriting, hash-pinned submission bundles;
+- semantic-version transition and breaking-change rules; and
+- clean-wheel SDK acceptance that installs and tests a generated provider.
+
+The SDK does not publish or approve providers. Registry lifecycle, conformance
+attestation and deprecation automation remain Phase 1.2 work.
 
 ## Post-1.0 sequence
 

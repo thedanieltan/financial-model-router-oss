@@ -4,7 +4,7 @@ Financial Model Router (FMR) is an open-source, deterministic router for financi
 
 FMR does not provide accounting, tax or investment advice. The deterministic core runs locally.
 
-FMR `1.0.0-alpha` is a provider-router integrity preview. It includes executable **Native XLSX** and **Python Forecast** providers plus a non-modelling **reference handoff provider**. It is not accepted as production FMR 1.0. Workbook formulas, layouts and calculation engines are owned by the Native XLSX provider; the historical `fmr.workbook` namespace remains a compatibility façade. See the normative [product charter](docs/PRODUCT_CHARTER.md), [provider-routing guide](docs/PROVIDER_ROUTING.md), [code inventory](docs/CODE_INVENTORY.md), [migration guide](docs/NATIVE_XLSX_MIGRATION.md) and [roadmap](docs/ROADMAP.md).
+FMR `1.0.0-alpha` is a provider-router integrity preview. It includes executable **Native XLSX** and **Python Forecast** providers plus a non-modelling **reference handoff provider**. It is not accepted as production FMR 1.0. Workbook formulas, layouts and calculation engines are owned by the Native XLSX provider; the historical `fmr.workbook` namespace remains a compatibility façade. See the normative [product charter](docs/PRODUCT_CHARTER.md), [provider-routing guide](docs/PROVIDER_ROUTING.md), [Provider SDK](docs/PROVIDER_SDK.md), [code inventory](docs/CODE_INVENTORY.md), [migration guide](docs/NATIVE_XLSX_MIGRATION.md) and [roadmap](docs/ROADMAP.md).
 
 ## Provider router
 
@@ -90,6 +90,19 @@ fmr prune-execution-artifacts --ledger .fmr-execution-ledger.sqlite3 \
 
 Retention is a dry run unless `--apply` is supplied. See the
 [operations guide](docs/OPERATIONS.md).
+
+Provider authoring:
+
+```bash
+fmr-provider init my-provider ./my-provider
+python -m pip install -e ./my-provider
+fmr-provider validate ./my-provider
+fmr-provider test ./my-provider
+fmr-provider package ./my-provider --destination ./dist
+```
+
+Static validation never imports provider code. Executable conformance is an
+explicit code-execution boundary. See the [Provider SDK guide](docs/PROVIDER_SDK.md).
 
 Financial-data intake:
 
