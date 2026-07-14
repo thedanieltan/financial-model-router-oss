@@ -8,7 +8,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
-from fmr.workbook import (
+from fmr.providers.native_xlsx.workbook import (
     compile_workbook_input_set_from_csv,
     populate_workbook_inputs_bytes,
     validate_input_population_calculation_link,

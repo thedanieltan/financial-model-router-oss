@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-content-plan-request.v1.schema.json",
+  "title": "Workbook content plan request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "coordinate_plan"],
+  "properties": {
+    "contract_version": {"const": "workbook-content-plan-request.v1"},
+    "coordinate_plan": {"type": "object"}
+  }
+}

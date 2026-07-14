@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-coordinate-plan-request.v1.schema.json",
+  "title": "FMR workbook coordinate plan request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "analysis",
+    "patch",
+    "target_resolution",
+    "layout_parameters"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "workbook-coordinate-plan-request.v1"
+    },
+    "analysis": {
+      "type": "object"
+    },
+    "patch": {
+      "type": "object"
+    },
+    "target_resolution": {
+      "type": "object"
+    },
+    "layout_parameters": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "forecast_period_count"
+      ],
+      "properties": {
+        "forecast_period_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        }
+      }
+    }
+  }
+}

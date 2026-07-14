@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import ast
+import importlib
 import re
 import tomllib
 import unittest
@@ -54,6 +55,42 @@ class RepositoryBoundaryTests(unittest.TestCase):
             ):
                 offenders.append(str(path.relative_to(core.parent.parent)))
         self.assertEqual(offenders, [])
+
+    def test_native_xlsx_runtime_is_physically_provider_owned(self) -> None:
+        package = Path(__file__).resolve().parents[1] / "fmr"
+        implementation = package / "providers" / "native_xlsx" / "workbook"
+        compatibility = package / "workbook"
+        implementation_modules = {path.name for path in implementation.glob("*.py")}
+        compatibility_modules = {path.name for path in compatibility.glob("*.py")}
+        self.assertEqual(compatibility_modules, implementation_modules)
+
+        for path in implementation.glob("*.py"):
+            self.assertNotIn("fmr.workbook", path.read_text(encoding="utf-8"), path.name)
+        for path in compatibility.glob("*.py"):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            definitions = [node for node in tree.body if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))]
+            self.assertEqual(definitions, [], path.name)
+            imports = [node.module for node in tree.body if isinstance(node, ast.ImportFrom)]
+            self.assertTrue(imports)
+            self.assertTrue(all(module and module.startswith("fmr.providers.native_xlsx.workbook") for module in imports), path.name)
+
+    def test_legacy_workbook_exports_are_provider_object_aliases(self) -> None:
+        legacy = importlib.import_module("fmr.workbook")
+        provider = importlib.import_module("fmr.providers.native_xlsx.workbook")
+        self.assertEqual(legacy.__all__, provider.__all__)
+        for name in provider.__all__:
+            self.assertIs(getattr(legacy, name), getattr(provider, name), name)
+
+    def test_native_xlsx_contracts_are_authoritative_and_legacy_copies_match(self) -> None:
+        package = Path(__file__).resolve().parents[1] / "fmr"
+        provider_contracts = package / "providers" / "native_xlsx" / "contracts"
+        compatibility_contracts = package / "contracts"
+        names = {path.name for path in compatibility_contracts.glob("workbook*.schema.json")}
+        names.add("external-calculation-acceptance-request.v1.schema.json")
+        self.assertTrue(names)
+        self.assertEqual(names, {path.name for path in provider_contracts.glob("*.schema.json")})
+        for name in names:
+            self.assertEqual((provider_contracts / name).read_bytes(), (compatibility_contracts / name).read_bytes(), name)
 
     def test_no_spreadsheet_binaries_are_committed(self) -> None:
         root = Path(__file__).resolve().parents[1]

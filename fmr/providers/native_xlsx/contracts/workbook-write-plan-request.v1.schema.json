@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-write-plan-request.v1.schema.json",
+  "title": "FMR workbook write plan request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "realization_plan", "write_context"],
+  "properties": {
+    "contract_version": {"const": "workbook-write-plan-request.v1"},
+    "realization_plan": {"type": "object"},
+    "write_context": {"type": "object"}
+  }
+}

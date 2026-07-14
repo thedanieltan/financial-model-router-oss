@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-realization-plan.v1.schema.json",
+  "title": "Workbook realization plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "realization_plan_id", "content_plan_id", "content_plan_sha256", "formula_specs_sha256", "style_specs_sha256", "expression_language", "source", "ready_for_executor", "execution_supported_by_this_release", "blockers", "operation_realizations", "controls"],
+  "properties": {
+    "contract_version": {"const": "workbook-realization-plan.v1"},
+    "realization_plan_id": {"type": "string", "pattern": "^fmrr_[0-9a-f]{24}$"},
+    "content_plan_id": {"type": "string", "minLength": 1},
+    "content_plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "formula_specs_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "style_specs_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "expression_language": {"const": "fmr-expression.v1"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "size_bytes"],
+      "properties": {
+        "filename": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "ready_for_executor": {"type": "boolean"},
+    "execution_supported_by_this_release": {"const": false},
+    "blockers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "operation_realizations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sequence", "operation_id", "source_operation", "content_plan_status", "status", "title", "slots", "blockers"],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 1},
+          "operation_id": {"type": "string", "minLength": 1},
+          "source_operation": {"type": "string", "minLength": 1},
+          "content_plan_status": {"type": "string"},
+          "status": {"enum": ["blocked", "planned_realization", "reference_only", "satisfied_existing"]},
+          "title": {"type": "string"},
+          "slots": {"type": "array", "items": {"type": "object"}},
+          "blockers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        }
+      }
+    },
+    "controls": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true}
+  }
+}

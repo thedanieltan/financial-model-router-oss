@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-input-population-receipt.v1.schema.json",
+  "title": "FMR workbook input population receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "population_id",
+    "input_set_id",
+    "input_set_sha256",
+    "write_plan_id",
+    "write_plan_sha256",
+    "execution_id",
+    "execution_receipt_sha256",
+    "source",
+    "output",
+    "status",
+    "records",
+    "verification",
+    "controls"
+  ],
+  "properties": {
+    "contract_version": {"const": "workbook-input-population-receipt.v1"},
+    "population_id": {"type": "string", "pattern": "^fmrp_[0-9a-f]{24}$"},
+    "input_set_id": {"type": "string", "pattern": "^fmri_[0-9a-f]{24}$"},
+    "input_set_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "write_plan_id": {"type": "string", "pattern": "^fmrw_[0-9a-f]{24}$"},
+    "write_plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "execution_id": {"type": "string", "pattern": "^fmre_[0-9a-f]{24}$"},
+    "execution_receipt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source": {"$ref": "#/$defs/file"},
+    "output": {"$ref": "#/$defs/file"},
+    "status": {"const": "completed"},
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "record_id",
+          "sheet_name",
+          "coordinate",
+          "value_type",
+          "cell_count",
+          "source_ref_sha256",
+          "status",
+          "before_sha256",
+          "after_sha256"
+        ],
+        "properties": {
+          "record_id": {"type": "string", "pattern": "^fmrw_[0-9]{6}$"},
+          "sheet_name": {"type": "string", "minLength": 1},
+          "coordinate": {"type": "string", "minLength": 1},
+          "value_type": {"enum": ["number", "boolean"]},
+          "cell_count": {"type": "integer", "minimum": 1},
+          "source_ref_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "status": {"const": "populated"},
+          "before_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "after_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "populated_record_count",
+        "populated_cell_count",
+        "immutable_record_count",
+        "failed_record_ids",
+        "source_hash_matches_execution_output",
+        "output_reopened",
+        "external_links_detected"
+      ],
+      "properties": {
+        "populated_record_count": {"type": "integer", "minimum": 0},
+        "populated_cell_count": {"type": "integer", "minimum": 0},
+        "immutable_record_count": {"type": "integer", "minimum": 0},
+        "failed_record_ids": {"type": "array", "maxItems": 0},
+        "source_hash_matches_execution_output": {"const": true},
+        "output_reopened": {"const": true},
+        "external_links_detected": {"const": false}
+      }
+    },
+    "controls": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "size_bytes"],
+      "properties": {
+        "filename": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 1}
+      }
+    }
+  }
+}

@@ -32,12 +32,21 @@ jobs:
           import copy
           import hashlib
           import json
+          import sys
           import tempfile
+          from importlib.resources import files
           from pathlib import Path
 
           import fmr
+          import fmr.providers.native_xlsx.workbook as native_workbook
+          import fmr.workbook as legacy_workbook
           from fmr.core.receipts import validate_execution_result, validate_provider_handoff
           from fmr.execution import ExecutionOrchestrator, SqliteExecutionLedger
+
+          assert legacy_workbook.__all__ == native_workbook.__all__
+          assert all(getattr(legacy_workbook, name) is getattr(native_workbook, name) for name in native_workbook.__all__)
+          assert files("fmr.providers.native_xlsx.contracts").joinpath("workbook-map.v1.schema.json").is_file()
+          assert "fmr.providers.native_xlsx.provider" not in sys.modules
 
           assumptions = ["forecast_horizon", "operating_cost_growth_rate", "revenue_growth_rate", "scenario", "scenario_adjustments"]
 

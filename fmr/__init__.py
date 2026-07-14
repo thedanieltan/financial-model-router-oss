@@ -22,7 +22,7 @@ from fmr.execution import ExecutionOrchestrator, ExecutionRequest, SqliteExecuti
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
 from fmr.router import route_request
-from fmr.workbook import (
+from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
     analyse_workbook_map,
     calculate_and_accept_workbook_bytes,

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-style-spec-registry.v1.schema.json",
+  "title": "Workbook style specification registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "registry_version", "palette", "role_styles", "number_formats", "identifier_semantic_types", "registry_sha256"],
+  "properties": {
+    "contract_version": {"const": "workbook-style-spec-registry.v1"},
+    "registry_version": {"const": "v1"},
+    "registry_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "palette": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^#[0-9A-F]{6}$"}},
+    "identifier_semantic_types": {"type": "object", "additionalProperties": {"type": "string"}},
+    "role_styles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["contract_version", "specification_ref", "format_role", "font", "fill", "alignment", "border", "protection"],
+        "properties": {
+          "contract_version": {"const": "workbook-style-spec.v1"},
+          "specification_ref": {"type": "string", "minLength": 1},
+          "format_role": {"type": "string", "minLength": 1},
+          "font": {"type": "object"},
+          "fill": {"type": "object"},
+          "alignment": {"type": "object"},
+          "border": {"type": "object"},
+          "protection": {"type": "object"}
+        }
+      }
+    },
+    "number_formats": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["contract_version", "specification_ref", "semantic_type", "code"],
+        "properties": {
+          "contract_version": {"const": "workbook-number-format-spec.v1"},
+          "specification_ref": {"type": "string", "minLength": 1},
+          "semantic_type": {"type": "string", "minLength": 1},
+          "code": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

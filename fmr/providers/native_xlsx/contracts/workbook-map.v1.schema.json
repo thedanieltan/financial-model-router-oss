@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-map.v1.schema.json",
+  "title": "Financial Model Router workbook map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "source", "workbook", "sheets", "findings", "limitations"],
+  "properties": {
+    "contract_version": {"const": "workbook-map.v1"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "size_bytes"],
+      "properties": {
+        "filename": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "workbook": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sheet_count", "defined_names", "external_links_detected"],
+      "properties": {
+        "sheet_count": {"type": "integer", "minimum": 0},
+        "defined_names": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "external_links_detected": {"type": "boolean"}
+      }
+    },
+    "sheets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "position", "visibility", "used_range", "formula_cells", "value_cells", "merged_ranges", "detected_periods", "candidate_role", "candidate_metrics", "external_formula_references"],
+        "properties": {
+          "name": {"type": "string", "minLength": 1},
+          "position": {"type": "integer", "minimum": 1},
+          "visibility": {"enum": ["visible", "hidden", "veryHidden"]},
+          "used_range": {"type": ["string", "null"]},
+          "formula_cells": {"type": "integer", "minimum": 0},
+          "value_cells": {"type": "integer", "minimum": 0},
+          "merged_ranges": {"type": "array", "items": {"type": "string"}},
+          "detected_periods": {"type": "array", "items": {"type": "string"}},
+          "candidate_role": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["value", "confidence", "evidence"],
+            "properties": {
+              "value": {"type": "string"},
+              "confidence": {"enum": ["low", "medium", "high"]},
+              "evidence": {"type": "array", "items": {"type": "string"}}
+            }
+          },
+          "candidate_metrics": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "external_formula_references": {"type": "integer", "minimum": 0}
+        }
+      }
+    },
+    "findings": {"type": "array", "items": {"type": "string"}},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-target-resolution.v1.schema.json",
+  "title": "FMR deterministic workbook target resolution",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "resolution_id",
+    "patch_id",
+    "patch_sha256",
+    "operation_specs_sha256",
+    "source",
+    "ready_for_executor",
+    "execution_supported_by_this_release",
+    "blockers",
+    "resolutions",
+    "controls"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "workbook-target-resolution.v1"
+    },
+    "resolution_id": {
+      "type": "string",
+      "pattern": "^fmrr_[0-9a-f]{24}$"
+    },
+    "patch_id": {
+      "type": "string",
+      "pattern": "^fmrp_[0-9a-f]{24}$"
+    },
+    "patch_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "operation_specs_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "size_bytes"],
+      "properties": {
+        "filename": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "ready_for_executor": {"type": "boolean"},
+    "execution_supported_by_this_release": {"const": false},
+    "blockers": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "resolutions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence",
+          "operation_id",
+          "source_operation",
+          "specification_ref",
+          "semantic_role",
+          "status",
+          "confidence",
+          "target",
+          "evidence",
+          "blockers"
+        ],
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 1},
+          "operation_id": {
+            "type": "string",
+            "pattern": "^op-[0-9]{3}$"
+          },
+          "source_operation": {"type": "string", "minLength": 1},
+          "specification_ref": {
+            "type": "string",
+            "pattern": "^fmr://workbook-operations/[a-z0-9_]+/v1$"
+          },
+          "semantic_role": {"type": "string", "minLength": 1},
+          "status": {
+            "enum": [
+              "resolved_existing",
+              "resolved_new",
+              "resolved_planned",
+              "resolved_set",
+              "blocked"
+            ]
+          },
+          "confidence": {"enum": ["none", "medium", "high"]},
+          "target": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "sheet_names",
+              "canonical_sheet_name",
+              "placement",
+              "anchors"
+            ],
+            "properties": {
+              "scope": {"enum": ["sheet", "sheet_set", "section"]},
+              "sheet_names": {
+                "type": "array",
+                "items": {"type": "string", "minLength": 1},
+                "uniqueItems": true
+              },
+              "canonical_sheet_name": {"type": ["string", "null"]},
+              "placement": {
+                "enum": [
+                  "after_last_visible_sheet",
+                  "append_below_used_range",
+                  "append_right_of_used_range",
+                  "link_existing_sheets"
+                ]
+              },
+              "anchors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "sheet_name",
+                    "position",
+                    "visibility",
+                    "used_range",
+                    "candidate_role",
+                    "role_confidence"
+                  ],
+                  "properties": {
+                    "sheet_name": {"type": "string", "minLength": 1},
+                    "position": {"type": "integer", "minimum": 1},
+                    "visibility": {
+                      "enum": ["visible", "hidden", "veryHidden"]
+                    },
+                    "used_range": {"type": ["string", "null"]},
+                    "candidate_role": {"type": "string", "minLength": 1},
+                    "role_confidence": {
+                      "enum": ["low", "medium", "high"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          },
+          "blockers": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "controls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    }
+  }
+}

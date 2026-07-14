@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from fmr.cli import main as legacy_main
-from fmr.workbook import (
+from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
     calculate_and_accept_workbook_file,
     calculation_engine_status,

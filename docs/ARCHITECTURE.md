@@ -16,7 +16,10 @@ fmr/
 ├── registry/             # provider and package manifest discovery
 ├── data/                 # canonical concepts and data packages
 ├── adapters/sources/     # external source -> canonical data
-├── providers/native_xlsx/# workbook-specific implementation
+├── providers/native_xlsx/
+│   ├── workbook/         # workbook-specific implementation
+│   └── contracts/        # authoritative workbook contracts
+├── workbook/             # 1.x import-compatibility façades only
 ├── sdk/                  # third-party provider extension surface
 └── contracts/            # provider-neutral and compatibility schemas
 ```
@@ -138,22 +141,25 @@ Routing and planning:
 - `fmr.plan`: ordered, closed-vocabulary transformation plans.
 - `fmr.model_specs`: supported model definitions.
 
-Workbook lifecycle:
+Native XLSX workbook lifecycle:
 
-- `fmr.workbook.inspect`: deterministic XLSX inspection.
-- `fmr.workbook.evidence`: conservative evidence derivation.
-- `fmr.workbook.analyse`: request enrichment and analysis.
-- `fmr.workbook.patch` and `patch_validation`: patch compilation and validation.
-- `fmr.workbook.operation_specs` and `target_resolution`: semantic target policies.
-- `fmr.workbook.coordinate_rules` and `coordinate_plan`: collision-checked allocation.
-- `fmr.workbook.content_specs` and `content_plan`: symbolic workbook content.
-- `fmr.workbook.formula_specs`, `style_specs` and `realization_plan`: governed formula and style realization.
-- `fmr.workbook.write_plan`: Excel formula compilation and ordered write records.
-- `fmr.workbook.executor` and `executor_public`: copy-only XLSX execution.
-- `fmr.workbook.input_population`: reserved-input population and value-free receipts.
-- `fmr.workbook.input_link`: population-to-calculation hash-chain validation.
-- `fmr.workbook.calculation` and `calculation_public`: spreadsheet-engine execution and calculated-output acceptance.
-- `fmr.contracts`: packaged JSON schemas.
+- `fmr.providers.native_xlsx.workbook.inspect`: deterministic XLSX inspection.
+- `fmr.providers.native_xlsx.workbook.evidence`: conservative evidence derivation.
+- `fmr.providers.native_xlsx.workbook.analyse`: request enrichment and analysis.
+- `fmr.providers.native_xlsx.workbook.patch` and `patch_validation`: patch compilation and validation.
+- `fmr.providers.native_xlsx.workbook.operation_specs` and `target_resolution`: semantic target policies.
+- `fmr.providers.native_xlsx.workbook.coordinate_rules` and `coordinate_plan`: collision-checked allocation.
+- `fmr.providers.native_xlsx.workbook.content_specs` and `content_plan`: symbolic workbook content.
+- `fmr.providers.native_xlsx.workbook.formula_specs`, `style_specs` and `realization_plan`: governed formula and style realization.
+- `fmr.providers.native_xlsx.workbook.write_plan`: Excel formula compilation and ordered write records.
+- `fmr.providers.native_xlsx.workbook.executor` and `executor_public`: copy-only XLSX execution.
+- `fmr.providers.native_xlsx.workbook.input_population`: reserved-input population and value-free receipts.
+- `fmr.providers.native_xlsx.workbook.input_link`: population-to-calculation hash-chain validation.
+- `fmr.providers.native_xlsx.workbook.calculation` and `calculation_public`: spreadsheet-engine execution and calculated-output acceptance.
+- `fmr.providers.native_xlsx.contracts`: authoritative provider-owned JSON schemas.
+
+`fmr.workbook` and the workbook-prefixed files in `fmr.contracts` are tested 1.x
+compatibility surfaces. They contain no workbook implementation.
 
 The routing, planning and financial-data intake core uses only the Python standard library. Workbook execution, population and calculated-output validation use the optional `openpyxl` adapter. Live recalculation requires an external spreadsheet engine; LibreOffice is the first supported adapter.
 
