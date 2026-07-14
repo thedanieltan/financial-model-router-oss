@@ -27,6 +27,7 @@ from fmr.execution import (
 )
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
+from fmr.vocabulary import VocabularyRegistry
 from fmr.router import route_request
 from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
@@ -78,6 +79,7 @@ __all__ = [
     "SqliteExecutionLedger",
     "ModelJob",
     "ProviderRegistry",
+    "VocabularyRegistry",
     "CONCEPTS",
     "accept_calculated_workbook_bytes",
     "analyse_workbook_map",

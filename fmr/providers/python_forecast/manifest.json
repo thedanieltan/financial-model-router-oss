@@ -29,5 +29,21 @@
     "execution_capabilities": ["execute_local"],
     "adapter_id": "python-forecast/generic-budget-forecast.v1",
     "adapter_entry_point": "python-forecast-budget-forecast"
+  }, {
+    "contract_version": "model-package-manifest.v1",
+    "package_id": "python-forecast/saas-budget-forecast",
+    "version": "1.0.0",
+    "model_family": "budget_forecast",
+    "industries": ["saas"],
+    "deliverables": ["budget_forecast", "saas_unit_economics"],
+    "required_data": ["customer_history", "income_statement_history", "monthly_recurring_revenue_history"],
+    "required_assumptions": ["customer_churn_rate", "customer_growth_rate", "forecast_horizon", "gross_margin_rate", "monthly_recurring_revenue_growth_rate", "saas_scenario_adjustments", "scenario"],
+    "accepted_inputs": ["canonical-financial-data.v2"],
+    "output_artifacts": [{"kind": "saas_budget_forecast", "format": "json", "required": true}],
+    "output_formats": ["json"],
+    "validation_checks": ["artifact_hash", "period_continuity", "saas_metric_reconciliation", "scenario_applied"],
+    "execution_capabilities": ["execute_local"],
+    "adapter_id": "python-forecast/saas-budget-forecast.v1",
+    "adapter_entry_point": "python-forecast-saas-budget-forecast"
   }]
 }

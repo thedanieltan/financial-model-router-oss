@@ -59,10 +59,12 @@ jobs:
                   "periods": ["2025", "2026"],
                   "financial_statements": {"income_statement": {"revenue": ["100", "110"], "operating_costs": ["60", "63"]}},
                   "trial_balance": [], "account_balances": [], "debt_schedules": [], "capital_expenditure": [], "working_capital": [],
-                  "operational_drivers": {"units": ["100", "105"]},
+                  "operational_drivers": {"units": ["100", "105"], "monthly_recurring_revenue": ["1000", "1100"], "customer_count": ["100", "110"]},
                   "assumptions": {
                       "forecast_horizon": 2, "revenue_growth_rate": "0.10", "operating_cost_growth_rate": "0.05", "scenario": "base",
-                      "scenario_adjustments": {"base": {"revenue_growth_delta": "0", "operating_cost_growth_delta": "0"}}
+                      "scenario_adjustments": {"base": {"revenue_growth_delta": "0", "operating_cost_growth_delta": "0"}},
+                      "monthly_recurring_revenue_growth_rate": "0.10", "customer_growth_rate": "0.15", "customer_churn_rate": "0.05", "gross_margin_rate": "0.80",
+                      "saas_scenario_adjustments": {"base": {"mrr_growth_delta": "0", "customer_growth_delta": "0", "churn_rate_delta": "0"}}
                   },
                   "provenance": [{"source": "clean-wheel-ci"}]
               }), encoding="utf-8")
@@ -90,6 +92,24 @@ jobs:
               assert {item["kind"] for item in native_result["output_artifact_references"]} == {"budget_forecast", "budget_forecast_workbook"}
               assert not validate_execution_result(native_result, handoff=native_handoff)
 
+              saas = {
+                  "contract_version": "model-job.v2", "objective": "Prepare SaaS budget and unit economics",
+                  "model_family": "budget_forecast", "industry": "software as a service",
+                  "requested_deliverables": ["budget_forecast", "saas_unit_economics"],
+                  "available_data": ["customer_history", "income_statement_history", "monthly_recurring_revenue_history"],
+                  "available_assumptions": ["customer_churn_rate", "customer_growth_rate", "forecast_horizon", "gross_margin_rate", "monthly_recurring_revenue_growth_rate", "saas_scenario_adjustments", "scenario"],
+                  "input_references": {"canonical_financial_data": reference}, "output_formats": ["json"]
+              }
+              saas_handoff = fmr.prepare_handoff(saas)
+              assert saas_handoff["package"]["package_id"] == "python-forecast/saas-budget-forecast"
+              saas_result = orchestrator.execute_request({
+                  "contract_version": "execution-request.v1", "handoff": saas_handoff, "idempotency_key": "saas",
+                  "execution_mode": "local", "timeout_seconds": 30, "secret_references": [],
+                  "output_policy": {"mode": "managed", "overwrite": False, "publish": False}
+              })
+              assert [item["kind"] for item in saas_result["output_artifact_references"]] == ["saas_budget_forecast"]
+              assert not validate_execution_result(saas_result, handoff=saas_handoff)
+
               external = {
                   "contract_version": "model-job.v2", "objective": "Prepare external DCF handoff",
                   "model_family": "operating_company_dcf", "requested_deliverables": ["external_provider_handoff"],
@@ -110,7 +130,7 @@ jobs:
               forged["provider_payload"]["external_request"]["objective"] = "forged"
               assert validate_provider_handoff(forged)
               operations = orchestrator.ledger.operational_status()
-              assert operations["states"]["completed"] == 2
+              assert operations["states"]["completed"] == 3
               backup = orchestrator.ledger.backup(root / "ledger-backup.sqlite3")
               assert len(backup["sha256"]) == 64
           PY

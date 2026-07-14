@@ -33,6 +33,7 @@ fmr-registry = "fmr.registry.cli:main"
 [project.entry-points."fmr.provider_adapters"]
 native-xlsx-budget-forecast = "fmr.providers.native_xlsx.plugin:NativeXlsxBudgetAdapter"
 python-forecast-budget-forecast = "fmr.providers.python_forecast.plugin:PythonForecastAdapter"
+python-forecast-saas-budget-forecast = "fmr.providers.python_forecast.plugin:SaasForecastAdapter"
 reference-handoff-dcf = "fmr.providers.reference_handoff.plugin:ReferenceHandoffAdapter"
 
 [project.entry-points."fmr.provider_executors"]
@@ -49,3 +50,4 @@ include = ["fmr*"]
 "fmr.fixtures" = ["**/*.json"]
 "fmr.providers" = ["**/*.json"]
 "fmr.sdk" = ["fixtures/*.json"]
+"fmr.vocabulary" = ["data/*.json"]

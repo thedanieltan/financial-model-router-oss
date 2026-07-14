@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/industry-vocabulary.v1.schema.json",
+  "type": "object",
+  "required": ["contract_version", "vocabulary_id", "version", "kind", "canonical_industry", "aliases", "concepts"],
+  "properties": {
+    "contract_version": {"const": "industry-vocabulary.v1"},
+    "vocabulary_id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "kind": {"enum": ["core", "industry"]},
+    "canonical_industry": {"anyOf": [{"type": "null"}, {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}]},
+    "aliases": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "concepts": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["concept_id", "label", "aliases"], "properties": {"concept_id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}, "label": {"type": "string", "minLength": 1}, "aliases": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}}, "additionalProperties": false}}
+  },
+  "allOf": [
+    {"if": {"properties": {"kind": {"const": "core"}}}, "then": {"properties": {"canonical_industry": {"type": "null"}}}},
+    {"if": {"properties": {"kind": {"const": "industry"}}}, "then": {"properties": {"canonical_industry": {"type": "string", "minLength": 1}}}}
+  ],
+  "additionalProperties": false
+}

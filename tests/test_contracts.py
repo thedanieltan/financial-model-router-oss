@@ -18,6 +18,7 @@ from fmr.execution import ExecutionOrchestrator, ExecutionRequest, SqliteExecuti
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderCatalog, ProviderManifest, ProviderRegistry
 from fmr.sdk import build_provider_bundle, initialize_provider_project, run_manifest_conformance, validate_provider_project
+from fmr.vocabulary import VocabularyRegistry
 from tests.test_provider_router import _canonical_file, _job
 
 
@@ -38,6 +39,7 @@ class ContractTests(unittest.TestCase):
             "provider-registry.v1.schema.json",
             "provider-registry-audit.v1.schema.json",
             "provider-registry-reconciliation.v1.schema.json",
+            "industry-vocabulary.v1.schema.json",
             "execution-request.v1.schema.json",
             "execution-result.v1.schema.json",
             "execution-operations-status.v1.schema.json",
@@ -108,6 +110,8 @@ class ContractTests(unittest.TestCase):
                 validators["model-package-manifest.v1.schema.json"].validate(package.to_dict())
         for family in FAMILIES:
             validators["model-family-definition.v1.schema.json"].validate(family.to_dict())
+        for vocabulary in VocabularyRegistry.builtins().vocabularies:
+            validators["industry-vocabulary.v1.schema.json"].validate(vocabulary.to_dict())
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             job = _job(_canonical_file(root), output_formats=["json"])
@@ -205,7 +209,7 @@ class ContractTests(unittest.TestCase):
 
 def _validators() -> dict[str, Draft202012Validator]:
     root = files("fmr.contracts")
-    names = ("artifact-retention-result.v1.schema.json", "canonical-financial-data.v2.schema.json", "execution-ledger-backup.v1.schema.json", "execution-operations-status.v1.schema.json", "execution-recovery-result.v1.schema.json", "model-family-definition.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "provider-sdk-validation-result.v1.schema.json", "provider-sdk-package-result.v1.schema.json", "provider-registry.v1.schema.json", "provider-registry-audit.v1.schema.json", "provider-registry-reconciliation.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
+    names = ("artifact-retention-result.v1.schema.json", "canonical-financial-data.v2.schema.json", "execution-ledger-backup.v1.schema.json", "execution-operations-status.v1.schema.json", "execution-recovery-result.v1.schema.json", "industry-vocabulary.v1.schema.json", "model-family-definition.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "provider-sdk-validation-result.v1.schema.json", "provider-sdk-package-result.v1.schema.json", "provider-registry.v1.schema.json", "provider-registry-audit.v1.schema.json", "provider-registry-reconciliation.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
     documents = {name: json.loads(root.joinpath(name).read_text(encoding="utf-8")) for name in names}
     registry = Registry().with_resources((document["$id"], Resource.from_contents(document)) for document in documents.values())
     return {name: Draft202012Validator(document, registry=registry) for name, document in documents.items()}

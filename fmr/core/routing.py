@@ -88,7 +88,7 @@ def _evaluate(job: ModelJob, item: RegisteredPackage, policy: RoutingPolicy) -> 
         preference_points = max(len(policy.preferred_providers) - policy.preferred_providers.index(provider.provider_id), 1)
     factors = {
         "exact_family_match": policy.weights["exact_family_match"],
-        "industry_match": policy.weights["industry_match"] if industry_match else 0,
+        "industry_match": policy.weights["industry_match"] * (2 if job.industry is not None and job.industry in package.industries else 1) if industry_match else 0,
         "deliverable_coverage": policy.weights["deliverable_coverage"] if not missing_deliverables else 0,
         "data_readiness": policy.weights["data_readiness"] if not missing_data and not missing_assumptions else 0,
         "preferred_output_format": policy.weights["preferred_output_format"] if not missing_formats else 0,
@@ -136,7 +136,11 @@ def route_job(job: ModelJob | dict[str, Any], *, registry: ProviderRegistry | No
         {key: item[key] for key in ("provider_id", "provider_version", "package_id", "package_version", "score")}
         for item in sorted((value for value in evaluations if value["executable"] and (not selected or value["package_id"] != selected["package_id"])), key=lambda value: (-value["score"], value["provider_id"], value["package_id"]))
     ]
-    missing = sorted({blocker for item in evaluations for blocker in item["blockers"]})
+    if selected:
+        chosen = next(item for item in evaluations if item["provider_id"] == selected["provider_id"] and item["package_id"] == selected["package_id"])
+        missing = list(chosen["blockers"])
+    else:
+        missing = sorted({blocker for item in evaluations for blocker in item["blockers"]})
     if selected:
         decision_reasons = [f"selected {selected['provider_id']} / {selected['package_id']} under {policy.version}"]
     elif classification["status"] in {"ambiguous_family", "unsupported_family"}:

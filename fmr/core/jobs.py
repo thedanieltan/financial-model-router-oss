@@ -4,6 +4,8 @@ from dataclasses import dataclass
 import re
 from typing import Any
 
+from fmr.vocabulary import VocabularyRegistry
+
 
 def _strings(value: Any, field: str, *, required: bool = False) -> tuple[str, ...]:
     if value is None:
@@ -129,7 +131,7 @@ class ModelJob:
             objective=objective.strip(),
             requested_deliverables=_strings(data.get("requested_deliverables"), "requested_deliverables", required=True),
             model_family=family.strip() if family else None,
-            industry=industry.strip().lower() if industry else None,
+            industry=VocabularyRegistry.builtins().normalize_industry(industry) if industry else None,
             context=_mapping(data.get("context"), "context"),
             available_data=_strings(data.get("available_data"), "available_data"),
             available_assumptions=_strings(data.get("available_assumptions"), "available_assumptions"),
