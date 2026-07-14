@@ -30,8 +30,12 @@ jobs:
         run: |
           /tmp/fmr-sdk-test/bin/pip install --no-deps /tmp/sdk-ci-provider
           cd /tmp
-          /tmp/fmr-sdk-test/bin/fmr-provider test /tmp/sdk-ci-provider
+          /tmp/fmr-sdk-test/bin/fmr-provider test /tmp/sdk-ci-provider --output /tmp/sdk-conformance.json
           /tmp/fmr-sdk-test/bin/fmr-provider package /tmp/sdk-ci-provider --destination /tmp/sdk-dist --output /tmp/sdk-package.json
+          /tmp/fmr-sdk-test/bin/fmr-registry --registry /tmp/provider-registry.json submit \
+            /tmp/sdk-ci-provider/manifest.json /tmp/sdk-conformance.json /tmp/sdk-package.json
+          /tmp/fmr-sdk-test/bin/fmr-registry --registry /tmp/provider-registry.json transition sdk-ci-provider 0.1.0 active
+          /tmp/fmr-sdk-test/bin/fmr-registry --registry /tmp/provider-registry.json audit
           /tmp/fmr-sdk-test/bin/python - <<'PY'
           import hashlib
           import json

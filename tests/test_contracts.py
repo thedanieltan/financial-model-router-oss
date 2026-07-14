@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import copy
+import hashlib
 import tempfile
 import unittest
 from importlib.resources import files
@@ -15,7 +16,7 @@ from fmr.data import validate_canonical_financial_data
 from fmr.core.receipts import validate_execution_result, validate_provider_handoff, validate_route_decision
 from fmr.execution import ExecutionOrchestrator, ExecutionRequest, SqliteExecutionLedger
 from fmr.provider_service import prepare_handoff
-from fmr.registry import ProviderManifest, ProviderRegistry
+from fmr.registry import ProviderCatalog, ProviderManifest, ProviderRegistry
 from fmr.sdk import build_provider_bundle, initialize_provider_project, run_manifest_conformance, validate_provider_project
 from tests.test_provider_router import _canonical_file, _job
 
@@ -34,6 +35,9 @@ class ContractTests(unittest.TestCase):
             "provider-conformance-result.v1.schema.json",
             "provider-sdk-validation-result.v1.schema.json",
             "provider-sdk-package-result.v1.schema.json",
+            "provider-registry.v1.schema.json",
+            "provider-registry-audit.v1.schema.json",
+            "provider-registry-reconciliation.v1.schema.json",
             "execution-request.v1.schema.json",
             "execution-result.v1.schema.json",
             "execution-operations-status.v1.schema.json",
@@ -127,6 +131,20 @@ class ContractTests(unittest.TestCase):
             initialize_provider_project(provider_project, "schema-provider")
             sdk_validation = validate_provider_project(provider_project)
             sdk_package = build_provider_bundle(provider_project, root / "provider-dist")
+            registry_manifest = ProviderRegistry.builtins().providers()[0].to_dict()
+            registry_conformance = run_manifest_conformance(registry_manifest)
+            registry_bundle = root / "registry-provider.zip"
+            registry_bundle.write_bytes(b"registry provider")
+            registry_receipt = {
+                "contract_version": "provider-sdk-package-result.v1", "provider_id": registry_manifest["provider_id"],
+                "path": str(registry_bundle), "sha256": hashlib.sha256(registry_bundle.read_bytes()).hexdigest(),
+                "size_bytes": registry_bundle.stat().st_size, "member_count": 1,
+            }
+            catalog = ProviderCatalog(root / "provider-registry.json")
+            catalog.submit(registry_manifest, registry_conformance, registry_receipt, available=False)
+            registry_snapshot = catalog.snapshot()
+            registry_audit = catalog.audit()
+            registry_reconciliation = catalog.reconcile()
             for schema_name, payload in (
                 ("model-job.v2.schema.json", ModelJob.from_mapping(job).to_dict()),
                 ("route-decision.v2.schema.json", decision),
@@ -139,6 +157,9 @@ class ContractTests(unittest.TestCase):
                 ("artifact-retention-result.v1.schema.json", retention),
                 ("provider-sdk-validation-result.v1.schema.json", sdk_validation),
                 ("provider-sdk-package-result.v1.schema.json", sdk_package),
+                ("provider-registry.v1.schema.json", registry_snapshot),
+                ("provider-registry-audit.v1.schema.json", registry_audit),
+                ("provider-registry-reconciliation.v1.schema.json", registry_reconciliation),
             ):
                 validators[schema_name].validate(payload)
             self.assertEqual(validate_route_decision(decision, job=job), ())
@@ -184,7 +205,7 @@ class ContractTests(unittest.TestCase):
 
 def _validators() -> dict[str, Draft202012Validator]:
     root = files("fmr.contracts")
-    names = ("artifact-retention-result.v1.schema.json", "canonical-financial-data.v2.schema.json", "execution-ledger-backup.v1.schema.json", "execution-operations-status.v1.schema.json", "execution-recovery-result.v1.schema.json", "model-family-definition.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "provider-sdk-validation-result.v1.schema.json", "provider-sdk-package-result.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
+    names = ("artifact-retention-result.v1.schema.json", "canonical-financial-data.v2.schema.json", "execution-ledger-backup.v1.schema.json", "execution-operations-status.v1.schema.json", "execution-recovery-result.v1.schema.json", "model-family-definition.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "provider-sdk-validation-result.v1.schema.json", "provider-sdk-package-result.v1.schema.json", "provider-registry.v1.schema.json", "provider-registry-audit.v1.schema.json", "provider-registry-reconciliation.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
     documents = {name: json.loads(root.joinpath(name).read_text(encoding="utf-8")) for name in names}
     registry = Registry().with_resources((document["$id"], Resource.from_contents(document)) for document in documents.values())
     return {name: Draft202012Validator(document, registry=registry) for name, document in documents.items()}

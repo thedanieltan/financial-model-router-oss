@@ -28,6 +28,7 @@ calculation = ["openpyxl>=3.1,<4"]
 [project.scripts]
 fmr = "fmr.entrypoint:main"
 fmr-provider = "fmr.sdk.cli:main"
+fmr-registry = "fmr.registry.cli:main"
 
 [project.entry-points."fmr.provider_adapters"]
 native-xlsx-budget-forecast = "fmr.providers.native_xlsx.plugin:NativeXlsxBudgetAdapter"

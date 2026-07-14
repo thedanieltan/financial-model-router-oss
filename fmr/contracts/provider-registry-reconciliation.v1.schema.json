@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/provider-registry-reconciliation.v1.schema.json",
+  "type": "object",
+  "required": ["contract_version", "changed"],
+  "properties": {
+    "contract_version": {"const": "provider-registry-reconciliation.v1"},
+    "changed": {"type": "array", "items": {"type": "object", "required": ["provider_id", "version", "reasons"], "properties": {"provider_id": {"type": "string"}, "version": {"type": "string"}, "reasons": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}}, "additionalProperties": false}}
+  },
+  "additionalProperties": false
+}
