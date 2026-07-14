@@ -1,6 +1,6 @@
 # Financial Model Router
 
-Financial Model Router (FMR) is an open-source Python toolkit for selecting a financial-model architecture, checking input sufficiency, inspecting XLSX structure, producing controlled workbook plans, executing those plans on copied workbooks, populating governed inputs and validating recalculated outputs.
+Financial Model Router (FMR) is an open-source Python toolkit for financial-data intake, model selection, controlled workbook construction, governed input population and calculated-output validation.
 
 FMR does not provide accounting, tax or investment advice. The deterministic core runs locally.
 
@@ -23,13 +23,15 @@ FMR 0.4 applies an accepted write plan to a copied `.xlsx` workbook and emits `w
 
 FMR 0.4.1 recalculates a populated copy through optional LibreOffice, or accepts a workbook recalculated elsewhere. `workbook-calculation-acceptance.v1` checks immutable records, populated inputs, cached results, result types, sign conventions and spreadsheet errors without recording input or calculated values.
 
-FMR 0.4.2 compiles explicit numeric or boolean CSV data into `workbook-input-set.v1`, populates only ranges governed by `reserve_input` records, and emits `workbook-input-population-receipt.v1`. Input sets contain values; population receipts contain only hashes, counts, record identifiers and statuses.
+FMR 0.4.2 compiles explicit numeric or boolean CSV data into `workbook-input-set.v1`, populates only ranges governed by `reserve_input` records, and emits `workbook-input-population-receipt.v1` without input values.
+
+FMR 0.5 normalizes provider-neutral statement CSVs into `financial-data-package.v1`, maps exact account labels or explicit overrides to canonical concepts, binds concepts or constants to semantic workbook slot IDs, and emits `workbook-input-set.v1` only when every reserved numeric or boolean input is covered.
 
 Derived evidence never creates assumptions and never overrides explicit user input.
 
 ## Install
 
-Planning core:
+Planning and financial-data intake:
 
 ```bash
 python -m pip install -e .
@@ -56,6 +58,27 @@ The server binds to the loopback interface, stores no requests, sends no telemet
 
 ## Use the CLI
 
+Financial-data intake:
+
+```bash
+fmr financial-concepts --output concepts.json
+fmr import-statement-csv statements.csv --output financial-data-package.json
+fmr make-financial-mapping-profile mapping-rules.json --output mapping-profile.json
+fmr map-financial-data financial-data-package.json \
+  --profile mapping-profile.json \
+  --output mapping-result.json
+fmr make-financial-binding-profile slot-bindings.json --output binding-profile.json
+fmr plan-financial-bindings \
+  financial-data-package.json mapping-result.json binding-profile.json \
+  write-plan.json execution-receipt.json \
+  --output input-binding-plan.json
+fmr compile-financial-input-set \
+  input-binding-plan.json write-plan.json execution-receipt.json \
+  --output input-set.json
+```
+
+Workbook pipeline:
+
 ```bash
 fmr route tests/fixtures/request-dcf-ready.json
 fmr plan tests/fixtures/request-debt-blocked.json
@@ -69,17 +92,13 @@ fmr plan-coordinates workbook-analysis.json workbook-patch.json target-resolutio
   --output coordinate-plan.json
 fmr plan-content coordinate-plan.json --output content-plan.json
 fmr plan-realization content-plan.json --output realization-plan.json
-fmr plan-writes realization-plan.json write-context.json \
-  --output write-plan.json
+fmr plan-writes realization-plan.json write-context.json --output write-plan.json
 fmr execute-writes source.xlsx write-plan.json \
   --output executed.xlsx \
   --receipt execution-receipt.json
-fmr compile-input-set-csv inputs.csv write-plan.json execution-receipt.json \
-  --output input-set.json
 fmr populate-inputs executed.xlsx input-set.json write-plan.json execution-receipt.json \
   --output populated.xlsx \
   --receipt population-receipt.json
-fmr calculation-engine-status
 fmr calculate-output populated.xlsx write-plan.json execution-receipt.json \
   --output calculated.xlsx \
   --receipt calculation-acceptance.json
@@ -95,26 +114,26 @@ Planning through `validate-write-plan` is non-mutating. Execution, input populat
 
 - Model selection is explainable.
 - Missing information is reported, not invented.
-- Workbook classification includes evidence and confidence.
-- Assumptions are never inferred from workbook labels.
+- Financial source amounts retain decimal precision during normalization.
+- Account mapping uses exact aliases or explicit overrides; fuzzy matching is not used.
+- Unmapped, ambiguous and statement-shape-invalid rows remain visible.
+- Binding profiles use semantic slot IDs rather than write-record IDs.
+- A governed input set is emitted only when every reserved input is covered.
+- Assumptions are never inferred from workbook labels or financial statements.
 - Existing formulas are inspected as text and never executed during inspection.
-- Patch operations are additive, closed-vocabulary intents.
 - Every plan and receipt pins its source contracts.
 - Ambiguous semantic targets and dependency bindings are blocked.
 - Coordinate ranges are checked against occupancy and Excel bounds.
 - Formula templates use declared dependencies and forbid raw external references and circularity.
-- Style and number-format rules remain separate from financial-model logic.
 - Input slots are editable; generated output and control slots are locked.
 - Execution verifies source identity and publishes atomically.
-- Input population writes only complete, explicitly bound reserved ranges.
 - Input-set values are never copied into population receipts.
 - Calculation runs through an optional isolated spreadsheet-engine adapter.
-- Calculated outputs must preserve immutable records and populated inputs.
 - Formula errors and missing cached results block acceptance.
 - Public fixtures and workbooks are synthetic and generated during tests.
 - CLI, Python and HTTP interfaces call the same deterministic functions.
 
-See [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/WORKBOOK_ANALYSIS.md](docs/WORKBOOK_ANALYSIS.md), [docs/WORKBOOK_PATCH.md](docs/WORKBOOK_PATCH.md), [docs/SEMANTIC_TARGET_RESOLUTION.md](docs/SEMANTIC_TARGET_RESOLUTION.md), [docs/COORDINATE_PLANNING.md](docs/COORDINATE_PLANNING.md), [docs/CONTENT_PLANNING.md](docs/CONTENT_PLANNING.md), [docs/FORMULA_STYLE_SPECIFICATIONS.md](docs/FORMULA_STYLE_SPECIFICATIONS.md), [docs/WRITE_PLANNING.md](docs/WRITE_PLANNING.md), [docs/WORKBOOK_EXECUTION.md](docs/WORKBOOK_EXECUTION.md), [docs/INPUT_POPULATION.md](docs/INPUT_POPULATION.md), [docs/CALCULATED_OUTPUT_ACCEPTANCE.md](docs/CALCULATED_OUTPUT_ACCEPTANCE.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
+See [docs/FINANCIAL_DATA_INTAKE.md](docs/FINANCIAL_DATA_INTAKE.md), [docs/SERVICE.md](docs/SERVICE.md), [docs/WORKBOOK_INSPECTION.md](docs/WORKBOOK_INSPECTION.md), [docs/WORKBOOK_ANALYSIS.md](docs/WORKBOOK_ANALYSIS.md), [docs/WORKBOOK_PATCH.md](docs/WORKBOOK_PATCH.md), [docs/SEMANTIC_TARGET_RESOLUTION.md](docs/SEMANTIC_TARGET_RESOLUTION.md), [docs/COORDINATE_PLANNING.md](docs/COORDINATE_PLANNING.md), [docs/CONTENT_PLANNING.md](docs/CONTENT_PLANNING.md), [docs/FORMULA_STYLE_SPECIFICATIONS.md](docs/FORMULA_STYLE_SPECIFICATIONS.md), [docs/WRITE_PLANNING.md](docs/WRITE_PLANNING.md), [docs/WORKBOOK_EXECUTION.md](docs/WORKBOOK_EXECUTION.md), [docs/INPUT_POPULATION.md](docs/INPUT_POPULATION.md), [docs/CALCULATED_OUTPUT_ACCEPTANCE.md](docs/CALCULATED_OUTPUT_ACCEPTANCE.md), [docs/DEVELOPER_WORKBENCH.md](docs/DEVELOPER_WORKBENCH.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), and [docs/IP_BOUNDARY.md](docs/IP_BOUNDARY.md).
 
 ## Licence
 

@@ -8,10 +8,12 @@ from fastapi.responses import Response
 from fmr.api.app import create_app as create_base_app
 from fmr.api.calculation_routes import router as calculation_router
 from fmr.api.execution_routes import router as execution_router
+from fmr.api.financial_data_routes import router as financial_data_router
 from fmr.api.input_population_routes import router as input_population_router
 from fmr.api.write_routes import router as write_router
 
 _LARGE_JSON_PATHS = {
+    "/api/v1/financial-data/packages/from-csv",
     "/api/v1/workbooks/executions",
     "/api/v1/workbooks/input-populations",
     "/api/v1/workbooks/calculations",
@@ -29,6 +31,7 @@ def create_app() -> FastAPI:
     application.include_router(execution_router)
     application.include_router(input_population_router)
     application.include_router(calculation_router)
+    application.include_router(financial_data_router)
 
     @application.middleware("http")
     async def large_request_limit_override(request: Request, call_next):  # type: ignore[no-untyped-def]
@@ -62,6 +65,13 @@ def create_app() -> FastAPI:
     @application.get("/assets/calculation.js", include_in_schema=False)
     def calculation_javascript() -> Response:
         return Response(_asset("calculation.js"), media_type="application/javascript")
+
+    @application.get("/assets/financial_data.js", include_in_schema=False)
+    def financial_data_javascript() -> Response:
+        return Response(
+            _asset("financial_data.js"),
+            media_type="application/javascript",
+        )
 
     return application
 

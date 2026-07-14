@@ -1,0 +1,193 @@
+name: Financial data CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Financial data Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e ".[dev-ui,test-ui,executor]"
+      - name: Run provider-neutral intake tests
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m unittest \
+            tests.test_financial_data \
+            tests.test_cli_financial_data \
+            tests.test_api_financial_data \
+            tests.test_financial_data_workbench \
+            tests.test_contracts -v 2>&1 | tee financial-data-test-output.txt
+      - name: Preserve failure output
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: financial-data-test-output-python-${{ matrix.python-version }}
+          path: financial-data-test-output.txt
+          if-no-files-found: error
+          retention-days: 7
+      - run: python -m compileall -q fmr
+      - run: python -m fmr financial-concepts --help
+      - run: python -m fmr import-statement-csv --help
+      - run: python -m fmr map-financial-data --help
+      - run: python -m fmr plan-financial-bindings --help
+      - run: python -m fmr compile-financial-input-set --help
+      - name: Confirm no workbook binaries are committed
+        run: |
+          if find . -type f \( -iname '*.xlsx' -o -iname '*.xlsm' -o -iname '*.xlsb' -o -iname '*.xls' -o -iname '*.xltx' -o -iname '*.xltm' -o -iname '*.ods' \) -print -quit | grep -q .; then
+            echo "Workbook binary found in repository" >&2
+            exit 1
+          fi
+
+  package:
+    name: Build wheel and compile governed input set
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - name: Install wheel in a clean environment
+        run: |
+          python -m venv /tmp/fmr-financial-data
+          WHEEL="$(ls dist/*.whl)"
+          /tmp/fmr-financial-data/bin/pip install "${WHEEL}[dev-ui,test-ui,executor]"
+      - name: Verify packaged contracts, modules and browser asset
+        run: |
+          cd /tmp
+          /tmp/fmr-financial-data/bin/python - <<'PY'
+          from importlib.resources import files
+          import fmr
+          import fmr.api.financial_data_routes  # noqa: F401
+          import fmr.financial_data  # noqa: F401
+
+          assert fmr.__version__ == "0.5.0"
+          for name in (
+              "financial-concept-registry.v1.schema.json",
+              "financial-data-package.v1.schema.json",
+              "financial-data-mapping-profile.v1.schema.json",
+              "financial-data-mapping-result.v1.schema.json",
+              "financial-data-binding-profile.v1.schema.json",
+              "workbook-input-binding-plan.v1.schema.json",
+          ):
+              assert files("fmr.contracts").joinpath(name).is_file(), name
+          assert files("fmr.web").joinpath("financial_data.js").is_file()
+          PY
+      - name: Generate runtime contracts and source data
+        env:
+          FMR_REPO: ${{ github.workspace }}
+        run: |
+          cd /tmp
+          /tmp/fmr-financial-data/bin/python - <<'PY'
+          import json
+          import os
+          import sys
+          from pathlib import Path
+
+          sys.path.insert(0, os.environ["FMR_REPO"])
+          from tests.financial_data_case import financial_data_case, statement_csv_bytes
+
+          _, mapping_profile, _, binding_profile, _, execution = financial_data_case()
+          Path("/tmp/statements.csv").write_bytes(statement_csv_bytes())
+          Path("/tmp/mapping-rules.json").write_text(json.dumps(mapping_profile["rules"]), encoding="utf-8")
+          Path("/tmp/binding-rules.json").write_text(json.dumps(binding_profile["bindings"]), encoding="utf-8")
+          Path("/tmp/write-plan.json").write_text(json.dumps(execution["write_plan"]), encoding="utf-8")
+          Path("/tmp/execution-receipt.json").write_text(json.dumps(execution["execution_receipt"]), encoding="utf-8")
+          PY
+      - name: Run installed CLI intake and binding path
+        run: |
+          cd /tmp
+          /tmp/fmr-financial-data/bin/fmr import-statement-csv /tmp/statements.csv --output /tmp/package.json
+          /tmp/fmr-financial-data/bin/fmr make-financial-mapping-profile /tmp/mapping-rules.json --output /tmp/mapping-profile.json
+          /tmp/fmr-financial-data/bin/fmr map-financial-data /tmp/package.json --profile /tmp/mapping-profile.json --output /tmp/mapping.json
+          /tmp/fmr-financial-data/bin/fmr make-financial-binding-profile /tmp/binding-rules.json --output /tmp/binding-profile.json
+          /tmp/fmr-financial-data/bin/fmr plan-financial-bindings \
+            /tmp/package.json /tmp/mapping.json /tmp/binding-profile.json \
+            /tmp/write-plan.json /tmp/execution-receipt.json \
+            --output /tmp/binding-plan.json
+          /tmp/fmr-financial-data/bin/fmr compile-financial-input-set \
+            /tmp/binding-plan.json /tmp/write-plan.json /tmp/execution-receipt.json \
+            --output /tmp/input-set.json
+          /tmp/fmr-financial-data/bin/fmr validate-financial-package /tmp/package.json
+          /tmp/fmr-financial-data/bin/fmr validate-financial-mapping \
+            /tmp/mapping.json --package /tmp/package.json --profile /tmp/mapping-profile.json
+          /tmp/fmr-financial-data/bin/fmr validate-financial-binding-plan \
+            /tmp/binding-plan.json \
+            --package /tmp/package.json \
+            --mapping-result /tmp/mapping.json \
+            --binding-profile /tmp/binding-profile.json \
+            --write-plan /tmp/write-plan.json \
+            --execution-receipt /tmp/execution-receipt.json
+      - name: Verify deterministic and complete output
+        run: |
+          /tmp/fmr-financial-data/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+
+          package = json.loads(Path("/tmp/package.json").read_text(encoding="utf-8"))
+          mapping = json.loads(Path("/tmp/mapping.json").read_text(encoding="utf-8"))
+          plan = json.loads(Path("/tmp/binding-plan.json").read_text(encoding="utf-8"))
+          input_set = json.loads(Path("/tmp/input-set.json").read_text(encoding="utf-8"))
+          assert package["contract_version"] == "financial-data-package.v1"
+          assert len(package["periods"]) == 7
+          assert any(item["status"] == "unmapped" for item in mapping["row_mappings"])
+          assert mapping["ready_for_binding"] is True
+          assert plan["ready_for_input_set"] is True
+          assert plan["unresolved_records"] == []
+          assert input_set["contract_version"] == "workbook-input-set.v1"
+          assert len(input_set["bindings"]) == len(plan["bound_records"])
+          assert input_set["source"]["reference"].startswith("financial-data-binding-plan:")
+          PY
+      - name: Start local service and check financial-data surface
+        run: |
+          /tmp/fmr-financial-data/bin/fmr serve --port 8770 >/tmp/fmr-financial-data-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill ${SERVER_PID} 2>/dev/null || true' EXIT
+          /tmp/fmr-financial-data/bin/python - <<'PY'
+          import time
+          import urllib.request
+
+          urls = (
+              "http://127.0.0.1:8770/health",
+              "http://127.0.0.1:8770/api/v1/financial-concepts",
+              "http://127.0.0.1:8770/assets/financial_data.js",
+              "http://127.0.0.1:8770/docs",
+          )
+          last_error = None
+          for _ in range(30):
+              try:
+                  for url in urls:
+                      with urllib.request.urlopen(url, timeout=1) as response:
+                          assert response.status == 200
+                  break
+              except Exception as exc:
+                  last_error = exc
+                  time.sleep(0.2)
+          else:
+              raise SystemExit(f"service did not become ready: {last_error}")
+          PY
+      - name: Confirm no workbook binaries are committed
+        run: |
+          cd "${{ github.workspace }}"
+          if find . -type f \( -iname '*.xlsx' -o -iname '*.xlsm' -o -iname '*.xlsb' -o -iname '*.xls' -o -iname '*.xltx' -o -iname '*.xltm' -o -iname '*.ods' \) -print -quit | grep -q .; then
+            echo "Workbook binary found in repository" >&2
+            exit 1
+          fi

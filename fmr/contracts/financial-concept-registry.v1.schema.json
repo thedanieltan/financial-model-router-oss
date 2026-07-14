@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/financial-concept-registry.v1.schema.json",
+  "title": "FMR financial concept registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "registry_sha256", "concepts"],
+  "properties": {
+    "contract_version": {"const": "financial-concept-registry.v1"},
+    "registry_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "concepts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["concept_id", "statement_type", "balance_type", "aliases"],
+        "properties": {
+          "concept_id": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+          "statement_type": {"enum": ["income_statement", "balance_sheet", "cash_flow", "operating_metric"]},
+          "balance_type": {"enum": ["flow", "point_in_time"]},
+          "aliases": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    }
+  }
+}
