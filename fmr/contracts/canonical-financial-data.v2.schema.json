@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/canonical-financial-data.v2.schema.json",
+  "title": "FMR canonical financial data v2",
+  "type": "object",
+  "required": ["contract_version", "entity", "periods", "financial_statements", "trial_balance", "account_balances", "debt_schedules", "capital_expenditure", "working_capital", "operational_drivers", "assumptions", "provenance"],
+  "properties": {"contract_version": {"const": "canonical-financial-data.v2"}, "entity": {"type": "object"}, "periods": {"type": "array", "minItems": 1}, "financial_statements": {"type": "object"}, "trial_balance": {"type": "array"}, "account_balances": {"type": "array"}, "debt_schedules": {"type": "array"}, "capital_expenditure": {"type": "array"}, "working_capital": {"type": "array"}, "operational_drivers": {"type": "object"}, "assumptions": {"type": "object"}, "provenance": {"type": "array", "minItems": 1}}
+}

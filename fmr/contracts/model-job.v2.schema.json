@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/model-job.v2.schema.json",
+  "title": "FMR model job v2",
+  "type": "object",
+  "required": ["contract_version", "objective", "requested_deliverables", "output_formats"],
+  "properties": {
+    "contract_version": {"const": "model-job.v2"},
+    "objective": {"type": "string", "minLength": 1},
+    "model_family": {"type": ["string", "null"]},
+    "industry": {"type": ["string", "null"]},
+    "requested_deliverables": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "available_data": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "available_assumptions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "input_references": {"type": "object"},
+    "existing_model": {"type": "object"},
+    "output_formats": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+    "constraints": {"type": "object"},
+    "privacy_constraints": {"type": "array", "items": {"type": "string"}},
+    "licensing_constraints": {"type": "array", "items": {"type": "string"}},
+    "preferred_execution_mode": {"enum": ["local", "remote", "handoff_only", null]}
+  },
+  "additionalProperties": true
+}

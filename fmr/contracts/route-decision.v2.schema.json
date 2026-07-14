@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/route-decision.v2.schema.json",
+  "title": "FMR route decision v2",
+  "type": "object",
+  "required": ["contract_version", "decision_id", "job_sha256", "status", "family_classification", "selected", "candidate_evaluations", "rejected_candidates", "missing_requirements", "fallback_routes", "decision_reasons", "routing_policy"],
+  "properties": {"contract_version": {"const": "route-decision.v2"}, "status": {"enum": ["selected", "no_route", "ambiguous_family", "unsupported_family"]}, "candidate_evaluations": {"type": "array"}, "rejected_candidates": {"type": "array"}}
+}

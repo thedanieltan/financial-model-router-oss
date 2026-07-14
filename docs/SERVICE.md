@@ -1,6 +1,6 @@
 # Service
 
-## Target service
+## Provider-routing service
 
 FMR routes a provider-neutral financial-modelling job to a compatible, versioned
 model package. The router validates and classifies the request, discovers
@@ -9,8 +9,8 @@ ranks candidates under an explicit policy and compiles a pinned provider handoff
 Execution and validation are later lifecycle stages. A recognized model family
 may legitimately produce a structured no-route result.
 
-The current workbook service below remains operational during migration and is
-the implementation that will become the Native XLSX provider. It is not the
+The current workbook service below remains operational as a compatibility
+interface and is also exposed through the Native XLSX provider. It is not the
 router's product boundary. See [PRODUCT_CHARTER.md](PRODUCT_CHARTER.md).
 
 ## Current compatibility service

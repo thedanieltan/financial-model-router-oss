@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "financial-model-router"
-version = "0.5.0"
+version = "1.0.0"
 description = "Deterministic routing for versioned financial-model providers"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -35,3 +35,4 @@ include = ["fmr*"]
 "fmr.contracts" = ["*.json"]
 "fmr.web" = ["*.html", "*.js", "*.css"]
 "fmr.fixtures" = ["*.json"]
+"fmr.providers" = ["**/*.json"]

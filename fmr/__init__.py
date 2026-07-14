@@ -16,6 +16,11 @@ from fmr.financial_data import (
     validate_mapping_result,
 )
 from fmr.plan import build_plan
+from fmr.core import FAMILIES, ModelJob, route_job, routing_policy
+from fmr.core.receipts import validate_execution_result
+from fmr.execution import ExecutionOrchestrator
+from fmr.provider_service import prepare_handoff
+from fmr.registry import ProviderRegistry
 from fmr.router import route_request
 from fmr.workbook import (
     accept_calculated_workbook_bytes,
@@ -59,6 +64,10 @@ from fmr.workbook import (
 )
 
 __all__ = [
+    "FAMILIES",
+    "ExecutionOrchestrator",
+    "ModelJob",
+    "ProviderRegistry",
     "CONCEPTS",
     "accept_calculated_workbook_bytes",
     "analyse_workbook_map",
@@ -93,6 +102,9 @@ __all__ = [
     "populate_workbook_inputs_file",
     "resolve_workbook_patch_targets",
     "route_request",
+    "route_job",
+    "routing_policy",
+    "prepare_handoff",
     "style_spec_registry_payload",
     "validate_binding_plan",
     "validate_binding_profile",
@@ -112,5 +124,6 @@ __all__ = [
     "validate_workbook_target_resolution_payload",
     "validate_workbook_write_context_payload",
     "validate_workbook_write_plan_payload",
+    "validate_execution_result",
 ]
-__version__ = "0.5.0"
+__version__ = "1.0.0"

@@ -116,9 +116,8 @@ def create_app() -> FastAPI:
         title="Financial Model Router Developer API",
         version=__version__,
         description=(
-            "Local developer interface for deterministic model routing, readiness "
-            "assessment, XLSX inspection and non-mutating workbook planning through "
-            "formula dependency and declarative style realization."
+            "Local developer interface for deterministic provider routing, handoff "
+            "and execution alongside the Native XLSX compatibility workflow."
         ),
         docs_url="/docs",
         redoc_url="/redoc",

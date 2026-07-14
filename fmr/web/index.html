@@ -23,6 +23,32 @@
     <section class="panel input-panel">
       <div class="panel-heading">
         <div>
+          <h2>Provider routing</h2>
+          <p>Route a provider-neutral model job, inspect every candidate and prepare a version-pinned provider handoff.</p>
+        </div>
+      </div>
+      <label for="provider-job-editor">Model job v2</label>
+      <textarea id="provider-job-editor" spellcheck="false" aria-label="Provider-neutral model job JSON">{
+  "contract_version": "model-job.v2",
+  "objective": "Prepare an operating budget and forecast",
+  "requested_deliverables": ["budget_forecast"],
+  "industry": "logistics",
+  "available_data": ["income_statement_history", "operating_cost_drivers", "revenue_drivers"],
+  "available_assumptions": ["forecast_horizon"],
+  "input_references": {"canonical_financial_data": {"path": "/path/to/input.json", "sha256": "replace-with-sha256"}},
+  "output_formats": ["xlsx"],
+  "constraints": {"local_only": false, "open_source_only": true}
+}</textarea>
+      <div class="actions">
+        <label for="routing-policy">Policy</label>
+        <select id="routing-policy"><option value="default">Default</option><option value="local-only">Local only</option></select>
+        <button id="route-job-button" type="button">Route job</button>
+        <button id="prepare-handoff-button" type="button" class="secondary">Prepare handoff</button>
+      </div>
+      <p id="provider-routing-status" class="status" aria-live="polite"></p>
+
+      <div class="panel-heading">
+        <div>
           <h2>Workbook inspection</h2>
           <p>Select an XLSX file. It is inspected in memory and not retained.</p>
         </div>
@@ -123,6 +149,7 @@
   </footer>
 
   <script src="/assets/app.js" defer></script>
+  <script src="/assets/provider-routing.js" defer></script>
   <script src="/assets/realization.js" defer></script>
   <script src="/assets/write_plan.js" defer></script>
   <script src="/assets/execution.js" defer></script>

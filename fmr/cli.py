@@ -47,7 +47,13 @@ def _write(payload: dict[str, Any], output: str | None = None) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="fmr")
+    parser = argparse.ArgumentParser(
+        prog="fmr",
+        epilog=(
+            "Provider-neutral commands: discover-providers, route-job, "
+            "prepare-handoff, execute-job, validate-job-result"
+        ),
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     route = subparsers.add_parser("route", help="Select a model family and report readiness")

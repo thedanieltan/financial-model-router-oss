@@ -88,6 +88,14 @@ function renderSummary(payload) {
   const evidence = payload.derived_evidence || {};
   const cards = [];
 
+  if (payload.status) cards.push(["Route status", payload.status]);
+  if (payload.selected?.provider_id) cards.push(["Provider", payload.selected.provider_id]);
+  if (payload.selected?.package_id) cards.push(["Package", payload.selected.package_id]);
+  if (Array.isArray(payload.candidate_evaluations)) cards.push(["Candidates", String(payload.candidate_evaluations.length)]);
+  if (Array.isArray(payload.rejected_candidates)) cards.push(["Rejected", String(payload.rejected_candidates.length)]);
+  if (payload.handoff_id) cards.push(["Handoff", payload.handoff_id]);
+  if (payload.execution_id) cards.push(["Execution", payload.execution_id]);
+
   if (recommendation.model_family) cards.push(["Model family", recommendation.model_family]);
   if (recommendation.confidence) cards.push(["Confidence", recommendation.confidence]);
   if (typeof readiness.ready === "boolean") cards.push(["Ready", readiness.ready ? "Yes" : "No"]);

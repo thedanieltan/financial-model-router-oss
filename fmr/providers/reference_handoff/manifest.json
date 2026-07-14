@@ -1,0 +1,48 @@
+{
+  "contract_version": "provider-manifest.v1",
+  "provider_id": "reference-handoff",
+  "version": "1.0.0",
+  "execution_mode": "handoff_only",
+  "network_required": true,
+  "license": "Apache-2.0",
+  "open_source": true,
+  "privacy_behavior": ["handoff_only", "caller_controls_transfer", "value_free_receipts"],
+  "runtime_dependencies": [],
+  "determinism_level": "deterministic_handoff",
+  "validation_capabilities": ["handoff_contract", "source_hashes"],
+  "limitations": ["does not execute or retrieve the external model result"],
+  "packages": [
+    {
+      "contract_version": "model-package-manifest.v1",
+      "package_id": "reference-handoff/generic-budget-forecast",
+      "version": "1.0.0",
+      "model_family": "budget_forecast",
+      "industries": ["*"],
+      "deliverables": ["budget_forecast"],
+      "required_data": ["income_statement_history", "operating_cost_drivers", "revenue_drivers"],
+      "required_assumptions": ["forecast_horizon"],
+      "accepted_inputs": ["canonical-financial-data.v2"],
+      "output_artifacts": ["budget_forecast_workbook"],
+      "output_formats": ["xlsx"],
+      "validation_checks": ["handoff_contract", "source_hashes"],
+      "execution_capabilities": ["prepare_handoff"],
+      "adapter_id": "reference-handoff/generic-budget-forecast.v1"
+    },
+    {
+      "contract_version": "model-package-manifest.v1",
+      "package_id": "reference-handoff/operating-company-dcf",
+      "version": "1.0.0",
+      "model_family": "operating_company_dcf",
+      "industries": ["*"],
+      "deliverables": ["enterprise_value", "equity_value", "operating_forecast"],
+      "required_data": ["capital_expenditure", "cash_flow_history", "income_statement_history", "net_debt", "revenue_drivers", "working_capital"],
+      "required_assumptions": ["discount_rate", "forecast_horizon", "tax_rate", "terminal_value_assumption"],
+      "accepted_inputs": ["canonical-financial-data.v2"],
+      "output_artifacts": ["external_provider_handoff"],
+      "output_formats": ["json"],
+      "validation_checks": ["handoff_contract", "source_hashes"],
+      "execution_capabilities": ["prepare_handoff"],
+      "adapter_id": "reference-handoff/operating-company-dcf.v1"
+    }
+  ]
+}

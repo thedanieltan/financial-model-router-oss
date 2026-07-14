@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/provider-handoff.v1.schema.json",
+  "title": "FMR provider handoff v1",
+  "type": "object",
+  "required": ["contract_version", "handoff_id", "handoff_sha256", "job_reference", "route_decision_reference", "provider", "package", "normalized_input_references", "source_adapters", "provider_adapter", "provider_payload", "execution_configuration", "expected_outputs", "validation_requirements", "source_hashes", "unresolved_requirements", "status"],
+  "properties": {"contract_version": {"const": "provider-handoff.v1"}, "status": {"enum": ["ready", "blocked"]}}
+}

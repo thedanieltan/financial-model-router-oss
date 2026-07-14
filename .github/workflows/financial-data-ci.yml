@@ -79,7 +79,7 @@ jobs:
           import fmr.api.financial_data_routes  # noqa: F401
           import fmr.financial_data  # noqa: F401
 
-          assert fmr.__version__ == "0.5.0"
+          assert fmr.__version__ == "1.0.0"
           for name in (
               "financial-concept-registry.v1.schema.json",
               "financial-data-package.v1.schema.json",

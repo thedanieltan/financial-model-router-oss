@@ -1,11 +1,21 @@
 from __future__ import annotations
 
 import ast
+import re
+import tomllib
 import unittest
 from pathlib import Path
 
 
 class RepositoryBoundaryTests(unittest.TestCase):
+    def test_financial_data_wheel_check_tracks_project_version(self) -> None:
+        root = Path(__file__).resolve().parents[1]
+        project_version = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+        workflow = (root / ".github" / "workflows" / "financial-data-ci.yml").read_text(encoding="utf-8")
+        match = re.search(r'assert fmr\.__version__ == "([^"]+)"', workflow)
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), project_version)
+
     def test_target_architecture_namespaces_exist(self) -> None:
         root = Path(__file__).resolve().parents[1] / "fmr"
         required = (

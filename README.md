@@ -4,18 +4,20 @@ Financial Model Router (FMR) is an open-source, deterministic router for financi
 
 FMR does not provide accounting, tax or investment advice. The deterministic core runs locally.
 
-The repository's existing workbook pipeline is being formalized as the **Native XLSX provider**. Its proven interfaces remain operational during migration; workbook formulas, layouts and calculation engines are provider responsibilities rather than router-core logic. See the normative [product charter](docs/PRODUCT_CHARTER.md), [code inventory](docs/CODE_INVENTORY.md) and [roadmap](docs/ROADMAP.md).
+FMR 1.0 includes the **Native XLSX provider** and a non-executing **reference handoff provider**. Workbook formulas, layouts and calculation engines are provider responsibilities rather than router-core logic. Existing workbook commands remain compatibility interfaces. See the normative [product charter](docs/PRODUCT_CHARTER.md), [provider-routing guide](docs/PROVIDER_ROUTING.md), [code inventory](docs/CODE_INVENTORY.md) and [roadmap](docs/ROADMAP.md).
 
-## Current implementation
+## Provider router
 
-The compatibility router recognizes four model families:
+The provider-neutral family registry recognizes four initial model families:
 
 - budget and forecast;
 - integrated three-statement model;
 - operating-company discounted cash-flow valuation; and
 - debt-capacity and refinancing analysis.
 
-Given a v1 JSON request, it returns a selected model family, reasons, readiness blockers and a machine-readable transformation plan. Provider-neutral jobs, provider selection and no-route decisions are the next architecture phases; the v1 result must not be interpreted as provider routing.
+`model-job.v2` routes through explicit family classification, manifest-only provider discovery, hard constraints, readiness evaluation and deterministic policy ranking. A decision returns every candidate, rejection reason, missing requirement and fallback. Ambiguous, unsupported and no-route outcomes are first-class results.
+
+The initial generic budget package is implemented by both providers. The default policy prefers the reference handoff provider; the local-only policy selects Native XLSX. Native XLSX consumes a hash-pinned `canonical-financial-data.v2` reference, creates a copied local output atomically and validates workbook structure and formulas. The reference provider proves that routing does not require XLSX execution.
 
 FMR can inspect an `.xlsx` workbook and return `workbook-map.v1`. It can derive evidence-backed inputs, merge them with an explicit `model-request.v1`, and return `workbook-analysis.v1`.
 
@@ -59,6 +61,21 @@ Open `http://127.0.0.1:8000` for the browser workbench or `http://127.0.0.1:8000
 The server binds to the loopback interface, stores no requests, sends no telemetry and makes no outbound network calls.
 
 ## Use the CLI
+
+Provider-neutral lifecycle:
+
+```bash
+fmr discover-providers --output registry.json
+fmr route-job model-job.json --policy default --output route-decision.json
+fmr prepare-handoff model-job.json --policy local-only --output provider-handoff.json
+fmr execute-job provider-handoff.json \
+  --idempotency-key example-run-1 \
+  --output-dir ./outputs \
+  --receipt execution-result.json
+fmr validate-job-result execution-result.json
+```
+
+The equivalent HTTP endpoints are under `/api/v2`; the browser workbench exposes provider candidates and rejection reasons. Python callers use `route_job`, `prepare_handoff`, `ExecutionOrchestrator` and `validate_execution_result`.
 
 Financial-data intake:
 

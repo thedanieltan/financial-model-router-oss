@@ -8,14 +8,14 @@ contract tests does not claim that an optional provider runtime is installed.
 |---|---|---|
 | Existing workbook runtime | XLSX planning, writing, population and validation | Built as legacy implementation |
 | Existing data intake | Statement CSV normalization and semantic mapping | Built |
-| 0.6 Product realignment | Charter, code inventory, target namespaces and core freeze | In progress |
-| 0.7 Job and family contracts | Provider-neutral `model-job.v2` and family definitions | Pending |
-| 0.8 Provider architecture | Manifests, registry, Native XLSX and handoff-only providers | Pending |
-| 0.9 Routing engine v2 | Constraint filtering, readiness, policy ranking and no-route results | Pending |
-| 1.0-alpha Data and handoff | Canonical data, source/provider adapters and pinned handoffs | Pending |
-| 1.0-beta Native XLSX extraction | Existing workbook runtime behind provider interface | Pending |
-| 1.0-rc Execution lifecycle | Idempotent local and handoff-only orchestration | Pending |
-| 1.0 Router proof | Two providers, competing route, no-route and policy-dependent route | Pending |
+| 0.6 Product realignment | Charter, code inventory, target namespaces and core freeze | Built |
+| 0.7 Job and family contracts | Provider-neutral `model-job.v2` and family definitions | Built |
+| 0.8 Provider architecture | Manifests, registry, Native XLSX and handoff-only providers | Built |
+| 0.9 Routing engine v2 | Constraint filtering, readiness, policy ranking and no-route results | Built |
+| 1.0-alpha Data and handoff | Canonical data, source/provider adapters and pinned handoffs | Built |
+| 1.0-beta Native XLSX extraction | Existing workbook runtime behind provider interface | Built |
+| 1.0-rc Execution lifecycle | Idempotent local and handoff-only orchestration | Built |
+| 1.0 Router proof | Two providers, competing route, no-route and policy-dependent route | Built |
 | 1.1–1.6 Ecosystem | SDK, registry, industries, sources, organization policies and agents | Pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
@@ -39,6 +39,11 @@ contract tests does not claim that an optional provider runtime is installed.
 8. **FMR 1.0 proof** — publish conformance tests and prove Native XLSX,
    alternative-provider, no-route and policy-dependent routing across Python, CLI,
    HTTP and the workbench.
+
+All eight immediate work packages are implemented. Live acceptance is reported
+per provider and remains distinct from contract implementation. The bundled
+Native XLSX package is acceptance-tested with synthetic canonical financial data;
+LibreOffice recalculation remains an optional, separately reported capability.
 
 ## Post-1.0 sequence
 

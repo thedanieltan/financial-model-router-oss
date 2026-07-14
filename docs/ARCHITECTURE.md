@@ -2,10 +2,10 @@
 
 ## Architecture status
 
-FMR is migrating from a workbook-led implementation to the provider architecture
-defined in [PRODUCT_CHARTER.md](PRODUCT_CHARTER.md). The diagram and modules below
-describe the operational pre-1.0 compatibility path; they are not the target
-ownership model. See [CODE_INVENTORY.md](CODE_INVENTORY.md) for disposition.
+FMR 1.0 implements the provider architecture defined in
+[PRODUCT_CHARTER.md](PRODUCT_CHARTER.md). The diagram and modules below also
+document the operational pre-1.0 workbook compatibility path. See
+[CODE_INVENTORY.md](CODE_INVENTORY.md) for its disposition.
 
 The target repository boundary is:
 
@@ -20,7 +20,7 @@ fmr/
 └── contracts/            # provider-neutral and compatibility schemas
 ```
 
-Routing and discovery must not import or execute provider implementations. The
+Routing and discovery do not import or execute provider implementations. The
 Native XLSX provider can be disabled without invalidating a non-XLSX route.
 
 ## Current compatibility architecture

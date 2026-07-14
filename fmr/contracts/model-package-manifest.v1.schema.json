@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/model-package-manifest.v1.schema.json",
+  "title": "FMR model package manifest v1",
+  "type": "object",
+  "required": ["contract_version", "package_id", "version", "model_family", "industries", "deliverables", "required_data", "required_assumptions", "output_artifacts", "output_formats", "validation_checks", "execution_capabilities", "adapter_id"],
+  "properties": {"contract_version": {"const": "model-package-manifest.v1"}}
+}
