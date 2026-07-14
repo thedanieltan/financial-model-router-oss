@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/organization-routing-policy.v1.schema.json",
+  "title": "FMR organization routing policy v1",
+  "type": "object",
+  "required": ["contract_version", "organization_id", "version", "private_provider_directories", "private_vocabulary_directories", "allowed_providers", "provider_precedence", "approved_provider_versions", "approved_package_versions", "prohibited_execution_modes", "approved_template_ids", "require_approved_template", "local_only", "audit_retention_days"],
+  "properties": {
+    "contract_version": {"const": "organization-routing-policy.v1"},
+    "organization_id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "private_provider_directories": {"$ref": "#/$defs/strings"},
+    "private_vocabulary_directories": {"$ref": "#/$defs/strings"},
+    "allowed_providers": {"$ref": "#/$defs/strings"},
+    "provider_precedence": {"$ref": "#/$defs/strings"},
+    "approved_provider_versions": {"$ref": "#/$defs/strings"},
+    "approved_package_versions": {"$ref": "#/$defs/strings"},
+    "prohibited_execution_modes": {"type": "array", "items": {"enum": ["local", "remote", "handoff_only"]}, "uniqueItems": true},
+    "approved_template_ids": {"$ref": "#/$defs/strings"},
+    "require_approved_template": {"type": "boolean"},
+    "local_only": {"type": "boolean"},
+    "audit_retention_days": {"type": "integer", "minimum": 1}
+  },
+  "additionalProperties": false,
+  "$defs": {"strings": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}}
+}

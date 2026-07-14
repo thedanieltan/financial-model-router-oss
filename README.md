@@ -114,6 +114,11 @@ router-specific logic. The first specialist executable package is the Python
 SaaS budget and unit-economics forecast. See
 [industry extensions](docs/INDUSTRY_EXTENSIONS.md).
 
+Organization policy can overlay private registries and vocabularies, provider
+and package approvals, precedence, execution-environment controls, company
+templates and audit-retention requirements. See
+[organization routing](docs/ORGANIZATION_ROUTING.md).
+
 CSV and XLSX exports can be normalized through exact, versioned source-adapter
 profiles. Trial balances, statements, ledgers, budget-versus-actuals, debt
 schedules and operating drivers are supported without guessing vendor headers

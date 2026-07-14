@@ -10,6 +10,7 @@ from fmr.core.receipts import validate_execution_result
 from fmr.execution import ExecutionOrchestrator, ManagedArtifactRetention, SqliteExecutionLedger
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
+from fmr.organization import OrganizationPolicy, route_organization_job
 
 PROVIDER_COMMANDS = {
     "backup-execution-ledger",
@@ -48,6 +49,7 @@ def _parser() -> argparse.ArgumentParser:
         command = commands.add_parser(name)
         command.add_argument("job")
         command.add_argument("--policy", default="default")
+        command.add_argument("--organization-policy")
         command.add_argument("--output")
     execute = commands.add_parser("execute-job")
     execute.add_argument("handoff")
@@ -88,11 +90,17 @@ def run_provider_command(argv: list[str]) -> int:
             _write({"providers": [item.to_dict() for item in registry.providers()], "model_families": [item.to_dict() for item in FAMILIES]}, args.output)
             return 0
         if args.command == "route-job":
-            job = ModelJob.from_mapping(_load(args.job))
-            _write(route_job(job, policy=routing_policy(args.policy)), args.output)
+            raw_job = _load(args.job)
+            if args.organization_policy:
+                organization = OrganizationPolicy.from_file(args.organization_policy)
+                result = route_organization_job(raw_job, organization, base_policy=routing_policy(args.policy))
+            else:
+                result = route_job(ModelJob.from_mapping(raw_job), policy=routing_policy(args.policy))
+            _write(result, args.output)
             return 0
         if args.command == "prepare-handoff":
-            _write(prepare_handoff(_load(args.job), policy_name=args.policy), args.output)
+            organization = OrganizationPolicy.from_file(args.organization_policy) if args.organization_policy else None
+            _write(prepare_handoff(_load(args.job), policy_name=args.policy, organization_policy=organization), args.output)
             return 0
         if args.command == "execute-job":
             handoff = _load(args.handoff)

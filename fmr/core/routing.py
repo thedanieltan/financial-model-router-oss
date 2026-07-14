@@ -41,6 +41,21 @@ def _evaluate(job: ModelJob, item: RegisteredPackage, policy: RoutingPolicy) -> 
         rejected.append("provider_prohibited")
     if constraints.pinned_provider_versions and _version_pin(provider.provider_id, provider.version) not in constraints.pinned_provider_versions:
         rejected.append("provider_version_not_pinned")
+    provider_version = _version_pin(provider.provider_id, provider.version)
+    package_version = f"{package.package_id}@{package.version}"
+    if policy.allowed_providers and provider.provider_id not in policy.allowed_providers:
+        rejected.append("organization_provider_not_approved")
+    if policy.approved_provider_versions and provider_version not in policy.approved_provider_versions:
+        rejected.append("organization_provider_version_not_approved")
+    if policy.approved_package_versions and package_version not in policy.approved_package_versions:
+        rejected.append("organization_package_version_not_approved")
+    if provider.execution_mode in policy.prohibited_execution_modes:
+        rejected.append("organization_execution_mode_prohibited")
+    template_id = job.existing_model.get("template_id") if isinstance(job.existing_model, dict) else None
+    if policy.require_approved_template and not isinstance(template_id, str):
+        rejected.append("organization_approved_template_required")
+    elif isinstance(template_id, str) and policy.approved_template_ids and template_id not in policy.approved_template_ids:
+        rejected.append("organization_template_not_approved")
     missing_formats = sorted(set(job.output_formats) - set(package.output_formats))
     if missing_formats:
         rejected.append("output_format_not_supported:" + ",".join(missing_formats))

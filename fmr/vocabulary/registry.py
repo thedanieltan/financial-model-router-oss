@@ -4,6 +4,7 @@ import json
 import re
 from dataclasses import dataclass
 from importlib.resources import files
+from pathlib import Path
 from typing import Any
 
 
@@ -85,6 +86,14 @@ class VocabularyRegistry:
         root = files("fmr.vocabulary.data")
         payloads = [json.loads(path.read_text(encoding="utf-8")) for path in sorted(root.iterdir(), key=lambda item: item.name) if path.name.endswith(".json")]
         return cls(tuple(IndustryVocabulary.from_mapping(item) for item in payloads))
+
+    @classmethod
+    def discover(cls, directories: tuple[str, ...] = ()) -> "VocabularyRegistry":
+        vocabularies = list(cls.builtins().vocabularies)
+        for directory in directories:
+            for path in sorted(Path(directory).glob("**/*.json")):
+                vocabularies.append(IndustryVocabulary.from_mapping(json.loads(path.read_text(encoding="utf-8"))))
+        return cls(tuple(vocabularies))
 
     def normalize_industry(self, value: str) -> str:
         normalized = _normalized(value)

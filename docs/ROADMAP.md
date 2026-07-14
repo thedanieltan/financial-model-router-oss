@@ -24,7 +24,7 @@ contract tests does not claim that an optional provider runtime is installed.
 | 1.2 Provider registry | Immutable releases, lifecycle, conformance evidence and reconciliation | Built in WP-REG-14 |
 | 1.3 Industry extensions | Eight declarative vocabularies and a proven SaaS specialist package | Built in WP-IND-15 |
 | 1.4 Source adapters | Exact profiled CSV/XLSX ingestion for six export shapes and named vendor exports | Built in WP-SRC-16 |
-| 1.5 Organization routing | Private registries, approvals and organization policies | Pending |
+| 1.5 Organization routing | Private registries/vocabularies, approvals, precedence and governance | Built in WP-ORG-17 |
 | 1.6 Agent access | Interface parity and optional MCP server | Pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
@@ -166,3 +166,15 @@ packages remain future provider work and must not be advertised until proven.
 
 Vendor-specific layouts require an operator-approved profile against the actual
 export. Installed-wheel CI proves the generic profiled ingestion lifecycle.
+
+## WP-ORG-17 — organization-specific routing
+
+- strict versioned organization policy applied as a non-bypassable overlay;
+- private manifest and vocabulary directories with code-free discovery;
+- provider allowlists and precedence plus provider/package version approvals;
+- local-only and prohibited execution-mode controls;
+- company-template approval and required-template modes; and
+- audit-retention requirements pinned into route decisions and handoffs.
+
+Retention is a governance requirement for deployment configuration; it does not
+silently delete or preserve artifacts by itself.

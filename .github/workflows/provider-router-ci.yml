@@ -46,6 +46,7 @@ jobs:
           assert legacy_workbook.__all__ == native_workbook.__all__
           assert all(getattr(legacy_workbook, name) is getattr(native_workbook, name) for name in native_workbook.__all__)
           assert files("fmr.providers.native_xlsx.contracts").joinpath("workbook-map.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("organization-routing-policy.v1.schema.json").is_file()
           assert "fmr.providers.native_xlsx.provider" not in sys.modules
 
           assumptions = ["forecast_horizon", "operating_cost_growth_rate", "revenue_growth_rate", "scenario", "scenario_adjustments"]
@@ -80,6 +81,18 @@ jobs:
               assert providers == ["native-xlsx", "python-forecast", "reference-handoff"]
               assert fmr.route_job(budget, policy=fmr.routing_policy("json-first"))["selected"]["provider_id"] == "python-forecast"
               assert fmr.route_job(budget, policy=fmr.routing_policy("spreadsheet-first"))["selected"]["provider_id"] == "native-xlsx"
+              organization = fmr.OrganizationPolicy.from_mapping({
+                  "contract_version": "organization-routing-policy.v1", "organization_id": "clean-wheel", "version": "1.0.0",
+                  "private_provider_directories": [], "private_vocabulary_directories": [],
+                  "allowed_providers": ["native-xlsx", "python-forecast"], "provider_precedence": ["native-xlsx", "python-forecast"],
+                  "approved_provider_versions": ["native-xlsx@1.0.0", "python-forecast@1.1.0"],
+                  "approved_package_versions": ["native-xlsx/generic-budget-forecast@1.1.0", "python-forecast/generic-budget-forecast@1.1.0"],
+                  "prohibited_execution_modes": ["remote", "handoff_only"], "approved_template_ids": [],
+                  "require_approved_template": False, "local_only": True, "audit_retention_days": 2555
+              })
+              governed = fmr.route_organization_job(budget, organization, base_policy=fmr.routing_policy("default"))
+              assert governed["selected"]["provider_id"] == "native-xlsx"
+              assert governed["routing_policy"]["audit_retention_days"] == 2555
 
               native_handoff = fmr.prepare_handoff(budget, policy_name="spreadsheet-first")
               orchestrator = ExecutionOrchestrator(ledger=SqliteExecutionLedger(root / "ledger.sqlite3"), managed_output_root=root / "outputs")

@@ -52,6 +52,13 @@ def validate_route_decision(
             policy = RoutingPolicy(
                 str(policy_data["version"]), bool(policy_data["require_local"]),
                 tuple(policy_data["preferred_providers"]), dict(policy_data["weights"]),
+                policy_data.get("organization_id"), tuple(policy_data.get("allowed_providers", [])),
+                tuple(policy_data.get("approved_provider_versions", [])),
+                tuple(policy_data.get("approved_package_versions", [])),
+                tuple(policy_data.get("prohibited_execution_modes", [])),
+                tuple(policy_data.get("approved_template_ids", [])),
+                bool(policy_data.get("require_approved_template", False)),
+                policy_data.get("audit_retention_days"),
             )
             if registry is None:
                 from fmr.registry import ProviderRegistry

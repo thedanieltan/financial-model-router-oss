@@ -42,6 +42,7 @@ class ContractTests(unittest.TestCase):
             "provider-registry-reconciliation.v1.schema.json",
             "industry-vocabulary.v1.schema.json",
             "source-adapter-profile.v1.schema.json",
+            "organization-routing-policy.v1.schema.json",
             "execution-request.v1.schema.json",
             "execution-result.v1.schema.json",
             "execution-operations-status.v1.schema.json",
