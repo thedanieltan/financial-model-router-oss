@@ -63,11 +63,11 @@ def validate_canonical_financial_data(payload: dict[str, Any]) -> tuple[str, ...
     provenance = payload.get("provenance")
     if not isinstance(provenance, list) or not provenance or not all(isinstance(item, dict) and isinstance(item.get("source"), str) and item["source"] for item in provenance):
         issues.append("provenance must contain source records")
-    elif any(set(item) - {"source", "sha256", "package_id", "mapping_id"} for item in provenance):
+    elif any(set(item) - {"source", "sha256", "package_id", "mapping_id", "source_system", "profile_id", "profile_version"} for item in provenance):
         issues.append("provenance contains unsupported fields")
     elif any("sha256" in item and (not isinstance(item["sha256"], str) or not re.fullmatch(r"[a-f0-9]{64}", item["sha256"])) for item in provenance):
         issues.append("provenance sha256 is invalid")
-    elif any(key in item and not isinstance(item[key], str) for item in provenance for key in ("package_id", "mapping_id")):
+    elif any(key in item and not isinstance(item[key], str) for item in provenance for key in ("package_id", "mapping_id", "source_system", "profile_id", "profile_version")):
         issues.append("provenance identifiers must be strings")
     return tuple(dict.fromkeys(issues))
 
