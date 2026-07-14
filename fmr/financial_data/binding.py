@@ -19,9 +19,9 @@ from fmr.financial_data.common import (
 )
 from fmr.financial_data.mapping import validate_mapping_result
 from fmr.financial_data.package import validate_financial_data_package
-from fmr.workbook.executor_public import validate_workbook_execution_receipt_payload
-from fmr.workbook.input_population import validate_workbook_input_set_payload
-from fmr.workbook.write_plan_public import validate_workbook_write_plan_payload
+from fmr.providers.native_xlsx.workbook.executor_public import validate_workbook_execution_receipt_payload
+from fmr.providers.native_xlsx.workbook.input_population import validate_workbook_input_set_payload
+from fmr.providers.native_xlsx.workbook.write_plan_public import validate_workbook_write_plan_payload
 
 _RANGE_RE = re.compile(
     r"^([A-Z]{1,3})([1-9][0-9]*)(?::([A-Z]{1,3})([1-9][0-9]*))?$"

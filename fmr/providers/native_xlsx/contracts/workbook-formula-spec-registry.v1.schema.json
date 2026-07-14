@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-formula-spec-registry.v1.schema.json",
+  "title": "Workbook formula specification registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "registry_version", "expression_language", "specifications", "registry_sha256"],
+  "properties": {
+    "contract_version": {"const": "workbook-formula-spec-registry.v1"},
+    "registry_version": {"const": "v1"},
+    "expression_language": {"const": "fmr-expression.v1"},
+    "registry_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "specifications": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["contract_version", "specification_ref", "identifier", "identifier_pattern", "formula_kind", "expression_language", "expression_template", "dependencies", "output_type", "sign_convention", "fill_policy", "circularity_policy", "controls"],
+        "properties": {
+          "contract_version": {"const": "workbook-formula-spec.v1"},
+          "specification_ref": {"type": "string", "minLength": 1},
+          "identifier": {"type": "string", "minLength": 1},
+          "identifier_pattern": {"type": ["string", "null"]},
+          "formula_kind": {"enum": ["calculation", "copy_rule", "validation"]},
+          "expression_language": {"const": "fmr-expression.v1"},
+          "expression_template": {"type": "string", "minLength": 1},
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "source", "identifier", "required"],
+              "properties": {
+                "name": {"type": "string", "minLength": 1},
+                "source": {"enum": ["content_slot", "period_context", "reference_target", "source_workbook", "validation_context"]},
+                "identifier": {"type": "string", "minLength": 1},
+                "required": {"type": "boolean"}
+              }
+            }
+          },
+          "output_type": {"enum": ["boolean", "currency", "decimal", "multiple", "percentage", "preserve_source"]},
+          "sign_convention": {"enum": ["boolean", "neutral", "positive_asset", "positive_expense", "positive_inflow", "positive_liability"]},
+          "fill_policy": {"enum": ["across_periods", "down_target_range", "single_cell"]},
+          "circularity_policy": {"const": "forbid"},
+          "controls": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true}
+        }
+      }
+    }
+  }
+}

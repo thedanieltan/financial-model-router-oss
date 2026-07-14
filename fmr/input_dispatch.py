@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fmr.workbook import (
+from fmr.providers.native_xlsx.workbook import (
     compile_workbook_input_set_from_csv,
     populate_workbook_inputs_file,
     validate_input_population_calculation_link,

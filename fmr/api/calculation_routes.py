@@ -8,7 +8,7 @@ from typing import Any, Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 
-from fmr.workbook import (
+from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
     calculate_and_accept_workbook_bytes,
     calculation_engine_status,

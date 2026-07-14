@@ -4,7 +4,7 @@ Financial Model Router (FMR) is an open-source, deterministic router for financi
 
 FMR does not provide accounting, tax or investment advice. The deterministic core runs locally.
 
-FMR `1.0.0-alpha` is a provider-router integrity preview. It includes executable **Native XLSX** and **Python Forecast** providers plus a non-modelling **reference handoff provider**. It is not accepted as production FMR 1.0. Workbook formulas, layouts and calculation engines are provider responsibilities rather than router-core logic; physical migration of the legacy workbook modules remains incomplete. See the normative [product charter](docs/PRODUCT_CHARTER.md), [provider-routing guide](docs/PROVIDER_ROUTING.md), [code inventory](docs/CODE_INVENTORY.md) and [roadmap](docs/ROADMAP.md).
+FMR `1.0.0-alpha` is a provider-router integrity preview. It includes executable **Native XLSX** and **Python Forecast** providers plus a non-modelling **reference handoff provider**. It is not accepted as production FMR 1.0. Workbook formulas, layouts and calculation engines are owned by the Native XLSX provider; the historical `fmr.workbook` namespace remains a compatibility façade. See the normative [product charter](docs/PRODUCT_CHARTER.md), [provider-routing guide](docs/PROVIDER_ROUTING.md), [code inventory](docs/CODE_INVENTORY.md), [migration guide](docs/NATIVE_XLSX_MIGRATION.md) and [roadmap](docs/ROADMAP.md).
 
 ## Provider router
 

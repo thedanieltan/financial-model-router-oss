@@ -56,5 +56,5 @@ fallback or automatic retry after execution starts.
 Synthetic Native XLSX and Python Forecast proofs validate local package
 execution. The clean-wheel provider workflow covers discovery, routing, handoff,
 execution, artifact validation, external handoff and no-route behavior from the
-built distribution. This does not claim production remote-provider operation,
-completed physical extraction of `fmr.workbook`, or installed LibreOffice.
+built distribution. This does not claim production remote-provider operation or
+that LibreOffice is installed in a downstream deployment.

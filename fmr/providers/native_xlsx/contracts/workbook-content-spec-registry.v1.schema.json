@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-content-spec-registry.v1.schema.json",
+  "title": "Workbook content specification registry v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "registry_version", "registry_sha256", "specifications"],
+  "properties": {
+    "contract_version": {"const": "workbook-content-spec-registry.v1"},
+    "registry_version": {"const": "v1"},
+    "registry_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "specifications": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract_version",
+          "specification_ref",
+          "source_operation",
+          "template_kind",
+          "title",
+          "slots",
+          "validation_ids",
+          "controls"
+        ],
+        "properties": {
+          "contract_version": {"const": "workbook-content-spec.v1"},
+          "specification_ref": {"type": "string", "pattern": "^fmr://workbook-content-specs/.+/v1$"},
+          "source_operation": {"type": "string", "minLength": 1},
+          "template_kind": {
+            "enum": ["control_block", "period_extension", "reference_only", "schedule"]
+          },
+          "title": {"type": "string", "minLength": 1},
+          "slots": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "slot_id",
+                "relative_position",
+                "content_kind",
+                "label",
+                "identifier",
+                "format_role",
+                "editable"
+              ],
+              "properties": {
+                "slot_id": {"type": "string", "minLength": 1},
+                "relative_position": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["row_offset", "column_offset", "row_span", "column_span"],
+                  "properties": {
+                    "row_offset": {"type": "integer", "minimum": 0},
+                    "column_offset": {"type": "integer", "minimum": 0},
+                    "row_span": {"type": "integer", "minimum": 1},
+                    "column_span": {"type": "integer", "minimum": 1}
+                  }
+                },
+                "content_kind": {
+                  "enum": [
+                    "input_placeholder",
+                    "label",
+                    "formula_identifier",
+                    "period_header",
+                    "reference_identifier",
+                    "validation_identifier"
+                  ]
+                },
+                "label": {"type": ["string", "null"]},
+                "identifier": {"type": ["string", "null"]},
+                "format_role": {
+                  "enum": [
+                    "control",
+                    "header",
+                    "input",
+                    "label",
+                    "output",
+                    "period",
+                    "reference",
+                    "section_title",
+                    "subheader"
+                  ]
+                },
+                "editable": {"type": "boolean"}
+              }
+            }
+          },
+          "validation_ids": {"type": "array", "items": {"type": "string"}},
+          "controls": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

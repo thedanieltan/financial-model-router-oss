@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-analysis.v1.schema.json",
+  "title": "Workbook analysis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "workbook_map",
+    "original_request",
+    "derived_evidence",
+    "effective_request",
+    "recommendation",
+    "transformation_plan"
+  ],
+  "properties": {
+    "contract_version": {"const": "workbook-analysis.v1"},
+    "workbook_map": {"type": "object"},
+    "original_request": {"type": "object"},
+    "derived_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["available_data", "workbook_capabilities", "items"],
+      "properties": {
+        "available_data": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "workbook_capabilities": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "value", "confidence", "evidence"],
+            "properties": {
+              "kind": {"enum": ["available_data", "workbook_capability"]},
+              "value": {"type": "string", "minLength": 1},
+              "confidence": {"enum": ["medium", "high"]},
+              "evidence": {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "effective_request": {"type": "object"},
+    "recommendation": {"type": "object"},
+    "transformation_plan": {"type": "object"}
+  }
+}

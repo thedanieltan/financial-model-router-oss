@@ -27,7 +27,7 @@ from fmr.model_specs import MODEL_DEFINITIONS
 from fmr.plan import build_plan, validate_plan_payload
 from fmr.router import route_request
 from fmr.types import ModelRequest
-from fmr.workbook import (
+from fmr.providers.native_xlsx.workbook import (
     WorkbookAnalysis,
     WorkbookMap,
     analyse_workbook_map,

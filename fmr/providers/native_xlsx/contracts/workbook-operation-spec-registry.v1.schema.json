@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-operation-spec-registry.v1.schema.json",
+  "title": "FMR workbook operation specification registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "registry_version",
+    "specifications",
+    "registry_sha256"
+  ],
+  "properties": {
+    "contract_version": {
+      "const": "workbook-operation-spec-registry.v1"
+    },
+    "registry_version": {
+      "const": "v1"
+    },
+    "registry_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "specifications": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contract_version",
+          "specification_ref",
+          "source_operation",
+          "action",
+          "semantic_role",
+          "target_policy",
+          "conflict_policy",
+          "postconditions"
+        ],
+        "properties": {
+          "contract_version": {
+            "const": "workbook-operation-spec.v1"
+          },
+          "specification_ref": {
+            "type": "string",
+            "pattern": "^fmr://workbook-operations/[a-z0-9_]+/v1$"
+          },
+          "source_operation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "enum": [
+              "add_control",
+              "add_scenario",
+              "add_sensitivity",
+              "append_periods",
+              "ensure_section",
+              "ensure_sheet",
+              "link_components"
+            ]
+          },
+          "semantic_role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target_policy": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "cardinality",
+              "accepted_sheet_roles",
+              "required_sheet_roles",
+              "name_aliases",
+              "metric_hints",
+              "canonical_sheet_name",
+              "placement",
+              "create_if_missing"
+            ],
+            "properties": {
+              "scope": {
+                "enum": ["sheet", "sheet_set", "section"]
+              },
+              "cardinality": {
+                "enum": ["one_or_create", "many", "required_roles"]
+              },
+              "accepted_sheet_roles": {
+                "type": "array",
+                "items": {"type": "string"},
+                "uniqueItems": true
+              },
+              "required_sheet_roles": {
+                "type": "array",
+                "items": {"type": "string"},
+                "uniqueItems": true
+              },
+              "name_aliases": {
+                "type": "array",
+                "items": {"type": "string"},
+                "uniqueItems": true
+              },
+              "metric_hints": {
+                "type": "array",
+                "items": {"type": "string"},
+                "uniqueItems": true
+              },
+              "canonical_sheet_name": {
+                "type": ["string", "null"]
+              },
+              "placement": {
+                "enum": [
+                  "after_last_visible_sheet",
+                  "append_below_used_range",
+                  "append_right_of_used_range",
+                  "link_existing_sheets"
+                ]
+              },
+              "create_if_missing": {
+                "type": "boolean"
+              }
+            }
+          },
+          "conflict_policy": {
+            "const": "reuse_unique_match_or_fail"
+          },
+          "postconditions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string"},
+            "uniqueItems": true
+          }
+        }
+      }
+    }
+  }
+}

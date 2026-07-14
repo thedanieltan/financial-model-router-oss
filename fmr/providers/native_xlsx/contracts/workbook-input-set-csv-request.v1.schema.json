@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-input-set-csv-request.v1.schema.json",
+  "title": "FMR workbook input set CSV request v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "source_name",
+    "csv_base64",
+    "write_plan",
+    "execution_receipt"
+  ],
+  "properties": {
+    "contract_version": {"const": "workbook-input-set-csv-request.v1"},
+    "source_name": {"type": "string", "minLength": 1},
+    "csv_base64": {"type": "string", "minLength": 1},
+    "write_plan": {"type": "object"},
+    "execution_receipt": {"type": "object"}
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-write-plan.v1.schema.json",
+  "title": "FMR workbook write plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract_version",
+    "write_plan_id",
+    "realization_plan_id",
+    "realization_plan_sha256",
+    "write_context_sha256",
+    "formula_language",
+    "source",
+    "ready_for_executor",
+    "execution_supported_by_this_release",
+    "blockers",
+    "phases",
+    "write_record_count",
+    "controls"
+  ],
+  "properties": {
+    "contract_version": {"const": "workbook-write-plan.v1"},
+    "write_plan_id": {"type": "string", "pattern": "^fmrw_[0-9a-f]{24}$"},
+    "realization_plan_id": {"type": "string", "minLength": 1},
+    "realization_plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "write_context_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "formula_language": {"const": "excel-a1.v1"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "size_bytes"],
+      "properties": {
+        "filename": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0}
+      }
+    },
+    "ready_for_executor": {"type": "boolean"},
+    "execution_supported_by_this_release": {"const": false},
+    "blockers": {"type": "array", "items": {"type": "string"}},
+    "phases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["phase", "name", "records"],
+        "properties": {
+          "phase": {"enum": [10, 20, 30, 40]},
+          "name": {"enum": ["sheet_setup", "values_and_inputs", "formulas_and_validations", "styles_and_protection"]},
+          "records": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["record_id", "sequence", "write_kind", "operation_id", "slot_id", "sheet_name", "sheet_position", "coordinate", "payload"],
+              "properties": {
+                "record_id": {"type": "string", "pattern": "^fmrw_[0-9]{6}$"},
+                "sequence": {"type": "integer", "minimum": 1},
+                "write_kind": {"enum": ["apply_style", "ensure_sheet", "reserve_input", "write_formula", "write_value"]},
+                "operation_id": {"type": ["string", "null"]},
+                "slot_id": {"type": ["string", "null"]},
+                "sheet_name": {"type": "string", "minLength": 1},
+                "sheet_position": {"type": ["integer", "null"]},
+                "coordinate": {"type": ["string", "null"]},
+                "payload": {"type": "object"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "write_record_count": {"type": "integer", "minimum": 0},
+    "controls": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}

@@ -14,12 +14,12 @@ contract tests does not claim that an optional provider runtime is installed.
 | 0.9 Routing engine v2 | Constraint filtering, readiness, policy ranking and no-route results | Built for registered providers |
 | 1.0-alpha Data and handoff | Canonical data and a strictly verified job-route-handoff hash chain | Built |
 | Native XLSX ownership boundary | Router core is spreadsheet-independent; legacy interfaces remain compatible | Built |
-| Physical Native XLSX extraction | Move `workbook/**` implementation and provider-owned schemas under the provider | Incomplete |
-| Legacy workbook interface deprecation | Publish migration and removal policy after physical extraction | Not started |
+| Physical Native XLSX extraction | Provider owns workbook implementation and schemas; `fmr.workbook` is façade-only | Built in WP-NX-10 |
+| Legacy workbook interface deprecation | Migration policy published; compatibility retained through the 1.x line | Built in WP-NX-10; removal deferred |
 | Execution lifecycle | Typed requests, enforced controls, SQLite idempotency and artifact validation | Local implementation built |
 | Interchangeable model proof | Native XLSX and Python Forecast execute the same budget family under policy | Built with synthetic acceptance |
 | FMR `1.0.0-alpha` | Provider-router integrity and local execution preview | Current maturity |
-| Production FMR 1.0 | Remote execution security, operational acceptance and completed Native extraction | Not accepted |
+| Production FMR 1.0 | Remote execution security and deployment-specific operational acceptance | Not accepted |
 | 1.1–1.6 Ecosystem | SDK, registry, industries, sources, organization policies and agents | Pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
@@ -46,10 +46,23 @@ contract tests does not claim that an optional provider runtime is installed.
 
 The original eight packages established the architecture proof. WP-RTR-09 then
 closed the unsafe handoff, output-contract and central-dispatch gaps. It does not
-claim production FMR 1.0: physical Native XLSX extraction, remote-provider
-security and deployment-specific operational acceptance remain open. Bundled
+claim production FMR 1.0: remote-provider security and deployment-specific
+operational acceptance remain open. Bundled
 providers are acceptance-tested with synthetic canonical financial data;
 LibreOffice recalculation remains optional and separately reported.
+
+## WP-NX-10 — physical Native XLSX extraction
+
+- workbook inspection, planning, execution, population and calculation code now
+  lives under `fmr.providers.native_xlsx.workbook`;
+- provider-owned workbook schemas live under
+  `fmr.providers.native_xlsx.contracts`;
+- `fmr.workbook` modules contain import aliases only and are covered by object-
+  identity compatibility tests;
+- legacy packaged contract paths remain byte-identical compatibility copies;
+- production modules no longer import the legacy workbook namespace; and
+- the migration and removal policy is published in
+  [NATIVE_XLSX_MIGRATION.md](NATIVE_XLSX_MIGRATION.md).
 
 ## WP-RTR-09 — router integrity and release hardening
 
