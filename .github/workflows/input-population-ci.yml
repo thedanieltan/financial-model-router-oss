@@ -79,7 +79,8 @@ jobs:
           import fmr.api.input_population_routes  # noqa: F401
           import fmr.workbook.input_population  # noqa: F401
 
-          assert tuple(map(int, fmr.__version__.split("."))) >= (0, 4, 2)
+          version_prefix = fmr.__version__.split("a", 1)[0].split("b", 1)[0].split("rc", 1)[0]
+          assert tuple(map(int, version_prefix.split("."))) >= (0, 4, 2)
           for name in (
               "workbook-input-set-csv-request.v1.schema.json",
               "workbook-input-set.v1.schema.json",

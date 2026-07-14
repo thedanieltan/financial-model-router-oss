@@ -168,8 +168,10 @@ def execute_budget_forecast_handoff(handoff: dict[str, Any], output_dir: str | o
     forecast.append(["Period type", *(["Forecast"] * inputs["horizon"])])
     columns = _columns(inputs["horizon"])
     historical_last = _columns(len(historical_periods))[-1]
-    forecast.append(["Revenue"] + [f"={'\'Historical Actuals\'!' + historical_last + '2' if index == 0 else columns[index - 1] + '3'}*(1+Assumptions!$B$2+Assumptions!$B$5)" for index in range(inputs["horizon"])])
-    forecast.append(["Operating costs"] + [f"={'\'Historical Actuals\'!' + historical_last + '3' if index == 0 else columns[index - 1] + '4'}*(1+Assumptions!$B$3+Assumptions!$B$6)" for index in range(inputs["horizon"])])
+    revenue_sources = [f"'Historical Actuals'!{historical_last}2", *[f"{column}3" for column in columns[:-1]]]
+    cost_sources = [f"'Historical Actuals'!{historical_last}3", *[f"{column}4" for column in columns[:-1]]]
+    forecast.append(["Revenue"] + [f"={source}*(1+Assumptions!$B$2+Assumptions!$B$5)" for source in revenue_sources])
+    forecast.append(["Operating costs"] + [f"={source}*(1+Assumptions!$B$3+Assumptions!$B$6)" for source in cost_sources])
     forecast.append(["Operating profit"] + [f"={column}3-{column}4" for column in columns])
     checks.append(["Check", "Status"])
     checks.append(["Forecast horizon", f"=COLUMNS('Budget Forecast'!B1:{columns[-1]}1)=Assumptions!B4"])
