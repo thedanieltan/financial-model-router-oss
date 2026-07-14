@@ -27,6 +27,7 @@ contract tests does not claim that an optional provider runtime is installed.
 | 1.5 Organization routing | Private registries/vocabularies, approvals, precedence and governance | Built in WP-ORG-17 |
 | 1.6 Agent access | Python, CLI, HTTP and optional MCP lifecycle access | Built in WP-AGT-18 |
 | Local release qualification | Automated implementation gates plus deployment-evidence contract | Built in WP-REL-19; production evidence pending |
+| Executable family coverage | Python implementations for all four initial analytical families | Built in WP-MDL-20 |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -204,3 +205,16 @@ Authenticated remote MCP transport remains distributed-routing work.
 
 Implementation qualification is automated. Deployment and production acceptance
 remain pending until evidence is collected in a real target environment.
+
+## WP-MDL-20 — executable model-family coverage
+
+- integrated three-statement projections with linked earnings, cash flow and a
+  balancing balance sheet;
+- operating-company DCF with explicit free cash flow, discount factors, terminal
+  value and enterprise-to-equity bridge;
+- debt-capacity and refinancing schedules with interest, repayment, leverage,
+  coverage and covenant results; and
+- one executable local Python package for every initial registered family.
+
+These are deterministic generic packages, not industry-specific professional
+opinions. Real-world practitioner acceptance remains WP-ACC-21.

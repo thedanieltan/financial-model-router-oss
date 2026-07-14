@@ -35,6 +35,9 @@ fmr-mcp = "fmr.mcp_server:main"
 native-xlsx-budget-forecast = "fmr.providers.native_xlsx.plugin:NativeXlsxBudgetAdapter"
 python-forecast-budget-forecast = "fmr.providers.python_forecast.plugin:PythonForecastAdapter"
 python-forecast-saas-budget-forecast = "fmr.providers.python_forecast.plugin:SaasForecastAdapter"
+python-forecast-three-statement = "fmr.providers.python_forecast.plugin:ThreeStatementAdapter"
+python-forecast-dcf = "fmr.providers.python_forecast.plugin:DcfAdapter"
+python-forecast-debt-capacity = "fmr.providers.python_forecast.plugin:DebtCapacityAdapter"
 reference-handoff-dcf = "fmr.providers.reference_handoff.plugin:ReferenceHandoffAdapter"
 
 [project.entry-points."fmr.provider_executors"]

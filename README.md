@@ -19,6 +19,11 @@ The provider-neutral family registry recognizes four initial model families:
 
 The generic budget package is implemented by Native XLSX and Python Forecast. Both generate forecast periods from explicit growth, horizon and scenario assumptions. `json-first` and `spreadsheet-first` policies select between the genuine implementations. The reference provider advertises only a JSON external-provider handoff and never competes for an XLSX workbook or completed model.
 
+Python Forecast also provides deterministic generic integrated three-statement,
+operating-company DCF and debt-capacity/refinancing packages. Each requires
+explicit inputs and assumptions and publishes reconciliation checks; none is an
+accounting, valuation or lending opinion.
+
 FMR can inspect an `.xlsx` workbook and return `workbook-map.v1`. It can derive evidence-backed inputs, merge them with an explicit `model-request.v1`, and return `workbook-analysis.v1`.
 
 A valid analysis can be compiled through versioned patch, target, coordinate, content, formula, style and write contracts. `workbook-write-plan.v1` contains explicit Excel A1 formulas and ordered sheet, value, input and style records.
