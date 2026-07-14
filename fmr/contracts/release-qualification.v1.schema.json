@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/release-qualification.v1.schema.json",
+  "title": "FMR release qualification v1",
+  "type": "object",
+  "required": ["contract_version", "qualification_id", "target", "package_version", "implementation_status", "production_status", "implementation_checks", "deployment_gates", "blockers"],
+  "properties": {
+    "contract_version": {"const": "release-qualification.v1"},
+    "qualification_id": {"type": "string", "pattern": "^fmrq_[a-f0-9]{24}$"},
+    "target": {"const": "local-production-1.0"},
+    "package_version": {"type": "string", "minLength": 1},
+    "implementation_status": {"enum": ["passed", "failed"]},
+    "production_status": {"enum": ["accepted", "not_accepted"]},
+    "implementation_checks": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/check"}},
+    "deployment_gates": {"type": "array", "minItems": 7, "maxItems": 7, "items": {"$ref": "#/$defs/gate"}},
+    "blockers": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "check": {"type": "object", "required": ["check_id", "status", "evidence"], "properties": {"check_id": {"type": "string"}, "status": {"enum": ["passed", "failed"]}, "evidence": {"type": "string"}}, "additionalProperties": false},
+    "gate": {"type": "object", "required": ["gate_id", "status", "reference"], "properties": {"gate_id": {"type": "string"}, "status": {"enum": ["passed", "failed", "not_run"]}, "reference": {"type": "string"}}, "additionalProperties": false}
+  }
+}

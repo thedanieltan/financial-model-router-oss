@@ -11,6 +11,7 @@ from fmr.execution import ExecutionOrchestrator, ManagedArtifactRetention, Sqlit
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
 from fmr.organization import OrganizationPolicy, route_organization_job
+from fmr.qualification import qualify_local_release
 
 PROVIDER_COMMANDS = {
     "backup-execution-ledger",
@@ -19,6 +20,7 @@ PROVIDER_COMMANDS = {
     "operations-status",
     "prepare-handoff",
     "prune-execution-artifacts",
+    "qualify-release",
     "recover-executions",
     "route-job",
     "validate-job-result",
@@ -79,6 +81,10 @@ def _parser() -> argparse.ArgumentParser:
     prune.add_argument("--older-than", type=int, required=True)
     prune.add_argument("--apply", action="store_true")
     prune.add_argument("--output")
+    qualify = commands.add_parser("qualify-release")
+    qualify.add_argument("--deployment-evidence")
+    qualify.add_argument("--require-production", action="store_true")
+    qualify.add_argument("--output")
     return parser
 
 
@@ -129,6 +135,11 @@ def run_provider_command(argv: list[str]) -> int:
             retention = ManagedArtifactRetention(SqliteExecutionLedger(args.ledger), args.managed_output_root)
             _write(retention.prune(older_than_seconds=args.older_than, dry_run=not args.apply), args.output)
             return 0
+        if args.command == "qualify-release":
+            report = qualify_local_release(_load(args.deployment_evidence) if args.deployment_evidence else None)
+            _write(report, args.output)
+            accepted = report["production_status"] == "accepted" if args.require_production else report["implementation_status"] == "passed"
+            return 0 if accepted else 2
         issues = validate_execution_result(_load(args.result), handoff=_load(args.handoff))
         _write({"valid": not issues, "issues": list(issues)}, args.output)
         return 0 if not issues else 2

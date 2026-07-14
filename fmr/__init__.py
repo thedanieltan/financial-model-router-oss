@@ -29,6 +29,7 @@ from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
 from fmr.vocabulary import VocabularyRegistry
 from fmr.organization import OrganizationPolicy, route_organization_job
+from fmr.qualification import qualify_local_release, validate_deployment_evidence
 from fmr.router import route_request
 from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
@@ -82,6 +83,7 @@ __all__ = [
     "ProviderRegistry",
     "VocabularyRegistry",
     "OrganizationPolicy",
+    "qualify_local_release",
     "CONCEPTS",
     "accept_calculated_workbook_bytes",
     "analyse_workbook_map",
@@ -141,6 +143,7 @@ __all__ = [
     "validate_workbook_write_plan_payload",
     "validate_execution_result",
     "validate_provider_handoff",
+    "validate_deployment_evidence",
     "validate_route_decision",
 ]
 __version__ = "1.0.0a1"

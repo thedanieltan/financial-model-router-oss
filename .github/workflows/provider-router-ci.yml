@@ -47,6 +47,7 @@ jobs:
           assert all(getattr(legacy_workbook, name) is getattr(native_workbook, name) for name in native_workbook.__all__)
           assert files("fmr.providers.native_xlsx.contracts").joinpath("workbook-map.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("organization-routing-policy.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("release-qualification.v1.schema.json").is_file()
           assert "fmr.providers.native_xlsx.provider" not in sys.modules
 
           assumptions = ["forecast_horizon", "operating_cost_growth_rate", "revenue_growth_rate", "scenario", "scenario_adjustments"]
@@ -154,3 +155,11 @@ jobs:
           /tmp/fmr-provider-test/bin/python -m fmr backup-execution-ledger --help
           /tmp/fmr-provider-test/bin/python -m fmr prune-execution-artifacts --help
           printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | /tmp/fmr-provider-test/bin/fmr-mcp | grep -q 'discover_providers'
+          /tmp/fmr-provider-test/bin/fmr qualify-release --output /tmp/fmr-qualification.json
+          /tmp/fmr-provider-test/bin/python - <<'PY'
+          import json
+          report = json.load(open("/tmp/fmr-qualification.json", encoding="utf-8"))
+          assert report["implementation_status"] == "passed"
+          assert report["production_status"] == "not_accepted"
+          assert "stable_release_version_not_declared" in report["blockers"]
+          PY
