@@ -18,7 +18,13 @@ from fmr.financial_data import (
 from fmr.plan import build_plan
 from fmr.core import FAMILIES, ModelJob, route_job, routing_policy
 from fmr.core.receipts import validate_execution_result, validate_provider_handoff, validate_route_decision
-from fmr.execution import ExecutionOrchestrator, ExecutionRequest, SqliteExecutionLedger
+from fmr.execution import (
+    EnvironmentSecretResolver,
+    ExecutionOrchestrator,
+    ExecutionRequest,
+    ManagedArtifactRetention,
+    SqliteExecutionLedger,
+)
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
 from fmr.router import route_request
@@ -67,6 +73,8 @@ __all__ = [
     "FAMILIES",
     "ExecutionOrchestrator",
     "ExecutionRequest",
+    "EnvironmentSecretResolver",
+    "ManagedArtifactRetention",
     "SqliteExecutionLedger",
     "ModelJob",
     "ProviderRegistry",

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/execution-recovery-result.v1.schema.json",
+  "title": "FMR execution recovery result v1",
+  "type": "object",
+  "required": ["contract_version", "recovered_count"],
+  "properties": {
+    "contract_version": {"const": "execution-recovery-result.v1"},
+    "recovered_count": {"type": "integer", "minimum": 0}
+  },
+  "additionalProperties": false
+}

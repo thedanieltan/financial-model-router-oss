@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/execution-ledger-backup.v1.schema.json",
+  "title": "FMR execution ledger backup v1",
+  "type": "object",
+  "required": ["contract_version", "path", "sha256", "size_bytes"],
+  "properties": {
+    "contract_version": {"const": "execution-ledger-backup.v1"},
+    "path": {"type": "string", "minLength": 1},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "size_bytes": {"type": "integer", "minimum": 1}
+  },
+  "additionalProperties": false
+}

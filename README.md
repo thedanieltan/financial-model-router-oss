@@ -77,6 +77,20 @@ fmr validate-job-result execution-result.json --handoff provider-handoff.json
 
 The equivalent HTTP endpoints are under `/api/v2`; the browser workbench exposes provider candidates and rejection reasons. Python callers use `route_job`, `prepare_handoff`, `ExecutionOrchestrator` and `validate_execution_result`.
 
+Local execution operations are available without exposing unauthenticated
+administrative HTTP endpoints:
+
+```bash
+fmr operations-status --ledger .fmr-execution-ledger.sqlite3
+fmr recover-executions --ledger .fmr-execution-ledger.sqlite3 --stale-after 300
+fmr backup-execution-ledger --ledger .fmr-execution-ledger.sqlite3 backup.sqlite3
+fmr prune-execution-artifacts --ledger .fmr-execution-ledger.sqlite3 \
+  --managed-output-root ./outputs --older-than 2592000
+```
+
+Retention is a dry run unless `--apply` is supplied. See the
+[operations guide](docs/OPERATIONS.md).
+
 Financial-data intake:
 
 ```bash

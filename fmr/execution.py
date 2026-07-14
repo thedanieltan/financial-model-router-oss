@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import sqlite3
 import subprocess
@@ -94,34 +95,226 @@ class SqliteExecutionLedger:
         self.path = Path(path or Path(tempfile.gettempdir()) / "fmr-execution-ledger-v1.sqlite3")
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as connection:
-            connection.execute("CREATE TABLE IF NOT EXISTS executions_v2 (cache_key TEXT PRIMARY KEY, state TEXT NOT NULL, claimed_at REAL NOT NULL, result_json TEXT)")
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS executions_v2 "
+                "(cache_key TEXT PRIMARY KEY, state TEXT NOT NULL, claimed_at REAL NOT NULL, "
+                "result_json TEXT, updated_at REAL, detail_code TEXT)"
+            )
+            columns = {row[1] for row in connection.execute("PRAGMA table_info(executions_v2)")}
+            if "updated_at" not in columns:
+                connection.execute("ALTER TABLE executions_v2 ADD COLUMN updated_at REAL")
+            if "detail_code" not in columns:
+                connection.execute("ALTER TABLE executions_v2 ADD COLUMN detail_code TEXT")
+            connection.execute("UPDATE executions_v2 SET updated_at = claimed_at WHERE updated_at IS NULL")
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS execution_events_v1 "
+                "(event_id INTEGER PRIMARY KEY AUTOINCREMENT, cache_key TEXT NOT NULL, "
+                "state TEXT NOT NULL, occurred_at REAL NOT NULL, detail_code TEXT NOT NULL)"
+            )
 
     def claim(self, cache_key: str, *, stale_after_seconds: int) -> dict[str, Any] | None:
         with self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             row = connection.execute("SELECT state, claimed_at, result_json FROM executions_v2 WHERE cache_key = ?", (cache_key,)).fetchone()
             if row is None:
-                connection.execute("INSERT INTO executions_v2(cache_key, state, claimed_at, result_json) VALUES (?, 'running', ?, NULL)", (cache_key, time.time()))
+                now = time.time()
+                connection.execute(
+                    "INSERT INTO executions_v2(cache_key, state, claimed_at, result_json, updated_at, detail_code) "
+                    "VALUES (?, 'running', ?, NULL, ?, 'claimed')",
+                    (cache_key, now, now),
+                )
+                self._event(connection, cache_key, "running", "claimed", now)
                 return None
             if row[0] == "completed" and row[2]:
                 return json.loads(row[2])
             if row[0] == "running" and time.time() - float(row[1]) > stale_after_seconds:
-                connection.execute("UPDATE executions_v2 SET claimed_at = ? WHERE cache_key = ?", (time.time(), cache_key))
+                now = time.time()
+                connection.execute(
+                    "UPDATE executions_v2 SET claimed_at = ?, updated_at = ?, detail_code = 'stale_reclaimed' "
+                    "WHERE cache_key = ?",
+                    (now, now, cache_key),
+                )
+                self._event(connection, cache_key, "running", "stale_reclaimed", now)
+                return None
+            if row[0] in {"abandoned", "pruned"}:
+                now = time.time()
+                connection.execute(
+                    "UPDATE executions_v2 SET state = 'running', claimed_at = ?, result_json = NULL, "
+                    "updated_at = ?, detail_code = 'reclaimed' WHERE cache_key = ?",
+                    (now, now, cache_key),
+                )
+                self._event(connection, cache_key, "running", "reclaimed", now)
                 return None
             raise RuntimeError("an execution with this handoff and idempotency key is already in progress")
 
     def complete(self, cache_key: str, result: dict[str, Any]) -> None:
         with self._connect() as connection:
-            connection.execute("UPDATE executions_v2 SET state = 'completed', result_json = ? WHERE cache_key = ?", (json.dumps(result, sort_keys=True), cache_key))
+            now = time.time()
+            connection.execute(
+                "UPDATE executions_v2 SET state = 'completed', result_json = ?, updated_at = ?, "
+                "detail_code = 'completed' WHERE cache_key = ?",
+                (json.dumps(result, sort_keys=True), now, cache_key),
+            )
+            self._event(connection, cache_key, "completed", "completed", now)
 
     def abandon(self, cache_key: str) -> None:
         with self._connect() as connection:
-            connection.execute("DELETE FROM executions_v2 WHERE cache_key = ?", (cache_key,))
+            now = time.time()
+            connection.execute(
+                "UPDATE executions_v2 SET state = 'abandoned', result_json = NULL, updated_at = ?, "
+                "detail_code = 'abandoned' WHERE cache_key = ?",
+                (now, cache_key),
+            )
+            self._event(connection, cache_key, "abandoned", "abandoned", now)
+
+    def recover_stale(self, *, stale_after_seconds: int, now: float | None = None) -> tuple[str, ...]:
+        if stale_after_seconds < 1:
+            raise ValueError("stale_after_seconds must be positive")
+        cutoff = (time.time() if now is None else now) - stale_after_seconds
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            keys = tuple(
+                row[0]
+                for row in connection.execute(
+                    "SELECT cache_key FROM executions_v2 WHERE state = 'running' AND claimed_at < ? ORDER BY cache_key",
+                    (cutoff,),
+                )
+            )
+            occurred_at = time.time() if now is None else now
+            for cache_key in keys:
+                connection.execute(
+                    "UPDATE executions_v2 SET state = 'abandoned', result_json = NULL, updated_at = ?, "
+                    "detail_code = 'stale_recovered' WHERE cache_key = ?",
+                    (occurred_at, cache_key),
+                )
+                self._event(connection, cache_key, "abandoned", "stale_recovered", occurred_at)
+            return keys
+
+    def operational_status(self, *, stale_after_seconds: int = 300) -> dict[str, Any]:
+        if stale_after_seconds < 1:
+            raise ValueError("stale_after_seconds must be positive")
+        with self._connect() as connection:
+            counts = {row[0]: row[1] for row in connection.execute(
+                "SELECT state, COUNT(*) FROM executions_v2 GROUP BY state ORDER BY state"
+            )}
+            stale = connection.execute(
+                "SELECT COUNT(*) FROM executions_v2 WHERE state = 'running' AND claimed_at < ?",
+                (time.time() - stale_after_seconds,),
+            ).fetchone()[0]
+            events = connection.execute("SELECT COUNT(*) FROM execution_events_v1").fetchone()[0]
+        return {
+            "contract_version": "execution-operations-status.v1",
+            "ledger": "sqlite",
+            "states": counts,
+            "stale_running": stale,
+            "event_count": events,
+            "database_size_bytes": self.path.stat().st_size if self.path.exists() else 0,
+        }
+
+    def backup(self, destination: str | Path) -> dict[str, Any]:
+        target = Path(destination)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists():
+            raise ValueError("backup destination already exists")
+        with self._connect() as source, sqlite3.connect(target) as backup:
+            source.backup(backup)
+        payload = target.read_bytes()
+        return {
+            "contract_version": "execution-ledger-backup.v1",
+            "path": str(target),
+            "sha256": hashlib.sha256(payload).hexdigest(),
+            "size_bytes": len(payload),
+        }
+
+    def completed_before(self, cutoff: float) -> tuple[tuple[str, dict[str, Any]], ...]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT cache_key, result_json FROM executions_v2 "
+                "WHERE state = 'completed' AND updated_at < ? AND result_json IS NOT NULL ORDER BY cache_key",
+                (cutoff,),
+            )
+            return tuple((row[0], json.loads(row[1])) for row in rows)
+
+    def mark_pruned(self, cache_key: str) -> None:
+        with self._connect() as connection:
+            now = time.time()
+            connection.execute(
+                "UPDATE executions_v2 SET state = 'pruned', result_json = NULL, updated_at = ?, "
+                "detail_code = 'retention_pruned' WHERE cache_key = ? AND state = 'completed'",
+                (now, cache_key),
+            )
+            self._event(connection, cache_key, "pruned", "retention_pruned", now)
+
+    @staticmethod
+    def _event(connection: sqlite3.Connection, cache_key: str, state: str, detail_code: str, occurred_at: float) -> None:
+        connection.execute(
+            "INSERT INTO execution_events_v1(cache_key, state, occurred_at, detail_code) VALUES (?, ?, ?, ?)",
+            (cache_key, state, occurred_at, detail_code),
+        )
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path, timeout=30)
         connection.execute("PRAGMA journal_mode=WAL")
+        connection.execute("PRAGMA synchronous=FULL")
+        connection.execute("PRAGMA foreign_keys=ON")
+        connection.execute("PRAGMA busy_timeout=30000")
         return connection
+
+
+class EnvironmentSecretResolver:
+    """Resolve only explicitly allowlisted environment references."""
+
+    def __init__(self, allowed_references: tuple[str, ...], *, prefix: str = "") -> None:
+        if len(set(allowed_references)) != len(allowed_references) or not all(
+            isinstance(item, str) and item.strip() for item in allowed_references
+        ):
+            raise ValueError("allowed secret references must be unique non-empty strings")
+        self.allowed_references = frozenset(allowed_references)
+        self.prefix = prefix
+
+    def __call__(self, reference: str) -> str:
+        if reference not in self.allowed_references:
+            raise ValueError("secret reference is not allowlisted")
+        value = os.environ.get(self.prefix + reference)
+        if value is None or value == "":
+            raise ValueError("secret reference is unavailable")
+        return value
+
+
+class ManagedArtifactRetention:
+    """Prune completed managed outputs without following paths outside the managed root."""
+
+    def __init__(self, ledger: SqliteExecutionLedger, managed_output_root: str | Path) -> None:
+        self.ledger = ledger
+        self.root = Path(managed_output_root).resolve()
+
+    def prune(self, *, older_than_seconds: int, dry_run: bool = True, now: float | None = None) -> dict[str, Any]:
+        if older_than_seconds < 1:
+            raise ValueError("older_than_seconds must be positive")
+        current = time.time() if now is None else now
+        candidates = self.ledger.completed_before(current - older_than_seconds)
+        selected: list[dict[str, Any]] = []
+        for cache_key, result in candidates:
+            paths = [Path(item["path"]).resolve() for item in result.get("output_artifact_references", [])]
+            if not paths or any(self.root not in path.parents for path in paths):
+                continue
+            directories = {path.parent for path in paths}
+            if len(directories) != 1:
+                continue
+            directory = directories.pop()
+            if directory == self.root:
+                continue
+            selected.append({"cache_key_sha256": hashlib.sha256(cache_key.encode()).hexdigest(), "artifact_count": len(paths)})
+            if not dry_run:
+                shutil.rmtree(directory)
+                self.ledger.mark_pruned(cache_key)
+        return {
+            "contract_version": "artifact-retention-result.v1",
+            "dry_run": dry_run,
+            "candidate_count": len(candidates),
+            "pruned_count": 0 if dry_run else len(selected),
+            "selected": selected,
+        }
 
 
 def _execute_with_timeout(entry_point: str, handoff: dict[str, Any], output_dir: Path, secrets: dict[str, str], timeout_seconds: int) -> dict[str, Any]:
@@ -140,14 +333,25 @@ def _execute_with_timeout(entry_point: str, handoff: dict[str, Any], output_dir:
         raise RuntimeError(f"provider process returned an invalid response (exit code {process.returncode})") from exc
     if process.returncode != 0 or message.get("status") != "ok":
         error_type = message.get("error_type")
-        error = str(message.get("error", "provider process failed"))
+        error = _redact_secret_values(str(message.get("error", "provider process failed")), secrets)
         if error_type in {"ValueError", "JSONDecodeError", "KeyError"}:
             raise ValueError(error)
         raise RuntimeError(error)
     receipt = message.get("receipt")
     if not isinstance(receipt, dict):
         raise RuntimeError("provider process returned no receipt")
+    serialized_receipt = json.dumps(receipt, sort_keys=True)
+    if any(secret and secret in serialized_receipt for secret in secrets.values()):
+        raise RuntimeError("provider receipt contains resolved secret material")
     return receipt
+
+
+def _redact_secret_values(message: str, secrets: dict[str, str]) -> str:
+    redacted = message
+    for secret in secrets.values():
+        if secret:
+            redacted = redacted.replace(secret, "[REDACTED]")
+    return redacted
 
 
 class ExecutionOrchestrator:

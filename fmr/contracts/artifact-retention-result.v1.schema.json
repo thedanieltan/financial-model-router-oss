@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/artifact-retention-result.v1.schema.json",
+  "title": "FMR managed artifact retention result v1",
+  "type": "object",
+  "required": ["contract_version", "dry_run", "candidate_count", "pruned_count", "selected"],
+  "properties": {
+    "contract_version": {"const": "artifact-retention-result.v1"},
+    "dry_run": {"type": "boolean"},
+    "candidate_count": {"type": "integer", "minimum": 0},
+    "pruned_count": {"type": "integer", "minimum": 0},
+    "selected": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["cache_key_sha256", "artifact_count"],
+        "properties": {
+          "cache_key_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "artifact_count": {"type": "integer", "minimum": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -187,6 +187,12 @@ A governed input set is emitted only when every reserved numeric or boolean slot
 
 The executor verifies source identity, rejects unsupported features, applies only accepted records, reopens and verifies the output, publishes atomically and emits a value-free receipt. It does not calculate formulas.
 
+Operational execution state is stored separately in a WAL-backed SQLite ledger.
+The ledger contains hashed cache keys, states, timestamps and closed event codes,
+not financial values. Local operations provide explicit stale recovery, online
+backup and confined artifact retention through Python and CLI interfaces. They
+are intentionally not exposed as unauthenticated HTTP administration routes.
+
 ## Input-population boundary
 
 Input population validates and pins its contracts, verifies the executor output, proves generated records remain unchanged, writes only numeric or boolean values to reserved ranges, reopens the output, publishes a separate copy and records hashes and counts without input values.

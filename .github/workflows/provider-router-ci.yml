@@ -109,4 +109,14 @@ jobs:
               forged = copy.deepcopy(external_handoff)
               forged["provider_payload"]["external_request"]["objective"] = "forged"
               assert validate_provider_handoff(forged)
+              operations = orchestrator.ledger.operational_status()
+              assert operations["states"]["completed"] == 2
+              backup = orchestrator.ledger.backup(root / "ledger-backup.sqlite3")
+              assert len(backup["sha256"]) == 64
           PY
+      - name: Verify operational CLI surface
+        run: |
+          /tmp/fmr-provider-test/bin/python -m fmr operations-status --help
+          /tmp/fmr-provider-test/bin/python -m fmr recover-executions --help
+          /tmp/fmr-provider-test/bin/python -m fmr backup-execution-ledger --help
+          /tmp/fmr-provider-test/bin/python -m fmr prune-execution-artifacts --help
