@@ -1,5 +1,20 @@
 # Service
 
+## Target service
+
+FMR routes a provider-neutral financial-modelling job to a compatible, versioned
+model package. The router validates and classifies the request, discovers
+packages without executing provider code, applies constraints, reports readiness,
+ranks candidates under an explicit policy and compiles a pinned provider handoff.
+Execution and validation are later lifecycle stages. A recognized model family
+may legitimately produce a structured no-route result.
+
+The current workbook service below remains operational during migration and is
+the implementation that will become the Native XLSX provider. It is not the
+router's product boundary. See [PRODUCT_CHARTER.md](PRODUCT_CHARTER.md).
+
+## Current compatibility service
+
 Financial Model Router turns financial source data, a modelling objective and an optional existing workbook into:
 
 1. a normalized financial-data package;

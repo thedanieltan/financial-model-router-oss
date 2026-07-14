@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "financial-model-router"
 version = "0.5.0"
-description = "Deterministic financial-data intake, model routing and governed XLSX construction"
+description = "Deterministic routing for versioned financial-model providers"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
