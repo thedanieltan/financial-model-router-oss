@@ -104,6 +104,10 @@ fmr qualify-release --output qualification.json
 
 See the [release qualification guide](docs/RELEASE_QUALIFICATION.md).
 
+Model packages can be exercised against versioned synthetic or anonymized cases
+with explicit tolerances and separate practitioner evidence. See the
+[model-acceptance guide](docs/MODEL_ACCEPTANCE.md).
+
 Provider authoring:
 
 ```bash
