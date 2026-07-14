@@ -114,9 +114,17 @@ router-specific logic. The first specialist executable package is the Python
 SaaS budget and unit-economics forecast. See
 [industry extensions](docs/INDUSTRY_EXTENSIONS.md).
 
+CSV and XLSX exports can be normalized through exact, versioned source-adapter
+profiles. Trial balances, statements, ledgers, budget-versus-actuals, debt
+schedules and operating drivers are supported without guessing vendor headers
+or assumptions. See [source adapters](docs/source-adapters.md).
+
 Financial-data intake:
 
 ```bash
+fmr import-tabular-source source-profile.json export.xlsx \
+  --entity-id acme --currency SGD --output canonical.json
+fmr merge-canonical-data statements.json drivers.json --output model-input.json
 fmr financial-concepts --output concepts.json
 fmr import-statement-csv statements.csv --output financial-data-package.json
 fmr make-financial-mapping-profile mapping-rules.json --output mapping-profile.json

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/source-adapter-profile.v1.schema.json",
+  "title": "FMR source adapter profile v1",
+  "type": "object",
+  "required": ["contract_version", "profile_id", "profile_version", "source_system", "source_type", "format", "sheet_name", "columns"],
+  "properties": {
+    "contract_version": {"const": "source-adapter-profile.v1"},
+    "profile_id": {"type": "string", "minLength": 1},
+    "profile_version": {"type": "string", "minLength": 1},
+    "source_system": {"enum": ["generic", "xero", "quickbooks", "erpnext"]},
+    "source_type": {"enum": ["trial_balance", "financial_statement", "general_ledger", "budget_actual", "debt_schedule", "operational_driver"]},
+    "format": {"enum": ["csv", "xlsx"]},
+    "sheet_name": {"type": ["string", "null"]},
+    "columns": {"type": "object"}
+  },
+  "allOf": [
+    {"if": {"properties": {"format": {"const": "xlsx"}}}, "then": {"properties": {"sheet_name": {"type": "string", "minLength": 1}}}},
+    {"if": {"properties": {"format": {"const": "csv"}}}, "then": {"properties": {"sheet_name": {"type": "null"}}}},
+    {"if": {"properties": {"source_type": {"const": "trial_balance"}}}, "then": {"properties": {"columns": {"$ref": "#/$defs/trialBalance"}}}},
+    {"if": {"properties": {"source_type": {"const": "financial_statement"}}}, "then": {"properties": {"columns": {"$ref": "#/$defs/financialStatement"}}}},
+    {"if": {"properties": {"source_type": {"const": "general_ledger"}}}, "then": {"properties": {"columns": {"$ref": "#/$defs/generalLedger"}}}},
+    {"if": {"properties": {"source_type": {"const": "budget_actual"}}}, "then": {"properties": {"columns": {"$ref": "#/$defs/budgetActual"}}}},
+    {"if": {"properties": {"source_type": {"const": "debt_schedule"}}}, "then": {"properties": {"columns": {"$ref": "#/$defs/debtSchedule"}}}},
+    {"if": {"properties": {"source_type": {"const": "operational_driver"}}}, "then": {"properties": {"columns": {"$ref": "#/$defs/operationalDriver"}}}}
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "header": {"type": "string", "minLength": 1},
+    "trialBalance": {"type": "object", "required": ["period", "account_code", "account_name", "debit", "credit"], "properties": {"period": {"$ref": "#/$defs/header"}, "account_code": {"$ref": "#/$defs/header"}, "account_name": {"$ref": "#/$defs/header"}, "debit": {"$ref": "#/$defs/header"}, "credit": {"$ref": "#/$defs/header"}}, "additionalProperties": false},
+    "financialStatement": {"type": "object", "required": ["period", "statement", "concept_id", "value"], "properties": {"period": {"$ref": "#/$defs/header"}, "statement": {"$ref": "#/$defs/header"}, "concept_id": {"$ref": "#/$defs/header"}, "value": {"$ref": "#/$defs/header"}}, "additionalProperties": false},
+    "generalLedger": {"type": "object", "required": ["period", "account_code", "account_name", "amount"], "properties": {"period": {"$ref": "#/$defs/header"}, "account_code": {"$ref": "#/$defs/header"}, "account_name": {"$ref": "#/$defs/header"}, "amount": {"$ref": "#/$defs/header"}}, "additionalProperties": false},
+    "budgetActual": {"type": "object", "required": ["period", "concept_id", "actual", "budget"], "properties": {"period": {"$ref": "#/$defs/header"}, "concept_id": {"$ref": "#/$defs/header"}, "actual": {"$ref": "#/$defs/header"}, "budget": {"$ref": "#/$defs/header"}}, "additionalProperties": false},
+    "debtSchedule": {"type": "object", "required": ["facility_id", "period", "opening_balance", "drawdown", "repayment", "interest_rate", "interest", "closing_balance"], "properties": {"facility_id": {"$ref": "#/$defs/header"}, "period": {"$ref": "#/$defs/header"}, "opening_balance": {"$ref": "#/$defs/header"}, "drawdown": {"$ref": "#/$defs/header"}, "repayment": {"$ref": "#/$defs/header"}, "interest_rate": {"$ref": "#/$defs/header"}, "interest": {"$ref": "#/$defs/header"}, "closing_balance": {"$ref": "#/$defs/header"}}, "additionalProperties": false},
+    "operationalDriver": {"type": "object", "required": ["period", "driver_id", "value"], "properties": {"period": {"$ref": "#/$defs/header"}, "driver_id": {"$ref": "#/$defs/header"}, "value": {"$ref": "#/$defs/header"}}, "additionalProperties": false}
+  }
+}

@@ -17,6 +17,7 @@ from fmr.financial_data import (
     validate_financial_data_package,
     validate_mapping_result,
 )
+from fmr.adapters.sources import import_tabular_source, merge_canonical_data
 
 FINANCIAL_DATA_COMMANDS = {
     "financial-concepts",
@@ -29,6 +30,8 @@ FINANCIAL_DATA_COMMANDS = {
     "validate-financial-package",
     "validate-financial-mapping",
     "validate-financial-binding-plan",
+    "import-tabular-source",
+    "merge-canonical-data",
 }
 
 
@@ -76,6 +79,23 @@ def _parser() -> argparse.ArgumentParser:
     )
     import_csv.add_argument("csv_file")
     import_csv.add_argument("--output")
+
+    import_tabular = subparsers.add_parser(
+        "import-tabular-source", help="Import a CSV or XLSX export through an exact source profile"
+    )
+    import_tabular.add_argument("profile")
+    import_tabular.add_argument("source_file")
+    import_tabular.add_argument("--entity-id", required=True)
+    import_tabular.add_argument("--entity-name")
+    import_tabular.add_argument("--currency", required=True)
+    import_tabular.add_argument("--output")
+
+    merge_data = subparsers.add_parser(
+        "merge-canonical-data", help="Merge compatible canonical financial-data packages"
+    )
+    merge_data.add_argument("packages", nargs="+")
+    merge_data.add_argument("--assumptions")
+    merge_data.add_argument("--output")
 
     mapping_profile = subparsers.add_parser(
         "make-financial-mapping-profile",
@@ -155,6 +175,22 @@ def run_financial_data_command(argv: list[str]) -> int:
             payload = import_statement_csv(
                 Path(args.csv_file).read_bytes(),
                 source_name=Path(args.csv_file).name,
+            )
+            _write(payload, args.output)
+            return 0
+        if args.command == "import-tabular-source":
+            source_path = Path(args.source_file)
+            payload = import_tabular_source(
+                source_path.read_bytes(), _load_object(args.profile),
+                source_name=source_path.name, entity_id=args.entity_id,
+                entity_name=args.entity_name, currency=args.currency,
+            )
+            _write(payload, args.output)
+            return 0
+        if args.command == "merge-canonical-data":
+            payload = merge_canonical_data(
+                [_load_object(path) for path in args.packages],
+                assumptions=_load_object(args.assumptions) if args.assumptions else None,
             )
             _write(payload, args.output)
             return 0

@@ -19,6 +19,7 @@ from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderCatalog, ProviderManifest, ProviderRegistry
 from fmr.sdk import build_provider_bundle, initialize_provider_project, run_manifest_conformance, validate_provider_project
 from fmr.vocabulary import VocabularyRegistry
+from fmr.adapters.sources import validate_source_adapter_profile
 from tests.test_provider_router import _canonical_file, _job
 
 
@@ -40,6 +41,7 @@ class ContractTests(unittest.TestCase):
             "provider-registry-audit.v1.schema.json",
             "provider-registry-reconciliation.v1.schema.json",
             "industry-vocabulary.v1.schema.json",
+            "source-adapter-profile.v1.schema.json",
             "execution-request.v1.schema.json",
             "execution-result.v1.schema.json",
             "execution-operations-status.v1.schema.json",
@@ -206,10 +208,29 @@ class ContractTests(unittest.TestCase):
             self.assertFalse(validators["execution-result.v1.schema.json"].is_valid({**bad_result, "unexpected": True}))
             self.assertTrue(validate_execution_result(bad_result, handoff=handoff))
 
+    def test_source_profile_schema_and_python_validation_agree(self) -> None:
+        validators = _validators()
+        profile = {
+            "contract_version": "source-adapter-profile.v1",
+            "profile_id": "generic-drivers",
+            "profile_version": "1.0.0",
+            "source_system": "generic",
+            "source_type": "operational_driver",
+            "format": "csv",
+            "sheet_name": None,
+            "columns": {"period": "Period", "driver_id": "Driver", "value": "Value"},
+        }
+        validators["source-adapter-profile.v1.schema.json"].validate(profile)
+        self.assertEqual(validate_source_adapter_profile(profile), ())
+        invalid = copy.deepcopy(profile)
+        invalid["columns"]["unexpected"] = "Unexpected"
+        self.assertFalse(validators["source-adapter-profile.v1.schema.json"].is_valid(invalid))
+        self.assertTrue(validate_source_adapter_profile(invalid))
+
 
 def _validators() -> dict[str, Draft202012Validator]:
     root = files("fmr.contracts")
-    names = ("artifact-retention-result.v1.schema.json", "canonical-financial-data.v2.schema.json", "execution-ledger-backup.v1.schema.json", "execution-operations-status.v1.schema.json", "execution-recovery-result.v1.schema.json", "industry-vocabulary.v1.schema.json", "model-family-definition.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "provider-sdk-validation-result.v1.schema.json", "provider-sdk-package-result.v1.schema.json", "provider-registry.v1.schema.json", "provider-registry-audit.v1.schema.json", "provider-registry-reconciliation.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
+    names = ("artifact-retention-result.v1.schema.json", "canonical-financial-data.v2.schema.json", "execution-ledger-backup.v1.schema.json", "execution-operations-status.v1.schema.json", "execution-recovery-result.v1.schema.json", "industry-vocabulary.v1.schema.json", "source-adapter-profile.v1.schema.json", "model-family-definition.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "provider-sdk-validation-result.v1.schema.json", "provider-sdk-package-result.v1.schema.json", "provider-registry.v1.schema.json", "provider-registry-audit.v1.schema.json", "provider-registry-reconciliation.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
     documents = {name: json.loads(root.joinpath(name).read_text(encoding="utf-8")) for name in names}
     registry = Registry().with_resources((document["$id"], Resource.from_contents(document)) for document in documents.values())
     return {name: Draft202012Validator(document, registry=registry) for name, document in documents.items()}

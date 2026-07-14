@@ -23,7 +23,9 @@ contract tests does not claim that an optional provider runtime is installed.
 | 1.1 Provider SDK | Scaffolding, static validation, executable conformance and deterministic bundles | Built in WP-SDK-13 |
 | 1.2 Provider registry | Immutable releases, lifecycle, conformance evidence and reconciliation | Built in WP-REG-14 |
 | 1.3 Industry extensions | Eight declarative vocabularies and a proven SaaS specialist package | Built in WP-IND-15 |
-| 1.4–1.6 Ecosystem | Sources, organization policies and agents | Pending |
+| 1.4 Source adapters | Exact profiled CSV/XLSX ingestion for six export shapes and named vendor exports | Built in WP-SRC-16 |
+| 1.5 Organization routing | Private registries, approvals and organization policies | Pending |
+| 1.6 Agent access | Interface parity and optional MCP server | Pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -149,3 +151,18 @@ packages remain future provider work and must not be advertised until proven.
   and receipts through HTTP, CLI and an optional MCP server.
 - **2.0 Distributed routing:** remote discovery, signed manifests, workers, health,
   regions, cost, quotas, comparisons and multi-step pipelines.
+
+## WP-SRC-16 — source adapter expansion
+
+- exact, versioned `source-adapter-profile.v1` mappings for CSV and XLSX exports;
+- normalized trial balance, financial statement, general-ledger,
+  budget-versus-actual, debt-schedule and operational-driver shapes;
+- named Xero, QuickBooks and ERPNext provenance without guessed universal vendor
+  columns or claims of live API integration;
+- source/profile/version/hash provenance and explicit entity/currency metadata;
+- fail-closed series completeness, numeric, trial-balance and debt-roll-forward
+  checks; and
+- deterministic canonical-package merge with no inferred assumptions.
+
+Vendor-specific layouts require an operator-approved profile against the actual
+export. Installed-wheel CI proves the generic profiled ingestion lifecycle.
