@@ -1,0 +1,635 @@
+{
+  "cases": [
+    {
+      "assertions": [
+        {
+          "assertion_id": "contract",
+          "expected": "budget-forecast-result.v1",
+          "operator": "equals",
+          "path": "/contract_version"
+        },
+        {
+          "assertion_id": "scenario",
+          "expected": "base",
+          "operator": "equals",
+          "path": "/scenario"
+        },
+        {
+          "assertion_id": "ending-revenue",
+          "expected": "1210.00",
+          "operator": "approximately_equals",
+          "path": "/forecast/1/revenue",
+          "tolerance": "0.01"
+        }
+      ],
+      "canonical_input": {
+        "account_balances": [],
+        "assumptions": {
+          "annual_repayment": "50",
+          "capital_expenditure_rate": "0.05",
+          "depreciation_rate": "0.03",
+          "discount_rate": "0.10",
+          "ebitda_growth_rate": "0.05",
+          "forecast_horizon": 2,
+          "interest_rate_assumption": "0.05",
+          "maximum_leverage_ratio": "3",
+          "minimum_debt_service_coverage": "1.5",
+          "net_debt": "200",
+          "opening_debt": "300",
+          "operating_cost_growth_rate": "0.05",
+          "operating_margin_rate": "0.20",
+          "revenue_growth_rate": "0.10",
+          "scenario": "base",
+          "scenario_adjustments": {
+            "base": {
+              "operating_cost_growth_delta": "0",
+              "revenue_growth_delta": "0"
+            }
+          },
+          "tax_rate": "0.20",
+          "terminal_growth_rate": "0.02",
+          "working_capital_rate": "0.10"
+        },
+        "capital_expenditure": [],
+        "contract_version": "canonical-financial-data.v2",
+        "debt_schedules": [],
+        "entity": {
+          "currency": "USD",
+          "entity_id": "synthetic"
+        },
+        "financial_statements": {
+          "balance_sheet": {
+            "cash": [
+              "100"
+            ],
+            "debt": [
+              "300"
+            ],
+            "equity": [
+              "500"
+            ]
+          },
+          "cash_flow": {
+            "operating_cash_flow": [
+              "150"
+            ]
+          },
+          "income_statement": {
+            "ebitda": [
+              "200"
+            ],
+            "operating_costs": [
+              "700"
+            ],
+            "revenue": [
+              "1000"
+            ]
+          }
+        },
+        "operational_drivers": {},
+        "periods": [
+          "2025"
+        ],
+        "provenance": [
+          {
+            "source": "synthetic"
+          }
+        ],
+        "trial_balance": [],
+        "working_capital": []
+      },
+      "case_id": "generic-budget-base",
+      "data_classification": "synthetic",
+      "job": {
+        "available_assumptions": [
+          "forecast_horizon",
+          "operating_cost_growth_rate",
+          "revenue_growth_rate",
+          "scenario",
+          "scenario_adjustments"
+        ],
+        "available_data": [
+          "income_statement_history",
+          "operating_cost_drivers",
+          "revenue_drivers"
+        ],
+        "contract_version": "model-job.v2",
+        "input_references": {},
+        "model_family": "budget_forecast",
+        "objective": "Synthetic budget_forecast acceptance",
+        "output_formats": [
+          "json"
+        ],
+        "requested_deliverables": [
+          "budget_forecast"
+        ]
+      }
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "contract",
+          "expected": "saas-budget-forecast-result.v1",
+          "operator": "equals",
+          "path": "/contract_version"
+        },
+        {
+          "assertion_id": "ending-arr",
+          "expected": "1452.00",
+          "operator": "approximately_equals",
+          "path": "/forecast/1/annual_recurring_revenue",
+          "tolerance": "0.01"
+        },
+        {
+          "assertion_id": "customer-floor",
+          "expected": "0",
+          "operator": "greater_than_or_equal",
+          "path": "/forecast/1/customer_count"
+        }
+      ],
+      "canonical_input": {
+        "account_balances": [],
+        "assumptions": {
+          "annual_repayment": "50",
+          "capital_expenditure_rate": "0.05",
+          "customer_churn_rate": "0.05",
+          "customer_growth_rate": "0.10",
+          "depreciation_rate": "0.03",
+          "discount_rate": "0.10",
+          "ebitda_growth_rate": "0.05",
+          "forecast_horizon": 2,
+          "gross_margin_rate": "0.80",
+          "interest_rate_assumption": "0.05",
+          "maximum_leverage_ratio": "3",
+          "minimum_debt_service_coverage": "1.5",
+          "monthly_recurring_revenue_growth_rate": "0.10",
+          "net_debt": "200",
+          "opening_debt": "300",
+          "operating_margin_rate": "0.20",
+          "revenue_growth_rate": "0.10",
+          "saas_scenario_adjustments": {
+            "base": {
+              "churn_rate_delta": "0",
+              "customer_growth_delta": "0",
+              "mrr_growth_delta": "0"
+            }
+          },
+          "scenario": "base",
+          "tax_rate": "0.20",
+          "terminal_growth_rate": "0.02",
+          "working_capital_rate": "0.10"
+        },
+        "capital_expenditure": [],
+        "contract_version": "canonical-financial-data.v2",
+        "debt_schedules": [],
+        "entity": {
+          "currency": "USD",
+          "entity_id": "synthetic"
+        },
+        "financial_statements": {
+          "balance_sheet": {
+            "cash": [
+              "100"
+            ],
+            "debt": [
+              "300"
+            ],
+            "equity": [
+              "500"
+            ]
+          },
+          "cash_flow": {
+            "operating_cash_flow": [
+              "150"
+            ]
+          },
+          "income_statement": {
+            "ebitda": [
+              "200"
+            ],
+            "revenue": [
+              "1000"
+            ]
+          }
+        },
+        "operational_drivers": {
+          "customer_count": [
+            "20"
+          ],
+          "monthly_recurring_revenue": [
+            "100"
+          ]
+        },
+        "periods": [
+          "2025"
+        ],
+        "provenance": [
+          {
+            "source": "synthetic"
+          }
+        ],
+        "trial_balance": [],
+        "working_capital": []
+      },
+      "case_id": "saas-budget-base",
+      "data_classification": "synthetic",
+      "job": {
+        "available_assumptions": [
+          "customer_churn_rate",
+          "customer_growth_rate",
+          "forecast_horizon",
+          "gross_margin_rate",
+          "monthly_recurring_revenue_growth_rate",
+          "saas_scenario_adjustments",
+          "scenario"
+        ],
+        "available_data": [
+          "customer_history",
+          "income_statement_history",
+          "monthly_recurring_revenue_history"
+        ],
+        "contract_version": "model-job.v2",
+        "industry": "saas",
+        "input_references": {},
+        "model_family": "budget_forecast",
+        "objective": "Synthetic budget_forecast acceptance",
+        "output_formats": [
+          "json"
+        ],
+        "requested_deliverables": [
+          "budget_forecast",
+          "saas_unit_economics"
+        ]
+      }
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "contract",
+          "expected": "three-statement-forecast-result.v1",
+          "operator": "equals",
+          "path": "/contract_version"
+        },
+        {
+          "assertion_id": "balance-sheet",
+          "expected": "583.90",
+          "operator": "approximately_equals",
+          "path": "/forecast/1/balance_sheet/assets",
+          "tolerance": "0.01"
+        },
+        {
+          "assertion_id": "balance-sheet-counterpart",
+          "expected": "583.90",
+          "operator": "approximately_equals",
+          "path": "/forecast/1/balance_sheet/liabilities_and_equity",
+          "tolerance": "0.01"
+        }
+      ],
+      "canonical_input": {
+        "account_balances": [],
+        "assumptions": {
+          "annual_repayment": "50",
+          "capital_expenditure_rate": "0.05",
+          "depreciation_rate": "0.03",
+          "discount_rate": "0.10",
+          "ebitda_growth_rate": "0.05",
+          "forecast_horizon": 2,
+          "interest_rate_assumption": "0.05",
+          "maximum_leverage_ratio": "3",
+          "minimum_debt_service_coverage": "1.5",
+          "net_debt": "200",
+          "opening_debt": "300",
+          "operating_margin_rate": "0.20",
+          "revenue_growth_rate": "0.10",
+          "tax_rate": "0.20",
+          "terminal_growth_rate": "0.02",
+          "working_capital_rate": "0.10"
+        },
+        "capital_expenditure": [],
+        "contract_version": "canonical-financial-data.v2",
+        "debt_schedules": [],
+        "entity": {
+          "currency": "USD",
+          "entity_id": "synthetic"
+        },
+        "financial_statements": {
+          "balance_sheet": {
+            "cash": [
+              "100"
+            ],
+            "debt": [
+              "300"
+            ],
+            "equity": [
+              "500"
+            ]
+          },
+          "cash_flow": {
+            "operating_cash_flow": [
+              "150"
+            ]
+          },
+          "income_statement": {
+            "ebitda": [
+              "200"
+            ],
+            "revenue": [
+              "1000"
+            ]
+          }
+        },
+        "operational_drivers": {},
+        "periods": [
+          "2025"
+        ],
+        "provenance": [
+          {
+            "source": "synthetic"
+          }
+        ],
+        "trial_balance": [],
+        "working_capital": []
+      },
+      "case_id": "three-statement-base",
+      "data_classification": "synthetic",
+      "job": {
+        "available_assumptions": [
+          "capital_expenditure_rate",
+          "depreciation_rate",
+          "forecast_horizon",
+          "operating_margin_rate",
+          "revenue_growth_rate",
+          "tax_rate",
+          "working_capital_rate"
+        ],
+        "available_data": [
+          "balance_sheet_history",
+          "capital_expenditure",
+          "cash_flow_history",
+          "debt_schedule",
+          "income_statement_history",
+          "working_capital"
+        ],
+        "contract_version": "model-job.v2",
+        "input_references": {},
+        "model_family": "three_statement",
+        "objective": "Synthetic three_statement acceptance",
+        "output_formats": [
+          "json"
+        ],
+        "requested_deliverables": [
+          "three_statement_forecast"
+        ]
+      }
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "contract",
+          "expected": "operating-company-dcf-result.v1",
+          "operator": "equals",
+          "path": "/contract_version"
+        },
+        {
+          "assertion_id": "enterprise-value",
+          "expected": "1930.91",
+          "operator": "approximately_equals",
+          "path": "/enterprise_value",
+          "tolerance": "0.01"
+        },
+        {
+          "assertion_id": "equity-value",
+          "expected": "1730.91",
+          "operator": "approximately_equals",
+          "path": "/equity_value",
+          "tolerance": "0.01"
+        }
+      ],
+      "canonical_input": {
+        "account_balances": [],
+        "assumptions": {
+          "annual_repayment": "50",
+          "capital_expenditure_rate": "0.05",
+          "depreciation_rate": "0.03",
+          "discount_rate": "0.10",
+          "ebitda_growth_rate": "0.05",
+          "forecast_horizon": 2,
+          "interest_rate_assumption": "0.05",
+          "maximum_leverage_ratio": "3",
+          "minimum_debt_service_coverage": "1.5",
+          "net_debt": "200",
+          "opening_debt": "300",
+          "operating_margin_rate": "0.20",
+          "revenue_growth_rate": "0.10",
+          "tax_rate": "0.20",
+          "terminal_growth_rate": "0.02",
+          "working_capital_rate": "0.10"
+        },
+        "capital_expenditure": [],
+        "contract_version": "canonical-financial-data.v2",
+        "debt_schedules": [],
+        "entity": {
+          "currency": "USD",
+          "entity_id": "synthetic"
+        },
+        "financial_statements": {
+          "balance_sheet": {
+            "cash": [
+              "100"
+            ],
+            "debt": [
+              "300"
+            ],
+            "equity": [
+              "500"
+            ]
+          },
+          "cash_flow": {
+            "operating_cash_flow": [
+              "150"
+            ]
+          },
+          "income_statement": {
+            "ebitda": [
+              "200"
+            ],
+            "revenue": [
+              "1000"
+            ]
+          }
+        },
+        "operational_drivers": {},
+        "periods": [
+          "2025"
+        ],
+        "provenance": [
+          {
+            "source": "synthetic"
+          }
+        ],
+        "trial_balance": [],
+        "working_capital": []
+      },
+      "case_id": "operating-company-dcf-base",
+      "data_classification": "synthetic",
+      "job": {
+        "available_assumptions": [
+          "capital_expenditure_rate",
+          "depreciation_rate",
+          "discount_rate",
+          "forecast_horizon",
+          "net_debt",
+          "operating_margin_rate",
+          "revenue_growth_rate",
+          "tax_rate",
+          "terminal_growth_rate",
+          "terminal_value_assumption",
+          "working_capital_rate"
+        ],
+        "available_data": [
+          "capital_expenditure",
+          "cash_flow_history",
+          "income_statement_history",
+          "net_debt",
+          "revenue_drivers",
+          "working_capital"
+        ],
+        "contract_version": "model-job.v2",
+        "input_references": {},
+        "model_family": "operating_company_dcf",
+        "objective": "Synthetic operating_company_dcf acceptance",
+        "output_formats": [
+          "json"
+        ],
+        "requested_deliverables": [
+          "enterprise_value",
+          "equity_value",
+          "operating_forecast"
+        ]
+      }
+    },
+    {
+      "assertions": [
+        {
+          "assertion_id": "contract",
+          "expected": "debt-capacity-refinancing-result.v1",
+          "operator": "equals",
+          "path": "/contract_version"
+        },
+        {
+          "assertion_id": "covenants",
+          "expected": true,
+          "operator": "equals",
+          "path": "/all_covenants_pass"
+        },
+        {
+          "assertion_id": "ending-debt",
+          "expected": "200.00",
+          "operator": "approximately_equals",
+          "path": "/forecast/1/closing_debt",
+          "tolerance": "0.01"
+        }
+      ],
+      "canonical_input": {
+        "account_balances": [],
+        "assumptions": {
+          "annual_repayment": "50",
+          "capital_expenditure_rate": "0.05",
+          "depreciation_rate": "0.03",
+          "discount_rate": "0.10",
+          "ebitda_growth_rate": "0.05",
+          "forecast_horizon": 2,
+          "interest_rate_assumption": "0.05",
+          "maximum_leverage_ratio": "3",
+          "minimum_debt_service_coverage": "1.5",
+          "net_debt": "200",
+          "opening_debt": "300",
+          "operating_margin_rate": "0.20",
+          "revenue_growth_rate": "0.10",
+          "tax_rate": "0.20",
+          "terminal_growth_rate": "0.02",
+          "working_capital_rate": "0.10"
+        },
+        "capital_expenditure": [],
+        "contract_version": "canonical-financial-data.v2",
+        "debt_schedules": [],
+        "entity": {
+          "currency": "USD",
+          "entity_id": "synthetic"
+        },
+        "financial_statements": {
+          "balance_sheet": {
+            "cash": [
+              "100"
+            ],
+            "debt": [
+              "300"
+            ],
+            "equity": [
+              "500"
+            ]
+          },
+          "cash_flow": {
+            "operating_cash_flow": [
+              "150"
+            ]
+          },
+          "income_statement": {
+            "ebitda": [
+              "200"
+            ],
+            "revenue": [
+              "1000"
+            ]
+          }
+        },
+        "operational_drivers": {},
+        "periods": [
+          "2025"
+        ],
+        "provenance": [
+          {
+            "source": "synthetic"
+          }
+        ],
+        "trial_balance": [],
+        "working_capital": []
+      },
+      "case_id": "debt-capacity-base",
+      "data_classification": "synthetic",
+      "job": {
+        "available_assumptions": [
+          "annual_repayment",
+          "covenant_thresholds",
+          "ebitda_growth_rate",
+          "forecast_horizon",
+          "interest_rate_assumption",
+          "maximum_leverage_ratio",
+          "minimum_debt_service_coverage",
+          "opening_debt",
+          "repayment_terms"
+        ],
+        "available_data": [
+          "cash_flow_history",
+          "debt_schedule",
+          "income_statement_history",
+          "liquidity_position"
+        ],
+        "contract_version": "model-job.v2",
+        "input_references": {},
+        "model_family": "debt_capacity_refinancing",
+        "objective": "Synthetic debt_capacity_refinancing acceptance",
+        "output_formats": [
+          "json"
+        ],
+        "requested_deliverables": [
+          "debt_capacity",
+          "refinancing_analysis"
+        ]
+      }
+    }
+  ],
+  "contract_version": "model-acceptance-corpus.v1",
+  "corpus_id": "bundled-synthetic-initial-families-v1",
+  "practitioner_reviews": []
+}

@@ -106,7 +106,9 @@ See the [release qualification guide](docs/RELEASE_QUALIFICATION.md).
 
 Model packages can be exercised against versioned synthetic or anonymized cases
 with explicit tolerances and separate practitioner evidence. See the
-[model-acceptance guide](docs/MODEL_ACCEPTANCE.md).
+[model-acceptance guide](docs/MODEL_ACCEPTANCE.md). The bundled full-family
+corpus covers every executable Python Forecast package without claiming live or
+professional acceptance.
 
 Provider authoring:
 

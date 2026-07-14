@@ -4,6 +4,7 @@ import copy
 import json
 import tempfile
 import unittest
+from importlib.resources import files
 from pathlib import Path
 
 from fmr.acceptance import run_acceptance_corpus, validate_acceptance_corpus
@@ -17,6 +18,25 @@ def _corpus() -> dict:
 
 
 class ModelAcceptanceTests(unittest.TestCase):
+    def test_bundled_corpus_covers_every_executable_python_package(self) -> None:
+        path = files("fmr.fixtures").joinpath("acceptance/synthetic-initial-families.v1.json")
+        corpus = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(validate_acceptance_corpus(corpus), ())
+        result = run_acceptance_corpus(corpus)
+        self.assertEqual(result["implementation_status"], "passed")
+        self.assertEqual(result["production_status"], "not_accepted")
+        self.assertEqual(
+            {item["package_id"] for item in result["case_results"]},
+            {
+                "python-forecast/generic-budget-forecast",
+                "python-forecast/saas-budget-forecast",
+                "python-forecast/integrated-three-statement",
+                "python-forecast/operating-company-dcf",
+                "python-forecast/debt-capacity-refinancing",
+            },
+        )
+        self.assertTrue(all(item["status"] == "passed" for item in result["case_results"]))
+
     def test_synthetic_corpus_passes_implementation_but_not_production(self) -> None:
         corpus = _corpus()
         self.assertEqual(validate_acceptance_corpus(corpus), ())
