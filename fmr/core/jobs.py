@@ -1,15 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any
 
 
 def _strings(value: Any, field: str, *, required: bool = False) -> tuple[str, ...]:
     if value is None:
         value = []
-    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+    if not isinstance(value, list) or not all(isinstance(item, str) and item.strip() for item in value):
         raise ValueError(f"{field} must be an array of strings")
-    cleaned = tuple(sorted({item.strip() for item in value if item.strip()}))
+    cleaned_values = [item.strip() for item in value]
+    if len(set(cleaned_values)) != len(cleaned_values):
+        raise ValueError(f"{field} must not contain duplicates")
+    cleaned = tuple(sorted(cleaned_values))
     if required and not cleaned:
         raise ValueError(f"{field} must contain at least one item")
     return cleaned
@@ -35,6 +39,9 @@ class JobConstraints:
     @classmethod
     def from_mapping(cls, value: Any) -> "JobConstraints":
         data = _mapping(value, "constraints")
+        allowed = {"local_only", "open_source_only", "network_allowed", "allowed_providers", "prohibited_providers", "pinned_provider_versions"}
+        if set(data) - allowed:
+            raise ValueError("constraints contains unsupported fields")
         for field in ("local_only", "open_source_only", "network_allowed"):
             if field in data and not isinstance(data[field], bool):
                 raise ValueError(f"constraints.{field} must be a boolean")
@@ -82,6 +89,13 @@ class ModelJob:
             raise ValueError("model job must be an object")
         if data.get("contract_version") != "model-job.v2":
             raise ValueError("unsupported contract_version")
+        allowed = {
+            "contract_version", "objective", "requested_deliverables", "model_family", "industry", "context",
+            "available_data", "available_assumptions", "input_references", "existing_model", "output_formats",
+            "constraints", "privacy_constraints", "licensing_constraints", "preferred_execution_mode",
+        }
+        if set(data) - allowed:
+            raise ValueError("model job contains unsupported fields")
         objective = data.get("objective")
         if not isinstance(objective, str) or not objective.strip():
             raise ValueError("objective must be a non-empty string")
@@ -94,6 +108,23 @@ class ModelJob:
         mode = data.get("preferred_execution_mode")
         if mode is not None and mode not in {"local", "remote", "handoff_only"}:
             raise ValueError("preferred_execution_mode is not supported")
+        input_references = _mapping(data.get("input_references"), "input_references")
+        for name, reference in input_references.items():
+            if not isinstance(reference, dict):
+                raise ValueError(f"input_references.{name} must be an object")
+            allowed_reference = {"contract_version", "sha256", "path", "uri"}
+            if set(reference) - allowed_reference:
+                raise ValueError(f"input_references.{name} contains unsupported fields")
+            if not isinstance(reference.get("contract_version"), str) or not reference["contract_version"]:
+                raise ValueError(f"input_references.{name}.contract_version is required")
+            if not isinstance(reference.get("sha256"), str) or not re.fullmatch(r"[a-f0-9]{64}", reference["sha256"]):
+                raise ValueError(f"input_references.{name}.sha256 is invalid")
+            locations = [key for key in ("path", "uri") if isinstance(reference.get(key), str) and reference[key]]
+            if not locations:
+                raise ValueError(f"input_references.{name} requires path or uri")
+        output_formats = _strings(data.get("output_formats"), "output_formats", required=True)
+        if any(not re.fullmatch(r"[a-z0-9][a-z0-9._+-]*", item) for item in output_formats):
+            raise ValueError("output_formats contains an invalid format identifier")
         return cls(
             objective=objective.strip(),
             requested_deliverables=_strings(data.get("requested_deliverables"), "requested_deliverables", required=True),
@@ -102,9 +133,9 @@ class ModelJob:
             context=_mapping(data.get("context"), "context"),
             available_data=_strings(data.get("available_data"), "available_data"),
             available_assumptions=_strings(data.get("available_assumptions"), "available_assumptions"),
-            input_references=_mapping(data.get("input_references"), "input_references"),
+            input_references=input_references,
             existing_model=_mapping(data.get("existing_model"), "existing_model"),
-            output_formats=_strings(data.get("output_formats"), "output_formats", required=True),
+            output_formats=output_formats,
             constraints=JobConstraints.from_mapping(data.get("constraints")),
             privacy_constraints=_strings(data.get("privacy_constraints"), "privacy_constraints"),
             licensing_constraints=_strings(data.get("licensing_constraints"), "licensing_constraints"),

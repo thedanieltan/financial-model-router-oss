@@ -13,7 +13,7 @@ The migration is deliberately staged so existing interfaces remain operational.
 | `financial_data/common.py`, canonical portions of `types.py` | Canonical financial-data layer | Move to `fmr.data` |
 | `financial_data/mapping.py` | Canonical financial-data layer | Retain deterministic concept mapping in `fmr.data` |
 | `financial_data/binding.py` | Mixed compatibility layer | Split canonical readiness from Native XLSX slot binding |
-| `workbook/**` | Native XLSX compatibility implementation | Owned and exported through `fmr.providers.native_xlsx`; paths remain for backward compatibility |
+| `workbook/**` | Native XLSX compatibility implementation | Ownership boundary established, but physical extraction remains incomplete; paths remain for backward compatibility |
 | workbook-prefixed schemas in `contracts/` | Native XLSX provider contracts | Relocate ownership without breaking packaged schema paths during migration |
 | financial-data schemas in `contracts/` | Canonical data/source-adapter contracts | Evolve under provider-neutral contracts |
 | `model-request.v1`, `model-recommendation.v1`, `transformation-plan.v1` | Compatibility contracts | Superseded, not silently changed, by v2 job/decision contracts |

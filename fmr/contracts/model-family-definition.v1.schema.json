@@ -3,7 +3,23 @@
   "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/model-family-definition.v1.schema.json",
   "title": "FMR model family definition v1",
   "type": "object",
-  "required": ["contract_version", "family_id", "analytical_objective", "required_deliverables", "required_data", "required_assumptions", "expected_checks", "limitations"],
-  "properties": {"contract_version": {"const": "model-family-definition.v1"}, "family_id": {"type": "string"}, "analytical_objective": {"type": "string"}, "required_deliverables": {"type": "array"}, "required_data": {"type": "array"}, "required_assumptions": {"type": "array"}, "expected_checks": {"type": "array"}, "limitations": {"type": "array"}},
-  "additionalProperties": true
+  "required": ["contract_version", "family_id", "title", "analytical_objective", "required_deliverables", "required_data", "required_assumptions", "optional_inputs", "expected_checks", "supported_industry_extensions", "limitations"],
+  "properties": {
+    "contract_version": {"const": "model-family-definition.v1"},
+    "family_id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "title": {"type": "string", "minLength": 1},
+    "analytical_objective": {"type": "string", "minLength": 1},
+    "required_deliverables": {"$ref": "#/$defs/nonEmptyStrings"},
+    "required_data": {"$ref": "#/$defs/nonEmptyStrings"},
+    "required_assumptions": {"$ref": "#/$defs/nonEmptyStrings"},
+    "optional_inputs": {"$ref": "#/$defs/strings"},
+    "expected_checks": {"$ref": "#/$defs/nonEmptyStrings"},
+    "supported_industry_extensions": {"$ref": "#/$defs/strings"},
+    "limitations": {"$ref": "#/$defs/strings"}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "strings": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "nonEmptyStrings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+  }
 }

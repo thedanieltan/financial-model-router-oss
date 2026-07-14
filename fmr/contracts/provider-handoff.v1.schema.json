@@ -3,6 +3,35 @@
   "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/provider-handoff.v1.schema.json",
   "title": "FMR provider handoff v1",
   "type": "object",
-  "required": ["contract_version", "handoff_id", "handoff_sha256", "job_reference", "route_decision_reference", "provider", "package", "normalized_input_references", "source_adapters", "provider_adapter", "provider_payload", "execution_configuration", "expected_outputs", "validation_requirements", "source_hashes", "unresolved_requirements", "status"],
-  "properties": {"contract_version": {"const": "provider-handoff.v1"}, "status": {"enum": ["ready", "blocked"]}}
+  "required": ["contract_version", "handoff_id", "handoff_sha256", "job", "route_decision", "job_reference", "route_decision_reference", "provider", "package", "normalized_input_references", "source_adapters", "provider_adapter", "provider_payload", "execution_configuration", "expected_outputs", "validation_requirements", "source_hashes", "unresolved_requirements", "status"],
+  "properties": {
+    "contract_version": {"const": "provider-handoff.v1"},
+    "handoff_id": {"type": "string", "pattern": "^fmrh_[a-f0-9]{24}$"},
+    "handoff_sha256": {"$ref": "#/$defs/sha256"},
+    "job": {"$ref": "model-job.v2.schema.json"},
+    "route_decision": {"$ref": "route-decision.v2.schema.json"},
+    "job_reference": {"$ref": "#/$defs/hashReference"},
+    "route_decision_reference": {"type": "object", "required": ["decision_id", "sha256"], "properties": {"decision_id": {"type": "string", "pattern": "^fmrd_[a-f0-9]{24}$"}, "sha256": {"$ref": "#/$defs/sha256"}}, "additionalProperties": false},
+    "provider": {"$ref": "#/$defs/providerIdentity"},
+    "package": {"$ref": "#/$defs/packageIdentity"},
+    "normalized_input_references": {"type": "array", "items": {"type": "object", "required": ["name", "contract_version", "sha256"], "properties": {"name": {"type": "string"}, "contract_version": {"type": "string"}, "sha256": {"$ref": "#/$defs/sha256"}, "path": {"type": "string"}, "uri": {"type": "string"}}, "additionalProperties": false}},
+    "source_adapters": {"type": "array", "items": {"type": "object", "required": ["input", "adapter_id"], "properties": {"input": {"type": "string"}, "adapter_id": {"type": "string"}}, "additionalProperties": false}},
+    "provider_adapter": {"type": "object", "required": ["adapter_id"], "properties": {"adapter_id": {"type": "string", "minLength": 1}}, "additionalProperties": false},
+    "provider_payload": {"type": "object"},
+    "execution_configuration": {"type": "object", "required": ["mode", "network_required"], "properties": {"mode": {"enum": ["local", "remote", "handoff_only"]}, "network_required": {"type": "boolean"}}, "additionalProperties": false},
+    "expected_outputs": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/artifactSpec"}},
+    "validation_requirements": {"$ref": "#/$defs/strings"},
+    "source_hashes": {"type": "array", "items": {"$ref": "#/$defs/sha256"}, "uniqueItems": true},
+    "unresolved_requirements": {"$ref": "#/$defs/strings"},
+    "status": {"enum": ["ready", "blocked"]}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "strings": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "hashReference": {"type": "object", "required": ["sha256"], "properties": {"sha256": {"$ref": "#/$defs/sha256"}}, "additionalProperties": false},
+    "providerIdentity": {"type": "object", "required": ["provider_id", "version"], "properties": {"provider_id": {"type": "string"}, "version": {"type": "string"}}, "additionalProperties": false},
+    "packageIdentity": {"type": "object", "required": ["package_id", "version"], "properties": {"package_id": {"type": "string"}, "version": {"type": "string"}}, "additionalProperties": false},
+    "artifactSpec": {"type": "object", "required": ["kind", "format", "required"], "properties": {"kind": {"type": "string"}, "format": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._+-]*$"}, "required": {"type": "boolean"}}, "additionalProperties": false}
+  }
 }

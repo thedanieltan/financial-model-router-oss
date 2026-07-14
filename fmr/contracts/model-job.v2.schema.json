@@ -6,19 +6,35 @@
   "required": ["contract_version", "objective", "requested_deliverables", "output_formats"],
   "properties": {
     "contract_version": {"const": "model-job.v2"},
-    "objective": {"type": "string", "minLength": 1},
-    "model_family": {"type": ["string", "null"]},
-    "industry": {"type": ["string", "null"]},
-    "requested_deliverables": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
-    "available_data": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "available_assumptions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
-    "input_references": {"type": "object"},
+    "objective": {"type": "string", "minLength": 1, "maxLength": 1000},
+    "model_family": {"type": ["string", "null"], "minLength": 1},
+    "industry": {"type": ["string", "null"], "minLength": 1},
+    "requested_deliverables": {"$ref": "#/$defs/nonEmptyStrings"},
+    "context": {"type": "object"},
+    "available_data": {"$ref": "#/$defs/strings"},
+    "available_assumptions": {"$ref": "#/$defs/strings"},
+    "input_references": {"type": "object", "additionalProperties": {"$ref": "#/$defs/inputReference"}},
     "existing_model": {"type": "object"},
-    "output_formats": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
-    "constraints": {"type": "object"},
-    "privacy_constraints": {"type": "array", "items": {"type": "string"}},
-    "licensing_constraints": {"type": "array", "items": {"type": "string"}},
+    "output_formats": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._+-]*$"}, "uniqueItems": true},
+    "constraints": {"$ref": "#/$defs/constraints"},
+    "privacy_constraints": {"$ref": "#/$defs/strings"},
+    "licensing_constraints": {"$ref": "#/$defs/strings"},
     "preferred_execution_mode": {"enum": ["local", "remote", "handoff_only", null]}
   },
-  "additionalProperties": true
+  "additionalProperties": false,
+  "$defs": {
+    "strings": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "nonEmptyStrings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "inputReference": {
+      "type": "object", "required": ["contract_version", "sha256"],
+      "properties": {"contract_version": {"type": "string", "minLength": 1}, "sha256": {"$ref": "#/$defs/sha256"}, "path": {"type": "string", "minLength": 1}, "uri": {"type": "string", "minLength": 1}},
+      "anyOf": [{"required": ["path"]}, {"required": ["uri"]}], "additionalProperties": false
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {"local_only": {"type": "boolean"}, "open_source_only": {"type": "boolean"}, "network_allowed": {"type": "boolean"}, "allowed_providers": {"$ref": "#/$defs/strings"}, "prohibited_providers": {"$ref": "#/$defs/strings"}, "pinned_provider_versions": {"$ref": "#/$defs/strings"}},
+      "additionalProperties": false
+    }
+  }
 }

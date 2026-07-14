@@ -9,13 +9,17 @@ contract tests does not claim that an optional provider runtime is installed.
 | Existing workbook runtime | XLSX planning, writing, population and validation | Built as legacy implementation |
 | Existing data intake | Statement CSV normalization and semantic mapping | Built |
 | 0.6 Product realignment | Charter, code inventory, target namespaces and core freeze | Built |
-| 0.7 Job and family contracts | Provider-neutral `model-job.v2` and family definitions | Built |
-| 0.8 Provider architecture | Manifests, registry, Native XLSX and handoff-only providers | Built |
-| 0.9 Routing engine v2 | Constraint filtering, readiness, policy ranking and no-route results | Built |
-| 1.0-alpha Data and handoff | Canonical data, source/provider adapters and pinned handoffs | Built |
-| 1.0-beta Native XLSX extraction | Existing workbook runtime behind provider interface | Built |
-| 1.0-rc Execution lifecycle | Idempotent local and handoff-only orchestration | Built |
-| 1.0 Router proof | Two providers, competing route, no-route and policy-dependent route | Built |
+| 0.7 Job and family contracts | Provider-neutral `model-job.v2` and family definitions | Built; strict schemas and fixtures added in WP-RTR-09 |
+| 0.8 Provider architecture | Manifest-only discovery plus late-loaded adapter and executor entry points | Built for local plugins |
+| 0.9 Routing engine v2 | Constraint filtering, readiness, policy ranking and no-route results | Built for registered providers |
+| 1.0-alpha Data and handoff | Canonical data and a strictly verified job-route-handoff hash chain | Built |
+| Native XLSX ownership boundary | Router core is spreadsheet-independent; legacy interfaces remain compatible | Built |
+| Physical Native XLSX extraction | Move `workbook/**` implementation and provider-owned schemas under the provider | Incomplete |
+| Legacy workbook interface deprecation | Publish migration and removal policy after physical extraction | Not started |
+| Execution lifecycle | Typed requests, enforced controls, SQLite idempotency and artifact validation | Local implementation built |
+| Interchangeable model proof | Native XLSX and Python Forecast execute the same budget family under policy | Built with synthetic acceptance |
+| FMR `1.0.0-alpha` | Provider-router integrity and local execution preview | Current maturity |
+| Production FMR 1.0 | Remote execution security, operational acceptance and completed Native extraction | Not accepted |
 | 1.1–1.6 Ecosystem | SDK, registry, industries, sources, organization policies and agents | Pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
@@ -40,10 +44,26 @@ contract tests does not claim that an optional provider runtime is installed.
    alternative-provider, no-route and policy-dependent routing across Python, CLI,
    HTTP and the workbench.
 
-All eight immediate work packages are implemented. Live acceptance is reported
-per provider and remains distinct from contract implementation. The bundled
-Native XLSX package is acceptance-tested with synthetic canonical financial data;
-LibreOffice recalculation remains an optional, separately reported capability.
+The original eight packages established the architecture proof. WP-RTR-09 then
+closed the unsafe handoff, output-contract and central-dispatch gaps. It does not
+claim production FMR 1.0: physical Native XLSX extraction, remote-provider
+security and deployment-specific operational acceptance remain open. Bundled
+providers are acceptance-tested with synthetic canonical financial data;
+LibreOffice recalculation remains optional and separately reported.
+
+## WP-RTR-09 — router integrity and release hardening
+
+- reference handoff advertises and produces only a JSON external handoff;
+- strict route, handoff, execution-result, receipt and artifact validation;
+- complete canonical job → route → handoff → execution hash verification;
+- provider adapters and executors loaded through installed entry points only
+  after selection;
+- Native XLSX performs driver-based, scenario-aware forecast-period generation;
+- Python Forecast provides a second genuine budget-family implementation;
+- execution mode, output policy and secret references are enforced;
+- SQLite-backed cross-process idempotency revalidates cached artifacts;
+- controlled JSON Schemas and valid/invalid fixtures are exercised in CI; and
+- a clean-wheel provider lifecycle workflow covers discovery through execution.
 
 ## Post-1.0 sequence
 

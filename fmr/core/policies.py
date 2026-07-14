@@ -33,13 +33,19 @@ _WEIGHTS = {
     "validation_strength": 10,
 }
 
-DEFAULT_POLICY = RoutingPolicy("default.v1", False, ("reference-handoff", "native-xlsx"), dict(_WEIGHTS))
-LOCAL_ONLY_POLICY = RoutingPolicy("local-only.v1", True, ("native-xlsx",), dict(_WEIGHTS))
+DEFAULT_POLICY = RoutingPolicy("default.v2", False, ("python-forecast", "native-xlsx", "reference-handoff"), dict(_WEIGHTS))
+LOCAL_ONLY_POLICY = RoutingPolicy("local-only.v2", True, ("native-xlsx", "python-forecast"), dict(_WEIGHTS))
+JSON_FIRST_POLICY = RoutingPolicy("json-first.v1", False, ("python-forecast", "native-xlsx"), dict(_WEIGHTS))
+SPREADSHEET_FIRST_POLICY = RoutingPolicy("spreadsheet-first.v1", False, ("native-xlsx", "python-forecast"), dict(_WEIGHTS))
 
 
 def routing_policy(name: str | None = None) -> RoutingPolicy:
-    if name in (None, "default", "default.v1"):
+    if name in (None, "default", "default.v2"):
         return DEFAULT_POLICY
-    if name in ("local-only", "local-only.v1"):
+    if name in ("local-only", "local-only.v2"):
         return LOCAL_ONLY_POLICY
+    if name in ("json-first", "json-first.v1"):
+        return JSON_FIRST_POLICY
+    if name in ("spreadsheet-first", "spreadsheet-first.v1"):
+        return SPREADSHEET_FIRST_POLICY
     raise ValueError(f"unknown routing policy: {name}")

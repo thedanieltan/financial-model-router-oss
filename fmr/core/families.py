@@ -43,7 +43,7 @@ FAMILIES: tuple[ModelFamilyDefinition, ...] = (
         "budget_forecast", "Budget and forecast", "Project operating performance, liquidity and funding needs.",
         ("budget_forecast",),
         ("income_statement_history", "revenue_drivers", "operating_cost_drivers"),
-        ("forecast_horizon",), ("balance_sheet_history", "cash_flow_history"),
+        ("forecast_horizon", "operating_cost_growth_rate", "revenue_growth_rate", "scenario", "scenario_adjustments"), ("balance_sheet_history", "cash_flow_history"),
         ("period_continuity", "cash_reconciliation", "assumption_coverage"),
         ("saas", "logistics", "hospitality"), ("Not a valuation opinion.",),
         ("budget", "forecast", "financial plan", "runway"),

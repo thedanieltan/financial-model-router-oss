@@ -2,8 +2,9 @@
 
 ## Architecture status
 
-FMR 1.0 implements the provider architecture defined in
-[PRODUCT_CHARTER.md](PRODUCT_CHARTER.md). The diagram and modules below also
+FMR `1.0.0-alpha` implements and hardens the local provider-router architecture
+defined in [PRODUCT_CHARTER.md](PRODUCT_CHARTER.md). It is not a production 1.0
+release. The diagram and modules below also
 document the operational pre-1.0 workbook compatibility path. See
 [CODE_INVENTORY.md](CODE_INVENTORY.md) for its disposition.
 
@@ -20,8 +21,10 @@ fmr/
 └── contracts/            # provider-neutral and compatibility schemas
 ```
 
-Routing and discovery do not import or execute provider implementations. The
-Native XLSX provider can be disabled without invalidating a non-XLSX route.
+Routing and discovery do not import or execute provider implementations.
+Configured directories contribute manifests without code execution. Installed
+adapter and executor entry points load only after selection and complete handoff
+verification. Native XLSX can be disabled without invalidating a non-XLSX route.
 
 ## Current compatibility architecture
 

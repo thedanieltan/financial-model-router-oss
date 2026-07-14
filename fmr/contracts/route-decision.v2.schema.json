@@ -4,5 +4,36 @@
   "title": "FMR route decision v2",
   "type": "object",
   "required": ["contract_version", "decision_id", "job_sha256", "status", "family_classification", "selected", "candidate_evaluations", "rejected_candidates", "missing_requirements", "fallback_routes", "decision_reasons", "routing_policy"],
-  "properties": {"contract_version": {"const": "route-decision.v2"}, "status": {"enum": ["selected", "no_route", "ambiguous_family", "unsupported_family"]}, "candidate_evaluations": {"type": "array"}, "rejected_candidates": {"type": "array"}}
+  "properties": {
+    "contract_version": {"const": "route-decision.v2"},
+    "decision_id": {"type": "string", "pattern": "^fmrd_[a-f0-9]{24}$"},
+    "job_sha256": {"$ref": "#/$defs/sha256"},
+    "status": {"enum": ["selected", "no_route", "ambiguous_family", "unsupported_family"]},
+    "family_classification": {"$ref": "#/$defs/classification"},
+    "selected": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/selected"}]},
+    "candidate_evaluations": {"type": "array", "items": {"$ref": "#/$defs/evaluation"}},
+    "rejected_candidates": {"type": "array", "items": {"$ref": "#/$defs/rejected"}},
+    "missing_requirements": {"$ref": "#/$defs/strings"},
+    "fallback_routes": {"type": "array", "items": {"$ref": "#/$defs/fallback"}},
+    "decision_reasons": {"$ref": "#/$defs/nonEmptyStrings"},
+    "routing_policy": {"$ref": "#/$defs/policy"}
+  },
+  "allOf": [
+    {"if": {"properties": {"status": {"const": "selected"}}}, "then": {"properties": {"selected": {"$ref": "#/$defs/selected"}}}},
+    {"if": {"properties": {"status": {"enum": ["no_route", "ambiguous_family", "unsupported_family"]}}}, "then": {"properties": {"selected": {"type": "null"}}}}
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "strings": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "nonEmptyStrings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "identity": {"type": "object", "required": ["provider_id", "provider_version", "package_id", "package_version"], "properties": {"provider_id": {"type": "string"}, "provider_version": {"type": "string"}, "package_id": {"type": "string"}, "package_version": {"type": "string"}}, "additionalProperties": true},
+    "selected": {"allOf": [{"$ref": "#/$defs/identity"}], "type": "object", "required": ["execution_mode"], "properties": {"provider_id": {"type": "string"}, "provider_version": {"type": "string"}, "package_id": {"type": "string"}, "package_version": {"type": "string"}, "execution_mode": {"enum": ["local", "remote", "handoff_only"]}}, "additionalProperties": false},
+    "classification": {"type": "object", "required": ["status", "selected_family", "candidates", "reasons"], "properties": {"status": {"enum": ["selected", "ambiguous_family", "unsupported_family"]}, "selected_family": {"type": ["string", "null"]}, "candidates": {"$ref": "#/$defs/strings"}, "reasons": {"$ref": "#/$defs/nonEmptyStrings"}}, "additionalProperties": false},
+    "readiness": {"type": "object", "required": ["required_data_available", "required_data_missing", "assumptions_available", "assumptions_missing", "source_adapter_available", "provider_adapter_available", "provider_executor_available", "runtime_available", "validation_available"], "properties": {"required_data_available": {"$ref": "#/$defs/strings"}, "required_data_missing": {"$ref": "#/$defs/strings"}, "assumptions_available": {"$ref": "#/$defs/strings"}, "assumptions_missing": {"$ref": "#/$defs/strings"}, "source_adapter_available": {"type": "boolean"}, "provider_adapter_available": {"type": "boolean"}, "provider_executor_available": {"type": "boolean"}, "runtime_available": {"type": "boolean"}, "validation_available": {"type": "boolean"}}, "additionalProperties": false},
+    "evaluation": {"type": "object", "required": ["provider_id", "provider_version", "package_id", "package_version", "execution_mode", "eligible", "executable", "rejection_reasons", "readiness", "blockers", "score", "score_factors"], "properties": {"provider_id": {"type": "string"}, "provider_version": {"type": "string"}, "package_id": {"type": "string"}, "package_version": {"type": "string"}, "execution_mode": {"enum": ["local", "remote", "handoff_only"]}, "eligible": {"type": "boolean"}, "executable": {"type": "boolean"}, "rejection_reasons": {"$ref": "#/$defs/strings"}, "readiness": {"$ref": "#/$defs/readiness"}, "blockers": {"$ref": "#/$defs/strings"}, "score": {"type": "integer"}, "score_factors": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}}, "additionalProperties": false},
+    "rejected": {"type": "object", "required": ["provider_id", "package_id", "reasons"], "properties": {"provider_id": {"type": "string"}, "package_id": {"type": "string"}, "reasons": {"$ref": "#/$defs/nonEmptyStrings"}}, "additionalProperties": false},
+    "fallback": {"type": "object", "required": ["provider_id", "provider_version", "package_id", "package_version", "score"], "properties": {"provider_id": {"type": "string"}, "provider_version": {"type": "string"}, "package_id": {"type": "string"}, "package_version": {"type": "string"}, "score": {"type": "integer"}}, "additionalProperties": false},
+    "policy": {"type": "object", "required": ["version", "require_local", "preferred_providers", "weights"], "properties": {"version": {"type": "string"}, "require_local": {"type": "boolean"}, "preferred_providers": {"$ref": "#/$defs/strings"}, "weights": {"type": "object", "minProperties": 1, "additionalProperties": {"type": "integer", "minimum": 0}}}, "additionalProperties": false}
+  }
 }

@@ -1,0 +1,7 @@
+{
+  "contract_version": "model-job.v2",
+  "objective": "Prepare an operating budget and forecast",
+  "requested_deliverables": ["budget_forecast"],
+  "output_formats": ["json"],
+  "invented_control": true
+}

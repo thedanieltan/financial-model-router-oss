@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "financial-model-router"
-version = "1.0.0"
+version = "1.0.0a1"
 description = "Deterministic routing for versioned financial-model providers"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -21,12 +21,22 @@ dependencies = []
 
 [project.optional-dependencies]
 dev-ui = ["fastapi>=0.115,<1", "pydantic>=2.7,<3", "uvicorn>=0.30,<1"]
-test-ui = ["httpx>=0.27,<1", "openpyxl>=3.1,<4"]
+test-ui = ["httpx>=0.27,<1", "jsonschema>=4.23,<5", "openpyxl>=3.1,<4"]
 executor = ["openpyxl>=3.1,<4"]
 calculation = ["openpyxl>=3.1,<4"]
 
 [project.scripts]
 fmr = "fmr.entrypoint:main"
+
+[project.entry-points."fmr.provider_adapters"]
+native-xlsx-budget-forecast = "fmr.providers.native_xlsx.plugin:NativeXlsxBudgetAdapter"
+python-forecast-budget-forecast = "fmr.providers.python_forecast.plugin:PythonForecastAdapter"
+reference-handoff-dcf = "fmr.providers.reference_handoff.plugin:ReferenceHandoffAdapter"
+
+[project.entry-points."fmr.provider_executors"]
+native-xlsx = "fmr.providers.native_xlsx.plugin:NativeXlsxExecutor"
+python-forecast = "fmr.providers.python_forecast.plugin:PythonForecastExecutor"
+reference-handoff = "fmr.providers.reference_handoff.plugin:ReferenceHandoffExecutor"
 
 [tool.setuptools.packages.find]
 include = ["fmr*"]
@@ -34,5 +44,5 @@ include = ["fmr*"]
 [tool.setuptools.package-data]
 "fmr.contracts" = ["*.json"]
 "fmr.web" = ["*.html", "*.js", "*.css"]
-"fmr.fixtures" = ["*.json"]
+"fmr.fixtures" = ["**/*.json"]
 "fmr.providers" = ["**/*.json"]

@@ -1,0 +1,17 @@
+{
+  "contract_version": "model-job.v2",
+  "objective": "Prepare an operating budget and forecast",
+  "model_family": "budget_forecast",
+  "industry": "logistics",
+  "requested_deliverables": ["budget_forecast"],
+  "context": {},
+  "available_data": ["income_statement_history", "operating_cost_drivers", "revenue_drivers"],
+  "available_assumptions": ["forecast_horizon", "operating_cost_growth_rate", "revenue_growth_rate", "scenario", "scenario_adjustments"],
+  "input_references": {"canonical_financial_data": {"contract_version": "canonical-financial-data.v2", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "uri": "fixture://canonical"}},
+  "existing_model": {},
+  "output_formats": ["json"],
+  "constraints": {"local_only": true, "open_source_only": true, "network_allowed": false, "allowed_providers": [], "prohibited_providers": [], "pinned_provider_versions": []},
+  "privacy_constraints": [],
+  "licensing_constraints": [],
+  "preferred_execution_mode": "local"
+}
