@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/provider-registry-audit.v1.schema.json",
+  "type": "object",
+  "required": ["contract_version", "status", "findings"],
+  "properties": {
+    "contract_version": {"const": "provider-registry-audit.v1"},
+    "status": {"enum": ["passed", "failed"]},
+    "findings": {"type": "array", "items": {"type": "object", "required": ["provider_id", "version", "issues"], "properties": {"provider_id": {"type": "string"}, "version": {"type": "string"}, "issues": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}}, "additionalProperties": false}}
+  },
+  "additionalProperties": false
+}

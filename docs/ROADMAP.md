@@ -21,7 +21,8 @@ contract tests does not claim that an optional provider runtime is installed.
 | FMR `1.0.0-alpha` | Provider-router integrity and local execution preview | Current maturity |
 | Production FMR 1.0 | Remote execution security and deployment-specific operational acceptance | Not accepted |
 | 1.1 Provider SDK | Scaffolding, static validation, executable conformance and deterministic bundles | Built in WP-SDK-13 |
-| 1.2–1.6 Ecosystem | Registry, industries, sources, organization policies and agents | Pending |
+| 1.2 Provider registry | Immutable releases, lifecycle, conformance evidence and reconciliation | Built in WP-REG-14 |
+| 1.3–1.6 Ecosystem | Industries, sources, organization policies and agents | Pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -105,6 +106,18 @@ supervision and secret-manager acceptance remain open.
 
 The SDK does not publish or approve providers. Registry lifecycle, conformance
 attestation and deprecation automation remain Phase 1.2 work.
+
+## WP-REG-14 — provider registry lifecycle
+
+- immutable provider/version identities with verified manifest and bundle hashes;
+- retained executable conformance attestations and metadata;
+- explicit submitted, active, deprecated, incompatible and withdrawn states;
+- availability controls and active-manifest projection for routing;
+- deterministic audit and reconciliation without loading provider code; and
+- machine-operated `fmr-registry` submission and lifecycle commands.
+
+This is the local registry substrate, not a hosted marketplace or signed remote
+discovery service. Remote distribution remains Phase 2.0.
 
 ## Post-1.0 sequence
 

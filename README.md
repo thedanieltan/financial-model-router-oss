@@ -104,6 +104,11 @@ fmr-provider package ./my-provider --destination ./dist
 Static validation never imports provider code. Executable conformance is an
 explicit code-execution boundary. See the [Provider SDK guide](docs/PROVIDER_SDK.md).
 
+Approved local provider releases can be retained in an immutable lifecycle
+registry using `fmr-registry`. Submission verifies bundle and attestation hashes;
+only available executable-conformant releases can become active. See the
+[provider registry guide](docs/PROVIDER_REGISTRY.md).
+
 Financial-data intake:
 
 ```bash

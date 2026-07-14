@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/provider-registry.v1.schema.json",
+  "type": "object",
+  "required": ["contract_version", "releases"],
+  "properties": {
+    "contract_version": {"const": "provider-registry.v1"},
+    "releases": {"type": "array", "items": {"$ref": "#/$defs/release"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "strings": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "release": {
+      "type": "object",
+      "required": ["provider_id", "version", "lifecycle_state", "available", "manifest_sha256", "bundle_sha256", "conformance_sha256", "conformance_level", "conformance_status", "license", "runtime_dependencies", "privacy_behavior", "package_versions", "manifest", "conformance", "created_at", "updated_at"],
+      "properties": {
+        "provider_id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1},
+        "lifecycle_state": {"enum": ["submitted", "active", "deprecated", "incompatible", "withdrawn"]},
+        "available": {"type": "boolean"},
+        "manifest_sha256": {"$ref": "#/$defs/sha"},
+        "bundle_sha256": {"$ref": "#/$defs/sha"},
+        "conformance_sha256": {"$ref": "#/$defs/sha"},
+        "conformance_level": {"enum": ["manifest", "executable"]},
+        "conformance_status": {"const": "passed"},
+        "license": {"type": "string", "minLength": 1},
+        "runtime_dependencies": {"$ref": "#/$defs/strings"},
+        "privacy_behavior": {"$ref": "#/$defs/strings"},
+        "package_versions": {"$ref": "#/$defs/strings"},
+        "manifest": {"$ref": "provider-manifest.v1.schema.json"},
+        "conformance": {"$ref": "provider-conformance-result.v1.schema.json"},
+        "created_at": {"type": "string", "format": "date-time"},
+        "updated_at": {"type": "string", "format": "date-time"}
+      },
+      "additionalProperties": false
+    }
+  }
+}
