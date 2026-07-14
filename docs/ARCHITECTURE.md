@@ -1,5 +1,30 @@
 # Architecture
 
+## Architecture status
+
+FMR is migrating from a workbook-led implementation to the provider architecture
+defined in [PRODUCT_CHARTER.md](PRODUCT_CHARTER.md). The diagram and modules below
+describe the operational pre-1.0 compatibility path; they are not the target
+ownership model. See [CODE_INVENTORY.md](CODE_INVENTORY.md) for disposition.
+
+The target repository boundary is:
+
+```text
+fmr/
+├── core/                 # jobs, families, routing, policies, handoffs, receipts
+├── registry/             # provider and package manifest discovery
+├── data/                 # canonical concepts and data packages
+├── adapters/sources/     # external source -> canonical data
+├── providers/native_xlsx/# workbook-specific implementation
+├── sdk/                  # third-party provider extension surface
+└── contracts/            # provider-neutral and compatibility schemas
+```
+
+Routing and discovery must not import or execute provider implementations. The
+Native XLSX provider can be disabled without invalidating a non-XLSX route.
+
+## Current compatibility architecture
+
 ```text
 statement CSV
       |

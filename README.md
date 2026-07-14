@@ -1,19 +1,21 @@
 # Financial Model Router
 
-Financial Model Router (FMR) is an open-source Python toolkit for financial-data intake, model selection, controlled workbook construction, governed input population and calculated-output validation.
+Financial Model Router (FMR) is an open-source, deterministic router for financial-modelling jobs. It classifies the requested model family, discovers compatible provider packages, checks constraints and readiness, selects an implementation under an explicit policy, and produces a version-pinned handoff for execution and validation.
 
 FMR does not provide accounting, tax or investment advice. The deterministic core runs locally.
 
-## Current scope
+The repository's existing workbook pipeline is being formalized as the **Native XLSX provider**. Its proven interfaces remain operational during migration; workbook formulas, layouts and calculation engines are provider responsibilities rather than router-core logic. See the normative [product charter](docs/PRODUCT_CHARTER.md), [code inventory](docs/CODE_INVENTORY.md) and [roadmap](docs/ROADMAP.md).
 
-FMR supports four model families:
+## Current implementation
+
+The compatibility router recognizes four model families:
 
 - budget and forecast;
 - integrated three-statement model;
 - operating-company discounted cash-flow valuation; and
 - debt-capacity and refinancing analysis.
 
-Given a JSON request, FMR returns the selected model family, reasons, readiness blockers and a machine-readable transformation plan.
+Given a v1 JSON request, it returns a selected model family, reasons, readiness blockers and a machine-readable transformation plan. Provider-neutral jobs, provider selection and no-route decisions are the next architecture phases; the v1 result must not be interpreted as provider routing.
 
 FMR can inspect an `.xlsx` workbook and return `workbook-map.v1`. It can derive evidence-backed inputs, merge them with an explicit `model-request.v1`, and return `workbook-analysis.v1`.
 
