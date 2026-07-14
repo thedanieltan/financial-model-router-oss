@@ -99,7 +99,7 @@ class RegistryAndRoutingTests(unittest.TestCase):
     def test_manifest_discovery_is_dynamic_and_code_free(self) -> None:
         registry = ProviderRegistry.builtins()
         self.assertEqual([item.provider_id for item in registry.providers()], ["native-xlsx", "python-forecast", "reference-handoff"])
-        self.assertEqual(len(registry.packages("budget_forecast")), 2)
+        self.assertEqual(len(registry.packages("budget_forecast")), 3)
         for provider in registry.providers():
             self.assertEqual(run_manifest_conformance(provider.to_dict())["status"], "passed")
         completed = subprocess.run([sys.executable, "-c", "import sys; from fmr.registry import ProviderRegistry; ProviderRegistry.builtins(); assert 'fmr.providers.native_xlsx.provider' not in sys.modules; assert 'fmr.providers.python_forecast.plugin' not in sys.modules"], check=False, capture_output=True, text=True)
@@ -107,6 +107,7 @@ class RegistryAndRoutingTests(unittest.TestCase):
 
     def test_configured_manifest_directory_registers_without_router_change(self) -> None:
         manifest = ProviderRegistry.builtins().providers()[1].to_dict()
+        manifest["packages"] = manifest["packages"][:1]
         manifest["provider_id"] = "third-party"
         manifest["executor_entry_point"] = "missing-executor"
         manifest["packages"][0]["package_id"] = "third-party/budget"

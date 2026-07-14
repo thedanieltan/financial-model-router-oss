@@ -22,7 +22,8 @@ contract tests does not claim that an optional provider runtime is installed.
 | Production FMR 1.0 | Remote execution security and deployment-specific operational acceptance | Not accepted |
 | 1.1 Provider SDK | Scaffolding, static validation, executable conformance and deterministic bundles | Built in WP-SDK-13 |
 | 1.2 Provider registry | Immutable releases, lifecycle, conformance evidence and reconciliation | Built in WP-REG-14 |
-| 1.3–1.6 Ecosystem | Industries, sources, organization policies and agents | Pending |
+| 1.3 Industry extensions | Eight declarative vocabularies and a proven SaaS specialist package | Built in WP-IND-15 |
+| 1.4–1.6 Ecosystem | Sources, organization policies and agents | Pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -118,6 +119,19 @@ attestation and deprecation automation remain Phase 1.2 work.
 
 This is the local registry substrate, not a hosted marketplace or signed remote
 discovery service. Remote distribution remains Phase 2.0.
+
+## WP-IND-15 — declarative industry extensions
+
+- versioned core-financial, SaaS, real-estate, logistics, hospitality, energy,
+  banking and insurance vocabularies;
+- exact alias normalization with no fuzzy or generative inference;
+- industry-match ranking that prefers exact specialist packages over wildcards;
+- executable `python-forecast/saas-budget-forecast` with MRR, ARR, customer,
+  churn, ARPC and gross-profit projections; and
+- clean-wheel routing, execution and artifact acceptance for the SaaS package.
+
+Vocabulary coverage is not executable-package coverage. Other specialist
+packages remain future provider work and must not be advertised until proven.
 
 ## Post-1.0 sequence
 

@@ -109,6 +109,11 @@ registry using `fmr-registry`. Submission verifies bundle and attestation hashes
 only available executable-conformant releases can become active. See the
 [provider registry guide](docs/PROVIDER_REGISTRY.md).
 
+Industry terminology is supplied through declarative vocabularies rather than
+router-specific logic. The first specialist executable package is the Python
+SaaS budget and unit-economics forecast. See
+[industry extensions](docs/INDUSTRY_EXTENSIONS.md).
+
 Financial-data intake:
 
 ```bash
