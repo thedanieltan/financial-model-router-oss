@@ -16,7 +16,7 @@ contract tests does not claim that an optional provider runtime is installed.
 | Native XLSX ownership boundary | Router core is spreadsheet-independent; legacy interfaces remain compatible | Built |
 | Physical Native XLSX extraction | Provider owns workbook implementation and schemas; `fmr.workbook` is façade-only | Built in WP-NX-10 |
 | Legacy workbook interface deprecation | Migration policy published; compatibility retained through the 1.x line | Built in WP-NX-10; removal deferred |
-| Execution lifecycle | Typed requests, enforced controls, SQLite idempotency and artifact validation | Local implementation built |
+| Execution lifecycle | Typed requests, controls, recovery, backup, retention and artifact validation | Local operational implementation built |
 | Interchangeable model proof | Native XLSX and Python Forecast execute the same budget family under policy | Built with synthetic acceptance |
 | FMR `1.0.0-alpha` | Provider-router integrity and local execution preview | Current maturity |
 | Production FMR 1.0 | Remote execution security and deployment-specific operational acceptance | Not accepted |
@@ -63,6 +63,20 @@ LibreOffice recalculation remains optional and separately reported.
 - production modules no longer import the legacy workbook namespace; and
 - the migration and removal policy is published in
   [NATIVE_XLSX_MIGRATION.md](NATIVE_XLSX_MIGRATION.md).
+
+## WP-OPS-12 — local production operations
+
+- migratable WAL-backed execution ledger with append-only value-free events;
+- deterministic stale-claim recovery without provider fallback;
+- aggregate operational status without job or financial payloads;
+- online non-overwriting SQLite backup with SHA-256 receipt;
+- dry-run-first retention confined to managed artifact directories;
+- allowlisted environment secret resolver; and
+- secret echo rejection and provider-error redaction.
+
+This completes the local operational implementation, not deployment acceptance.
+Distributed scheduling, remote workers and environment-specific restore,
+supervision and secret-manager acceptance remain open.
 
 ## WP-RTR-09 — router integrity and release hardening
 

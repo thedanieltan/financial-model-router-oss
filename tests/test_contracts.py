@@ -34,6 +34,10 @@ class ContractTests(unittest.TestCase):
             "provider-conformance-result.v1.schema.json",
             "execution-request.v1.schema.json",
             "execution-result.v1.schema.json",
+            "execution-operations-status.v1.schema.json",
+            "execution-ledger-backup.v1.schema.json",
+            "execution-recovery-result.v1.schema.json",
+            "artifact-retention-result.v1.schema.json",
             "model-request.v1.schema.json",
             "model-recommendation.v1.schema.json",
             "transformation-plan.v1.schema.json",
@@ -112,12 +116,21 @@ class ContractTests(unittest.TestCase):
                 "secret_references": [], "output_policy": {"mode": "managed", "overwrite": False, "publish": False},
             }
             result = ExecutionOrchestrator(ledger=SqliteExecutionLedger(root / "ledger.sqlite3"), managed_output_root=root / "outputs").execute_request(request)
+            ledger = SqliteExecutionLedger(root / "ledger.sqlite3")
+            operations_status = ledger.operational_status()
+            backup = ledger.backup(root / "ledger-backup.sqlite3")
+            recovery = {"contract_version": "execution-recovery-result.v1", "recovered_count": 0}
+            retention = {"contract_version": "artifact-retention-result.v1", "dry_run": True, "candidate_count": 0, "pruned_count": 0, "selected": []}
             for schema_name, payload in (
                 ("model-job.v2.schema.json", ModelJob.from_mapping(job).to_dict()),
                 ("route-decision.v2.schema.json", decision),
                 ("provider-handoff.v1.schema.json", handoff),
                 ("execution-request.v1.schema.json", request),
                 ("execution-result.v1.schema.json", result),
+                ("execution-operations-status.v1.schema.json", operations_status),
+                ("execution-ledger-backup.v1.schema.json", backup),
+                ("execution-recovery-result.v1.schema.json", recovery),
+                ("artifact-retention-result.v1.schema.json", retention),
             ):
                 validators[schema_name].validate(payload)
             self.assertEqual(validate_route_decision(decision, job=job), ())
@@ -163,7 +176,7 @@ class ContractTests(unittest.TestCase):
 
 def _validators() -> dict[str, Draft202012Validator]:
     root = files("fmr.contracts")
-    names = ("canonical-financial-data.v2.schema.json", "model-family-definition.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
+    names = ("artifact-retention-result.v1.schema.json", "canonical-financial-data.v2.schema.json", "execution-ledger-backup.v1.schema.json", "execution-operations-status.v1.schema.json", "execution-recovery-result.v1.schema.json", "model-family-definition.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
     documents = {name: json.loads(root.joinpath(name).read_text(encoding="utf-8")) for name in names}
     registry = Registry().with_resources((document["$id"], Resource.from_contents(document)) for document in documents.values())
     return {name: Draft202012Validator(document, registry=registry) for name, document in documents.items()}

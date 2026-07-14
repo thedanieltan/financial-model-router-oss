@@ -7,11 +7,21 @@ from typing import Any
 
 from fmr.core import FAMILIES, ModelJob, route_job, routing_policy
 from fmr.core.receipts import validate_execution_result
-from fmr.execution import ExecutionOrchestrator, SqliteExecutionLedger
+from fmr.execution import ExecutionOrchestrator, ManagedArtifactRetention, SqliteExecutionLedger
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
 
-PROVIDER_COMMANDS = {"discover-providers", "route-job", "prepare-handoff", "execute-job", "validate-job-result"}
+PROVIDER_COMMANDS = {
+    "backup-execution-ledger",
+    "discover-providers",
+    "execute-job",
+    "operations-status",
+    "prepare-handoff",
+    "prune-execution-artifacts",
+    "recover-executions",
+    "route-job",
+    "validate-job-result",
+}
 
 
 def _load(path: str) -> dict[str, Any]:
@@ -49,6 +59,24 @@ def _parser() -> argparse.ArgumentParser:
     validate.add_argument("result")
     validate.add_argument("--handoff", required=True)
     validate.add_argument("--output")
+    status = commands.add_parser("operations-status")
+    status.add_argument("--ledger", required=True)
+    status.add_argument("--stale-after", type=int, default=300)
+    status.add_argument("--output")
+    recover = commands.add_parser("recover-executions")
+    recover.add_argument("--ledger", required=True)
+    recover.add_argument("--stale-after", type=int, required=True)
+    recover.add_argument("--output")
+    backup = commands.add_parser("backup-execution-ledger")
+    backup.add_argument("--ledger", required=True)
+    backup.add_argument("destination")
+    backup.add_argument("--output")
+    prune = commands.add_parser("prune-execution-artifacts")
+    prune.add_argument("--ledger", required=True)
+    prune.add_argument("--managed-output-root", required=True)
+    prune.add_argument("--older-than", type=int, required=True)
+    prune.add_argument("--apply", action="store_true")
+    prune.add_argument("--output")
     return parser
 
 
@@ -79,6 +107,20 @@ def run_provider_command(argv: list[str]) -> int:
             })
             _write(result, args.receipt)
             return 0 if result["state"] == "completed" else 2
+        if args.command == "operations-status":
+            _write(SqliteExecutionLedger(args.ledger).operational_status(stale_after_seconds=args.stale_after), args.output)
+            return 0
+        if args.command == "recover-executions":
+            recovered = SqliteExecutionLedger(args.ledger).recover_stale(stale_after_seconds=args.stale_after)
+            _write({"contract_version": "execution-recovery-result.v1", "recovered_count": len(recovered)}, args.output)
+            return 0
+        if args.command == "backup-execution-ledger":
+            _write(SqliteExecutionLedger(args.ledger).backup(args.destination), args.output)
+            return 0
+        if args.command == "prune-execution-artifacts":
+            retention = ManagedArtifactRetention(SqliteExecutionLedger(args.ledger), args.managed_output_root)
+            _write(retention.prune(older_than_seconds=args.older_than, dry_run=not args.apply), args.output)
+            return 0
         issues = validate_execution_result(_load(args.result), handoff=_load(args.handoff))
         _write({"valid": not issues, "issues": list(issues)}, args.output)
         return 0 if not issues else 2

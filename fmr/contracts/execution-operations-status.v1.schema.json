@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/execution-operations-status.v1.schema.json",
+  "title": "FMR execution operations status v1",
+  "type": "object",
+  "required": ["contract_version", "ledger", "states", "stale_running", "event_count", "database_size_bytes"],
+  "properties": {
+    "contract_version": {"const": "execution-operations-status.v1"},
+    "ledger": {"const": "sqlite"},
+    "states": {"type": "object", "propertyNames": {"enum": ["running", "completed", "abandoned", "pruned"]}, "additionalProperties": {"type": "integer", "minimum": 0}},
+    "stale_running": {"type": "integer", "minimum": 0},
+    "event_count": {"type": "integer", "minimum": 0},
+    "database_size_bytes": {"type": "integer", "minimum": 0}
+  },
+  "additionalProperties": false
+}
