@@ -28,6 +28,7 @@ from fmr.execution import (
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
 from fmr.vocabulary import VocabularyRegistry
+from fmr.organization import OrganizationPolicy, route_organization_job
 from fmr.router import route_request
 from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
@@ -80,6 +81,7 @@ __all__ = [
     "ModelJob",
     "ProviderRegistry",
     "VocabularyRegistry",
+    "OrganizationPolicy",
     "CONCEPTS",
     "accept_calculated_workbook_bytes",
     "analyse_workbook_map",
@@ -115,6 +117,7 @@ __all__ = [
     "resolve_workbook_patch_targets",
     "route_request",
     "route_job",
+    "route_organization_job",
     "routing_policy",
     "prepare_handoff",
     "style_spec_registry_payload",

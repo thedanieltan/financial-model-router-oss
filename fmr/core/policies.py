@@ -10,6 +10,14 @@ class RoutingPolicy:
     require_local: bool
     preferred_providers: tuple[str, ...]
     weights: dict[str, int]
+    organization_id: str | None = None
+    allowed_providers: tuple[str, ...] = ()
+    approved_provider_versions: tuple[str, ...] = ()
+    approved_package_versions: tuple[str, ...] = ()
+    prohibited_execution_modes: tuple[str, ...] = ()
+    approved_template_ids: tuple[str, ...] = ()
+    require_approved_template: bool = False
+    audit_retention_days: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -17,6 +25,14 @@ class RoutingPolicy:
             "require_local": self.require_local,
             "preferred_providers": list(self.preferred_providers),
             "weights": dict(sorted(self.weights.items())),
+            "organization_id": self.organization_id,
+            "allowed_providers": list(self.allowed_providers),
+            "approved_provider_versions": list(self.approved_provider_versions),
+            "approved_package_versions": list(self.approved_package_versions),
+            "prohibited_execution_modes": list(self.prohibited_execution_modes),
+            "approved_template_ids": list(self.approved_template_ids),
+            "require_approved_template": self.require_approved_template,
+            "audit_retention_days": self.audit_retention_days,
         }
 
 
