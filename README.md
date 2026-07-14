@@ -119,6 +119,10 @@ and package approvals, precedence, execution-environment controls, company
 templates and audit-retention requirements. See
 [organization routing](docs/ORGANIZATION_ROUTING.md).
 
+Agents can use equivalent Python, CLI, HTTP and optional MCP stdio surfaces for
+discovery, route simulation, handoff, execution, validation and receipt
+retrieval. See [agent access](docs/AGENT_ACCESS.md).
+
 CSV and XLSX exports can be normalized through exact, versioned source-adapter
 profiles. Trial balances, statements, ledgers, budget-versus-actuals, debt
 schedules and operating drivers are supported without guessing vendor headers

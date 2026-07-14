@@ -153,3 +153,4 @@ jobs:
           /tmp/fmr-provider-test/bin/python -m fmr recover-executions --help
           /tmp/fmr-provider-test/bin/python -m fmr backup-execution-ledger --help
           /tmp/fmr-provider-test/bin/python -m fmr prune-execution-artifacts --help
+          printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | /tmp/fmr-provider-test/bin/fmr-mcp | grep -q 'discover_providers'

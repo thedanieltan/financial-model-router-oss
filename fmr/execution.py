@@ -235,6 +235,19 @@ class SqliteExecutionLedger:
             )
             return tuple((row[0], json.loads(row[1])) for row in rows)
 
+    def execution_result(self, execution_id: str) -> dict[str, Any] | None:
+        if not isinstance(execution_id, str) or not execution_id:
+            raise ValueError("execution_id is required")
+        with self._connect() as connection:
+            rows = connection.execute(
+                "SELECT result_json FROM executions_v2 WHERE state = 'completed' AND result_json IS NOT NULL ORDER BY cache_key"
+            )
+            for row in rows:
+                result = json.loads(row[0])
+                if result.get("execution_id") == execution_id:
+                    return result
+        return None
+
     def mark_pruned(self, cache_key: str) -> None:
         with self._connect() as connection:
             now = time.time()

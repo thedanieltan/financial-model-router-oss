@@ -25,7 +25,7 @@ contract tests does not claim that an optional provider runtime is installed.
 | 1.3 Industry extensions | Eight declarative vocabularies and a proven SaaS specialist package | Built in WP-IND-15 |
 | 1.4 Source adapters | Exact profiled CSV/XLSX ingestion for six export shapes and named vendor exports | Built in WP-SRC-16 |
 | 1.5 Organization routing | Private registries/vocabularies, approvals, precedence and governance | Built in WP-ORG-17 |
-| 1.6 Agent access | Interface parity and optional MCP server | Pending |
+| 1.6 Agent access | Python, CLI, HTTP and optional MCP lifecycle access | Built in WP-AGT-18 |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -178,3 +178,14 @@ export. Installed-wheel CI proves the generic profiled ingestion lifecycle.
 
 Retention is a governance requirement for deployment configuration; it does not
 silently delete or preserve artifacts by itself.
+
+## WP-AGT-18 — agent access
+
+- provider discovery, route simulation, handoff, execution, validation and
+  receipt retrieval exposed as MCP tools;
+- JSON-RPC lifecycle and tool discovery over local stdio;
+- tool calls reuse the same typed contracts and deterministic implementations as
+  Python, CLI and HTTP; and
+- structured tool errors without a remote listener or implicit data egress.
+
+Authenticated remote MCP transport remains distributed-routing work.
