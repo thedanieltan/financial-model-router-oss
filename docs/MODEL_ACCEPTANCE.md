@@ -22,3 +22,9 @@ identity or financial data.
 FMR validates the structure and coverage of review declarations. It cannot
 prove that an external reviewer is qualified or that an evidence URI is honest;
 those remain owner and deployment governance responsibilities.
+
+The bundled `synthetic-initial-families.v1.json` corpus exercises all five
+executable Python Forecast packages: generic budget, SaaS budget, integrated
+three-statement, operating-company DCF and debt-capacity/refinancing. Its
+value-free result is suitable as an implementation review packet, but it remains
+synthetic evidence and therefore cannot satisfy the production gate.

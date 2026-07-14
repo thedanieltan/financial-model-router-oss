@@ -29,6 +29,7 @@ contract tests does not claim that an optional provider runtime is installed.
 | Local release qualification | Automated implementation gates plus deployment-evidence contract | Built in WP-REL-19; production evidence pending |
 | Executable family coverage | Python implementations for all four initial analytical families | Built in WP-MDL-20 |
 | Model acceptance framework | Deterministic cases, tolerances and value-free practitioner evidence ledger | Built in WP-ACC-21; live reviews pending |
+| Full-family acceptance corpus | All five executable Python packages exercised through the routed lifecycle | Built in WP-ACC-22; synthetic evidence only |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -231,3 +232,15 @@ opinions. Real-world practitioner acceptance remains WP-ACC-21.
 The framework is implemented. No bundled synthetic fixture constitutes
 practitioner or production acceptance; representative anonymized cases and
 external review evidence remain pending.
+
+## WP-ACC-22 — full-family synthetic acceptance
+
+- one bundled corpus covers generic budget, SaaS budget, integrated
+  three-statement, operating-company DCF and debt-capacity/refinancing;
+- every case routes through provider selection, handoff integrity, local
+  execution, artifact validation and explicit output assertions;
+- clean-wheel CI verifies all five installed package identities; and
+- the resulting evidence ledger remains value-free and production-gated.
+
+This closes synthetic implementation coverage. It does not replace anonymized
+representative cases, qualified practitioner review or deployment acceptance.
