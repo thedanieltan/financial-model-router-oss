@@ -1,7 +1,7 @@
 {
   "contract_version": "provider-manifest.v1",
   "provider_id": "python-forecast",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "execution_mode": "local",
   "network_required": false,
   "license": "Apache-2.0",
@@ -10,7 +10,7 @@
   "runtime_dependencies": [],
   "determinism_level": "deterministic",
   "validation_capabilities": ["artifact_hash", "forecast_reconciliation"],
-  "limitations": ["Produces a JSON operating forecast; no workbook layout."],
+  "limitations": ["Produces deterministic generic JSON models; no workbook layout or professional opinion."],
   "secret_requirements": [],
   "executor_entry_point": "python-forecast",
   "packages": [{
@@ -45,5 +45,26 @@
     "execution_capabilities": ["execute_local"],
     "adapter_id": "python-forecast/saas-budget-forecast.v1",
     "adapter_entry_point": "python-forecast-saas-budget-forecast"
+  }, {
+    "contract_version": "model-package-manifest.v1", "package_id": "python-forecast/integrated-three-statement", "version": "1.0.0", "model_family": "three_statement", "industries": ["*"],
+    "deliverables": ["three_statement_forecast"], "required_data": ["balance_sheet_history", "capital_expenditure", "cash_flow_history", "debt_schedule", "income_statement_history", "working_capital"],
+    "required_assumptions": ["capital_expenditure_rate", "depreciation_rate", "forecast_horizon", "operating_margin_rate", "revenue_growth_rate", "tax_rate", "working_capital_rate"],
+    "accepted_inputs": ["canonical-financial-data.v2"], "output_artifacts": [{"kind": "three_statement_forecast", "format": "json", "required": true}], "output_formats": ["json"],
+    "validation_checks": ["balance_sheet_balances", "cash_flow_reconciles", "retained_earnings_rolls_forward"], "execution_capabilities": ["execute_local"],
+    "adapter_id": "python-forecast/integrated-three-statement.v1", "adapter_entry_point": "python-forecast-three-statement"
+  }, {
+    "contract_version": "model-package-manifest.v1", "package_id": "python-forecast/operating-company-dcf", "version": "1.0.0", "model_family": "operating_company_dcf", "industries": ["*"],
+    "deliverables": ["enterprise_value", "equity_value", "operating_forecast"], "required_data": ["capital_expenditure", "cash_flow_history", "income_statement_history", "net_debt", "revenue_drivers", "working_capital"],
+    "required_assumptions": ["capital_expenditure_rate", "depreciation_rate", "discount_rate", "forecast_horizon", "net_debt", "operating_margin_rate", "revenue_growth_rate", "tax_rate", "terminal_growth_rate", "terminal_value_assumption", "working_capital_rate"],
+    "accepted_inputs": ["canonical-financial-data.v2"], "output_artifacts": [{"kind": "operating_company_dcf", "format": "json", "required": true}], "output_formats": ["json"],
+    "validation_checks": ["discount_factor_monotonicity", "enterprise_equity_bridge", "terminal_value_reconciliation"], "execution_capabilities": ["execute_local"],
+    "adapter_id": "python-forecast/operating-company-dcf.v1", "adapter_entry_point": "python-forecast-dcf"
+  }, {
+    "contract_version": "model-package-manifest.v1", "package_id": "python-forecast/debt-capacity-refinancing", "version": "1.0.0", "model_family": "debt_capacity_refinancing", "industries": ["*"],
+    "deliverables": ["debt_capacity", "refinancing_analysis"], "required_data": ["cash_flow_history", "debt_schedule", "income_statement_history", "liquidity_position"],
+    "required_assumptions": ["annual_repayment", "covenant_thresholds", "ebitda_growth_rate", "forecast_horizon", "interest_rate_assumption", "maximum_leverage_ratio", "minimum_debt_service_coverage", "opening_debt", "repayment_terms"],
+    "accepted_inputs": ["canonical-financial-data.v2"], "output_artifacts": [{"kind": "debt_capacity_refinancing", "format": "json", "required": true}], "output_formats": ["json"],
+    "validation_checks": ["covenant_headroom", "debt_roll_forward", "interest_reconciliation", "liquidity_minimum"], "execution_capabilities": ["execute_local"],
+    "adapter_id": "python-forecast/debt-capacity-refinancing.v1", "adapter_entry_point": "python-forecast-debt-capacity"
   }]
 }

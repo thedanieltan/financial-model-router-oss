@@ -80,6 +80,8 @@ jobs:
               }
               providers = [item.provider_id for item in fmr.ProviderRegistry.builtins().providers()]
               assert providers == ["native-xlsx", "python-forecast", "reference-handoff"]
+              python_families = {item.package.model_family for item in fmr.ProviderRegistry.builtins().packages() if item.provider.provider_id == "python-forecast" and item.provider_adapter_available and item.provider_executor_available}
+              assert python_families == {"budget_forecast", "three_statement", "operating_company_dcf", "debt_capacity_refinancing"}
               assert fmr.route_job(budget, policy=fmr.routing_policy("json-first"))["selected"]["provider_id"] == "python-forecast"
               assert fmr.route_job(budget, policy=fmr.routing_policy("spreadsheet-first"))["selected"]["provider_id"] == "native-xlsx"
               organization = fmr.OrganizationPolicy.from_mapping({

@@ -20,7 +20,7 @@ package uses explicit horizon, growth-rate and scenario assumptions to create
 separate forecast periods. It emits a formula-backed XLSX workbook and a JSON
 forecast and validates both artifacts.
 
-`python-forecast@1.0.0` independently executes the same budget-and-forecast
+`python-forecast@1.1.0` independently executes the same budget-and-forecast
 family and emits a deterministic JSON result. `json-first` and
 `spreadsheet-first` policies demonstrate genuine implementation competition.
 
