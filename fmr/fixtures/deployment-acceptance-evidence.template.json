@@ -1,0 +1,13 @@
+{
+  "contract_version": "deployment-acceptance-evidence.v1",
+  "environment_id": "replace-with-deployment-id",
+  "gates": {
+    "filesystem_durability": {"status": "not_run", "reference": ""},
+    "backup_restore_drill": {"status": "not_run", "reference": ""},
+    "process_supervision": {"status": "not_run", "reference": ""},
+    "resource_limits": {"status": "not_run", "reference": ""},
+    "secret_manager_integration": {"status": "not_run", "reference": ""},
+    "security_review": {"status": "not_run", "reference": ""},
+    "operator_acceptance": {"status": "not_run", "reference": ""}
+  }
+}

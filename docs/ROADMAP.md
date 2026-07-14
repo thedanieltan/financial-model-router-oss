@@ -26,6 +26,7 @@ contract tests does not claim that an optional provider runtime is installed.
 | 1.4 Source adapters | Exact profiled CSV/XLSX ingestion for six export shapes and named vendor exports | Built in WP-SRC-16 |
 | 1.5 Organization routing | Private registries/vocabularies, approvals, precedence and governance | Built in WP-ORG-17 |
 | 1.6 Agent access | Python, CLI, HTTP and optional MCP lifecycle access | Built in WP-AGT-18 |
+| Local release qualification | Automated implementation gates plus deployment-evidence contract | Built in WP-REL-19; production evidence pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -189,3 +190,17 @@ silently delete or preserve artifacts by itself.
 - structured tool errors without a remote listener or implicit data egress.
 
 Authenticated remote MCP transport remains distributed-routing work.
+
+## WP-REL-19 — local release qualification
+
+- deterministic machine-readable implementation qualification;
+- clean provider discovery, interchangeability and contract packaging gates;
+- router dependency-boundary and fail-closed secret checks;
+- ledger backup/restore, legacy migration, concurrent idempotency and stale-
+  recovery probes;
+- explicit deployment evidence for durability, supervision, limits, secret
+  management, security and operator acceptance; and
+- an alpha-version gate that prevents synthetic CI from claiming production 1.0.
+
+Implementation qualification is automated. Deployment and production acceptance
+remain pending until evidence is collected in a real target environment.

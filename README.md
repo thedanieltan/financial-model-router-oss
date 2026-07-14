@@ -91,6 +91,14 @@ fmr prune-execution-artifacts --ledger .fmr-execution-ledger.sqlite3 \
 Retention is a dry run unless `--apply` is supplied. See the
 [operations guide](docs/OPERATIONS.md).
 
+Repository and deployment release gates are deliberately separate:
+
+```bash
+fmr qualify-release --output qualification.json
+```
+
+See the [release qualification guide](docs/RELEASE_QUALIFICATION.md).
+
 Provider authoring:
 
 ```bash
