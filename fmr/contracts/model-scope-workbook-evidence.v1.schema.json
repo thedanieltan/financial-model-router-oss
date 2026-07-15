@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/model-scope-workbook-evidence.v1.schema.json",
+  "title": "Workbook Scope Evidence v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "evidence_id", "evidence_sha256", "source", "observed_data", "observed_capabilities", "observations", "warnings", "limitations"],
+  "properties": {
+    "contract_version": {"const": "model-scope-workbook-evidence.v1"},
+    "evidence_id": {"type": "string", "pattern": "^fmrwe_[a-f0-9]{24}$"},
+    "evidence_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract_version", "filename", "sha256", "size_bytes", "workbook_map_sha256"],
+      "properties": {
+        "contract_version": {"const": "workbook-map.v1"},
+        "filename": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "workbook_map_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "observed_data": {"$ref": "#/$defs/stringSet"},
+    "observed_capabilities": {"$ref": "#/$defs/stringSet"},
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["kind", "value", "confidence", "evidence"],
+        "properties": {
+          "kind": {"enum": ["available_data", "workbook_capability"]},
+          "value": {"type": "string", "minLength": 1},
+          "confidence": {"enum": ["medium", "high"]},
+          "evidence": {"$ref": "#/$defs/nonEmptyStringArray"}
+        }
+      }
+    },
+    "warnings": {"$ref": "#/$defs/stringSet"},
+    "limitations": {"$ref": "#/$defs/stringSet"}
+  },
+  "$defs": {
+    "nonEmptyStringArray": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "stringSet": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    }
+  }
+}

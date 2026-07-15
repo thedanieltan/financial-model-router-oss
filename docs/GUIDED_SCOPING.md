@@ -42,6 +42,14 @@ an unsuitable model family into a recommendation. Routing begins only after the
 user confirms scope. Missing data and assumptions remain requirements; they are
 not inferred from a workbook or invented by the engine.
 
+WP-GUX-26 adds `model-scope-workbook-evidence.v1`. It converts a trusted
+`workbook-map.v1` into hash-pinned observations about data concepts and workbook
+capabilities. Applying that evidence requires deterministic recomputation from
+the original workbook map. It may add observed data and a source reference to an
+intent, but it preserves the objective, decision context, requested outcomes and
+assumptions exactly. External links are warnings, and workbook structure never
+establishes user intent.
+
 Built-in playbooks are marked `synthetic_reviewed`, not
 `practitioner_accepted`. FAST and ICAEW materials inform modelling-quality
 provenance; they are not treated as automatic family-selection rules. SEC data

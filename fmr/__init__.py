@@ -33,6 +33,7 @@ from fmr.qualification import qualify_local_release, validate_deployment_evidenc
 from fmr.acceptance import run_acceptance_corpus, validate_acceptance_corpus
 from fmr.knowledge import KnowledgeRegistry
 from fmr.scoping_service import answer_scope_question, assess_model_intent, compile_confirmed_scope
+from fmr.scoping_evidence import apply_workbook_scope_evidence, derive_workbook_scope_evidence, validate_workbook_scope_evidence
 from fmr.router import route_request
 from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
@@ -91,6 +92,7 @@ __all__ = [
     "run_acceptance_corpus",
     "CONCEPTS",
     "accept_calculated_workbook_bytes",
+    "apply_workbook_scope_evidence",
     "answer_scope_question",
     "assess_model_intent",
     "analyse_workbook_map",
@@ -113,6 +115,7 @@ __all__ = [
     "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
     "derive_workbook_evidence",
+    "derive_workbook_scope_evidence",
     "discover_calculation_engine",
     "execute_workbook_write_plan_bytes",
     "execute_workbook_write_plan_file",
@@ -146,6 +149,7 @@ __all__ = [
     "validate_scope_candidate",
     "validate_scope_confirmation",
     "validate_workbook_calculation_acceptance_payload",
+    "validate_workbook_scope_evidence",
     "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",
     "validate_workbook_execution_receipt_payload",
