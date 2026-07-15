@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from fmr.core import FAMILIES, ModelJob, route_job, routing_policy
+from fmr.core import FAMILIES, ModelJob, create_model_intent, create_scope_confirmation, route_job, routing_policy
 from fmr.core.receipts import validate_execution_result
 from fmr.execution import ExecutionOrchestrator, ManagedArtifactRetention, SqliteExecutionLedger
 from fmr.provider_service import prepare_handoff
@@ -13,9 +13,18 @@ from fmr.registry import ProviderRegistry
 from fmr.organization import OrganizationPolicy, route_organization_job
 from fmr.qualification import qualify_local_release
 from fmr.acceptance import run_acceptance_corpus
+from fmr.scoping_evidence import apply_workbook_scope_evidence, derive_workbook_scope_evidence
+from fmr.scoping_service import answer_scope_question, assess_model_intent, compile_confirmed_scope
 
 PROVIDER_COMMANDS = {
     "backup-execution-ledger",
+    "answer-scope-question",
+    "apply-workbook-scope-evidence",
+    "assess-scope",
+    "compile-scoped-job",
+    "confirm-scope",
+    "create-model-intent",
+    "derive-workbook-scope-evidence",
     "discover-providers",
     "execute-job",
     "operations-status",
@@ -49,6 +58,35 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
     discover = commands.add_parser("discover-providers")
     discover.add_argument("--output")
+    create_intent = commands.add_parser("create-model-intent")
+    create_intent.add_argument("intent")
+    create_intent.add_argument("--output")
+    assess_scope = commands.add_parser("assess-scope")
+    assess_scope.add_argument("intent")
+    assess_scope.add_argument("--output")
+    answer_scope = commands.add_parser("answer-scope-question")
+    answer_scope.add_argument("intent")
+    answer_scope.add_argument("--question", required=True)
+    answer_scope.add_argument("--answer", required=True)
+    answer_scope.add_argument("--output")
+    confirm_scope = commands.add_parser("confirm-scope")
+    confirm_scope.add_argument("assessment")
+    confirm_scope.add_argument("--family", required=True)
+    confirm_scope.add_argument("--acknowledge", action="append", default=[])
+    confirm_scope.add_argument("--output")
+    compile_scope = commands.add_parser("compile-scoped-job")
+    compile_scope.add_argument("assessment")
+    compile_scope.add_argument("confirmation")
+    compile_scope.add_argument("--input-references")
+    compile_scope.add_argument("--output")
+    derive_evidence = commands.add_parser("derive-workbook-scope-evidence")
+    derive_evidence.add_argument("workbook_map")
+    derive_evidence.add_argument("--output")
+    apply_evidence = commands.add_parser("apply-workbook-scope-evidence")
+    apply_evidence.add_argument("intent")
+    apply_evidence.add_argument("evidence")
+    apply_evidence.add_argument("workbook_map")
+    apply_evidence.add_argument("--output")
     for name in ("route-job", "prepare-handoff"):
         command = commands.add_parser(name)
         command.add_argument("job")
@@ -100,6 +138,28 @@ def run_provider_command(argv: list[str]) -> int:
         if args.command == "discover-providers":
             registry = ProviderRegistry.builtins()
             _write({"providers": [item.to_dict() for item in registry.providers()], "model_families": [item.to_dict() for item in FAMILIES]}, args.output)
+            return 0
+        if args.command == "create-model-intent":
+            _write(create_model_intent(_load(args.intent)), args.output)
+            return 0
+        if args.command == "assess-scope":
+            _write(assess_model_intent(_load(args.intent)), args.output)
+            return 0
+        if args.command == "answer-scope-question":
+            _write(answer_scope_question(_load(args.intent), args.question, args.answer), args.output)
+            return 0
+        if args.command == "confirm-scope":
+            _write(create_scope_confirmation(_load(args.assessment), selected_family=args.family, acknowledged_limitations=args.acknowledge), args.output)
+            return 0
+        if args.command == "compile-scoped-job":
+            references = _load(args.input_references) if args.input_references else None
+            _write(compile_confirmed_scope(_load(args.assessment), _load(args.confirmation), input_references=references), args.output)
+            return 0
+        if args.command == "derive-workbook-scope-evidence":
+            _write(derive_workbook_scope_evidence(_load(args.workbook_map)), args.output)
+            return 0
+        if args.command == "apply-workbook-scope-evidence":
+            _write(apply_workbook_scope_evidence(_load(args.intent), _load(args.evidence), workbook_map=_load(args.workbook_map)), args.output)
             return 0
         if args.command == "route-job":
             raw_job = _load(args.job)

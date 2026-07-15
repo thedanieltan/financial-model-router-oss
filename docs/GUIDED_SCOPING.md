@@ -50,6 +50,13 @@ intent, but it preserves the objective, decision context, requested outcomes and
 assumptions exactly. External links are warnings, and workbook structure never
 establishes user intent.
 
+WP-GUX-27 exposes the same lifecycle through Python, CLI and HTTP. The browser
+workbench starts with a plain-language decision and output choice, presents
+controlled follow-up questions, shows candidate suitability, missing inputs and
+limitations, and requires explicit confirmation before it creates a
+provider-neutral job. The confirmed job is then handed to the existing provider
+routing panel; the interface cannot skip the confirmation hash chain.
+
 Built-in playbooks are marked `synthetic_reviewed`, not
 `practitioner_accepted`. FAST and ICAEW materials inform modelling-quality
 provenance; they are not treated as automatic family-selection rules. SEC data

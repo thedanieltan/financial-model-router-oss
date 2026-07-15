@@ -23,6 +23,39 @@
     <section class="panel input-panel">
       <div class="panel-heading">
         <div>
+          <h2>Guided model scoping</h2>
+          <p>Start with the business decision. FMR will explain suitable model families, missing information and limitations before provider routing.</p>
+        </div>
+      </div>
+      <label for="scope-objective">What should the model help you decide?</label>
+      <textarea id="scope-objective" spellcheck="false">Plan next year's operations and understand cash needs</textarea>
+      <div class="workbook-control">
+        <label for="scope-decision">Decision</label>
+        <select id="scope-decision">
+          <option value="unknown">Help me clarify</option>
+          <option value="operating_plan">Plan future operations</option>
+          <option value="liquidity">Understand cash or liquidity</option>
+          <option value="valuation">Estimate business value</option>
+          <option value="financing">Assess borrowing capacity</option>
+          <option value="refinancing">Review debt or refinancing</option>
+          <option value="acquisition">Assess an acquisition</option>
+          <option value="other">Another decision</option>
+        </select>
+        <label for="scope-format">Output</label>
+        <select id="scope-format"><option value="json">JSON</option><option value="xlsx">Excel workbook</option></select>
+        <button id="assess-scope-button" type="button">Assess scope</button>
+        <button id="answer-scope-button" type="button" class="secondary" disabled>Apply answers</button>
+      </div>
+      <div id="scope-questions" aria-live="polite"></div>
+      <div id="scope-candidates" aria-live="polite"></div>
+      <div class="actions">
+        <button id="confirm-scope-button" type="button" disabled>Confirm selected scope</button>
+        <button id="compile-scoped-job-button" type="button" class="secondary" disabled>Create routable job</button>
+      </div>
+      <p id="scope-status" class="status" aria-live="polite"></p>
+
+      <div class="panel-heading">
+        <div>
           <h2>Provider routing</h2>
           <p>Route a provider-neutral model job, inspect every candidate and prepare a version-pinned provider handoff.</p>
         </div>
@@ -150,6 +183,7 @@
 
   <script src="/assets/app.js" defer></script>
   <script src="/assets/provider-routing.js" defer></script>
+  <script src="/assets/scoping.js" defer></script>
   <script src="/assets/realization.js" defer></script>
   <script src="/assets/write_plan.js" defer></script>
   <script src="/assets/execution.js" defer></script>
