@@ -60,6 +60,14 @@ jobs:
           knowledge = KnowledgeRegistry.builtins()
           assert len(knowledge.playbooks) == 4
           assert all(item.review_state == "synthetic_reviewed" for item in knowledge.playbooks)
+          assert files("fmr.web").joinpath("scoping.js").is_file()
+          intent = fmr.create_model_intent({"objective": "Prepare a budget", "decision_context": "operating_plan", "requested_outcomes": ["budget"]})
+          assessment = fmr.assess_model_intent(intent)
+          budget_candidate = next(item for item in assessment["candidates"] if item["family_id"] == "budget_forecast")
+          confirmation = fmr.create_scope_confirmation(assessment, selected_family="budget_forecast", acknowledged_limitations=budget_candidate["limitations"])
+          scoped_job = fmr.compile_confirmed_scope(assessment, confirmation)
+          assert scoped_job["model_family"] == "budget_forecast"
+          assert scoped_job["scope_confirmation"]["confirmation_id"] == confirmation["confirmation_id"]
           assert files("fmr.fixtures").joinpath("acceptance/synthetic-dcf.v1.json").is_file()
           assert files("fmr.fixtures").joinpath("acceptance/synthetic-initial-families.v1.json").is_file()
           assert "fmr.providers.native_xlsx.provider" not in sys.modules
@@ -170,6 +178,9 @@ jobs:
           /tmp/fmr-provider-test/bin/python -m fmr recover-executions --help
           /tmp/fmr-provider-test/bin/python -m fmr backup-execution-ledger --help
           /tmp/fmr-provider-test/bin/python -m fmr prune-execution-artifacts --help
+          /tmp/fmr-provider-test/bin/python -m fmr assess-scope --help
+          /tmp/fmr-provider-test/bin/python -m fmr confirm-scope --help
+          /tmp/fmr-provider-test/bin/python -m fmr compile-scoped-job --help
           printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | /tmp/fmr-provider-test/bin/fmr-mcp | grep -q 'discover_providers'
           /tmp/fmr-provider-test/bin/fmr qualify-release --output /tmp/fmr-qualification.json
           /tmp/fmr-provider-test/bin/python - <<'PY'

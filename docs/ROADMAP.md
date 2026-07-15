@@ -34,7 +34,8 @@ contract tests does not claim that an optional provider runtime is installed.
 | Modelling knowledge repository | Four initial family playbooks, questions and source provenance | Built in WP-GUX-24; practitioner review pending |
 | Guided-scoping engine | Deterministic assessment, controlled clarification and confirmed job compilation | Built in WP-GUX-25 |
 | Workbook-aware scope evidence | Hash-pinned, recomputed observations that never infer intent or assumptions | Built in WP-GUX-26 |
-| Guided-scoping interfaces | CLI, HTTP and workbench journeys | In progress |
+| Guided-scoping interfaces | Python, CLI, HTTP and plain-language workbench journeys | Built in WP-GUX-27 |
+| Guided-scoping acceptance | End-to-end corpus and practitioner evidence path | In progress |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages

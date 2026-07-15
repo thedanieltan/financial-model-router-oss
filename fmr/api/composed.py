@@ -79,6 +79,10 @@ def create_app() -> FastAPI:
     def provider_routing_javascript() -> Response:
         return Response(_asset("provider-routing.js"), media_type="application/javascript")
 
+    @application.get("/assets/scoping.js", include_in_schema=False)
+    def scoping_javascript() -> Response:
+        return Response(_asset("scoping.js"), media_type="application/javascript")
+
     return application
 
 
