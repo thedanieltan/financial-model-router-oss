@@ -12,6 +12,7 @@ from fmr.registry import ProviderRegistry
 from fmr.knowledge import KnowledgeRegistry
 from fmr.scoping_evidence import apply_workbook_scope_evidence, derive_workbook_scope_evidence
 from fmr.scoping_service import answer_scope_question, assess_model_intent, compile_confirmed_scope
+from fmr.scoping_acceptance import run_guided_scoping_acceptance_corpus
 
 router = APIRouter(prefix="/api/v2", tags=["provider routing"])
 
@@ -107,6 +108,14 @@ def apply_scoping_workbook_evidence(payload: dict[str, Any]) -> dict[str, Any]:
         return apply_workbook_scope_evidence(payload["intent"], payload["evidence"], workbook_map=payload["workbook_map"])
     except (KeyError, TypeError, ValueError) as exc:
         raise _invalid(ValueError(str(exc))) from exc
+
+
+@router.post("/scoping/acceptance")
+def run_scoping_acceptance(payload: dict[str, Any]) -> dict[str, Any]:
+    try:
+        return run_guided_scoping_acceptance_corpus(payload)
+    except ValueError as exc:
+        raise _invalid(exc) from exc
 
 
 @router.post("/jobs/routes")

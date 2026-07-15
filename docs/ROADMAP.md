@@ -35,7 +35,7 @@ contract tests does not claim that an optional provider runtime is installed.
 | Guided-scoping engine | Deterministic assessment, controlled clarification and confirmed job compilation | Built in WP-GUX-25 |
 | Workbook-aware scope evidence | Hash-pinned, recomputed observations that never infer intent or assumptions | Built in WP-GUX-26 |
 | Guided-scoping interfaces | Python, CLI, HTTP and plain-language workbench journeys | Built in WP-GUX-27 |
-| Guided-scoping acceptance | End-to-end corpus and practitioner evidence path | In progress |
+| Guided-scoping acceptance | Full-state synthetic corpus and practitioner evidence path | Built in WP-GUX-28; live reviews pending |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -274,3 +274,17 @@ base or guided questionnaire. Those remain WP-GUX-24 through WP-GUX-28.
 
 The built-in knowledge is synthetic-review evidence. It is not practitioner
 acceptance, and no third-party workbook or proprietary template is included.
+
+## WP-GUX-25 through WP-GUX-28 — guided scoping lifecycle
+
+- deterministic intent assessment and controlled clarification;
+- hash-pinned workbook observations that cannot infer intent or assumptions;
+- Python, CLI, HTTP and plain-language workbench parity;
+- explicit candidate limitation acknowledgement before job compilation;
+- a synthetic corpus spanning every assessment state and initial family; and
+- case-and-assessment-pinned external practitioner review references.
+
+The implementation roadmap for guided scoping is complete. The bundled evidence
+proves deterministic behaviour only. Representative anonymized cases, verified
+practitioner reviews and deployment acceptance remain external acceptance work,
+not claims that can be completed by repository CI.

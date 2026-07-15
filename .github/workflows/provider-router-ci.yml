@@ -56,6 +56,9 @@ jobs:
           assert files("fmr.contracts").joinpath("scope-question-set.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("knowledge-source-registry.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("model-scope-workbook-evidence.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("guided-scoping-practitioner-review.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("guided-scoping-acceptance-corpus.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("guided-scoping-acceptance-result.v1.schema.json").is_file()
           from fmr import KnowledgeRegistry
           knowledge = KnowledgeRegistry.builtins()
           assert len(knowledge.playbooks) == 4
@@ -70,6 +73,11 @@ jobs:
           assert scoped_job["scope_confirmation"]["confirmation_id"] == confirmation["confirmation_id"]
           assert files("fmr.fixtures").joinpath("acceptance/synthetic-dcf.v1.json").is_file()
           assert files("fmr.fixtures").joinpath("acceptance/synthetic-initial-families.v1.json").is_file()
+          scoping_corpus = json.loads(files("fmr.fixtures").joinpath("acceptance/synthetic-guided-scoping.v1.json").read_text(encoding="utf-8"))
+          scoping_acceptance = fmr.run_guided_scoping_acceptance_corpus(scoping_corpus)
+          assert scoping_acceptance["implementation_status"] == "passed"
+          assert scoping_acceptance["practitioner_status"] == "pending"
+          assert scoping_acceptance["production_status"] == "not_accepted"
           assert "fmr.providers.native_xlsx.provider" not in sys.modules
 
           assumptions = ["forecast_horizon", "operating_cost_growth_rate", "revenue_growth_rate", "scenario", "scenario_adjustments"]
@@ -181,6 +189,7 @@ jobs:
           /tmp/fmr-provider-test/bin/python -m fmr assess-scope --help
           /tmp/fmr-provider-test/bin/python -m fmr confirm-scope --help
           /tmp/fmr-provider-test/bin/python -m fmr compile-scoped-job --help
+          /tmp/fmr-provider-test/bin/python -m fmr run-guided-scoping-acceptance --help
           printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | /tmp/fmr-provider-test/bin/fmr-mcp | grep -q 'discover_providers'
           /tmp/fmr-provider-test/bin/fmr qualify-release --output /tmp/fmr-qualification.json
           /tmp/fmr-provider-test/bin/python - <<'PY'

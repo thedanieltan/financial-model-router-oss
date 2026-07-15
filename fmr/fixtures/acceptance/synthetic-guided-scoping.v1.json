@@ -1,0 +1,92 @@
+{
+  "contract_version": "guided-scoping-acceptance-corpus.v1",
+  "corpus_id": "synthetic-guided-scoping",
+  "corpus_version": "1.0.0",
+  "cases": [
+    {
+      "case_id": "unknown-decision",
+      "data_classification": "synthetic",
+      "intent": {"objective": "Help me understand this spreadsheet"},
+      "workbook_map": null,
+      "expected": {"state": "clarification_required", "candidates": [], "required_questions": ["What decision should the model help you make?"], "selected_family": null}
+    },
+    {
+      "case_id": "ready-budget",
+      "data_classification": "synthetic",
+      "intent": {
+        "objective": "Prepare next year's operating budget",
+        "decision_context": "operating_plan",
+        "requested_outcomes": ["budget", "forecast"],
+        "planning_horizon": {"value": 12, "unit": "months"},
+        "available_data": ["income_statement_history", "operating_cost_drivers", "revenue_drivers"],
+        "available_assumptions": ["forecast_horizon", "operating_cost_growth_rate", "revenue_growth_rate", "scenario", "scenario_adjustments"]
+      },
+      "workbook_map": null,
+      "expected": {"state": "candidate_scopes", "candidates": [{"family_id": "budget_forecast", "suitability": "eligible"}], "required_questions": [], "selected_family": "budget_forecast"}
+    },
+    {
+      "case_id": "valuation-prerequisite",
+      "data_classification": "synthetic",
+      "intent": {"objective": "Estimate enterprise value", "decision_context": "valuation", "requested_outcomes": ["enterprise value"], "context": {"operating_forecast_available": "no"}},
+      "workbook_map": null,
+      "expected": {"state": "candidate_scopes", "candidates": [{"family_id": "operating_company_dcf", "suitability": "blocked"}, {"family_id": "three_statement", "suitability": "possible"}], "required_questions": [], "selected_family": "three_statement"}
+    },
+    {
+      "case_id": "ready-dcf",
+      "data_classification": "synthetic",
+      "intent": {
+        "objective": "Estimate enterprise value using a DCF",
+        "decision_context": "valuation",
+        "requested_outcomes": ["enterprise value", "equity value"],
+        "context": {"operating_forecast_available": "yes"},
+        "available_data": ["capital_expenditure", "cash_flow_history", "income_statement_history", "net_debt", "revenue_drivers", "working_capital"],
+        "available_assumptions": ["discount_rate", "forecast_horizon", "tax_rate", "terminal_value_assumption"]
+      },
+      "workbook_map": null,
+      "expected": {"state": "candidate_scopes", "candidates": [{"family_id": "operating_company_dcf", "suitability": "eligible"}], "required_questions": [], "selected_family": "operating_company_dcf"}
+    },
+    {
+      "case_id": "ready-debt",
+      "data_classification": "synthetic",
+      "intent": {
+        "objective": "Assess debt capacity and refinancing",
+        "decision_context": "refinancing",
+        "requested_outcomes": ["debt capacity", "refinancing"],
+        "context": {"debt_decision_needed": "yes"},
+        "available_data": ["cash_flow_history", "debt_schedule", "income_statement_history", "liquidity_position"],
+        "available_assumptions": ["covenant_thresholds", "forecast_horizon", "interest_rate_assumption", "repayment_terms"]
+      },
+      "workbook_map": null,
+      "expected": {"state": "candidate_scopes", "candidates": [{"family_id": "debt_capacity_refinancing", "suitability": "eligible"}], "required_questions": [], "selected_family": "debt_capacity_refinancing"}
+    },
+    {
+      "case_id": "contradictory-horizon",
+      "data_classification": "synthetic",
+      "intent": {"objective": "Prepare a forecast", "decision_context": "operating_plan", "requested_outcomes": ["forecast"], "planning_horizon": {"value": 12, "unit": "months"}, "context": {"forecast_horizon_known": "no"}},
+      "workbook_map": null,
+      "expected": {"state": "contradictory_requirements", "candidates": [{"family_id": "budget_forecast", "suitability": "blocked"}], "required_questions": [], "selected_family": null}
+    },
+    {
+      "case_id": "unsupported-purpose",
+      "data_classification": "synthetic",
+      "intent": {"objective": "Prepare a marketing campaign", "decision_context": "other"},
+      "workbook_map": null,
+      "expected": {"state": "unsupported_scope", "candidates": [], "required_questions": [], "selected_family": null}
+    },
+    {
+      "case_id": "workbook-cannot-infer-intent",
+      "data_classification": "synthetic",
+      "intent": {"objective": "Help me understand this file"},
+      "workbook_map": {
+        "contract_version": "workbook-map.v1",
+        "source": {"filename": "synthetic.xlsx", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "size_bytes": 100},
+        "workbook": {"sheet_count": 1, "defined_names": [], "external_links_detected": false},
+        "sheets": [{"name": "Income Statement", "position": 1, "visibility": "visible", "used_range": "A1:C4", "formula_cells": 2, "value_cells": 6, "merged_ranges": [], "detected_periods": ["2023A", "2024A"], "candidate_role": {"value": "income_statement", "confidence": "high", "evidence": ["title:income statement"]}, "candidate_metrics": ["revenue"], "external_formula_references": 0}],
+        "findings": [],
+        "limitations": []
+      },
+      "expected": {"state": "clarification_required", "candidates": [], "required_questions": ["What decision should the model help you make?"], "selected_family": null}
+    }
+  ],
+  "practitioner_reviews": []
+}

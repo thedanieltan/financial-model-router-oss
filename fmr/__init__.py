@@ -34,6 +34,7 @@ from fmr.acceptance import run_acceptance_corpus, validate_acceptance_corpus
 from fmr.knowledge import KnowledgeRegistry
 from fmr.scoping_service import answer_scope_question, assess_model_intent, compile_confirmed_scope
 from fmr.scoping_evidence import apply_workbook_scope_evidence, derive_workbook_scope_evidence, validate_workbook_scope_evidence
+from fmr.scoping_acceptance import create_scoping_practitioner_review, run_guided_scoping_acceptance_corpus, validate_guided_scoping_acceptance_corpus, validate_guided_scoping_acceptance_result, validate_scoping_practitioner_review
 from fmr.router import route_request
 from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
@@ -90,6 +91,7 @@ __all__ = [
     "OrganizationPolicy",
     "qualify_local_release",
     "run_acceptance_corpus",
+    "run_guided_scoping_acceptance_corpus",
     "CONCEPTS",
     "accept_calculated_workbook_bytes",
     "apply_workbook_scope_evidence",
@@ -108,6 +110,7 @@ __all__ = [
     "compile_workbook_patch",
     "compile_workbook_write_plan",
     "create_model_intent",
+    "create_scoping_practitioner_review",
     "create_scope_assessment",
     "create_scope_candidate",
     "create_scope_confirmation",
@@ -141,6 +144,8 @@ __all__ = [
     "validate_binding_plan",
     "validate_binding_profile",
     "validate_financial_data_package",
+    "validate_guided_scoping_acceptance_corpus",
+    "validate_guided_scoping_acceptance_result",
     "validate_input_population_calculation_link",
     "validate_mapping_profile",
     "validate_mapping_result",
@@ -148,6 +153,7 @@ __all__ = [
     "validate_scope_assessment",
     "validate_scope_candidate",
     "validate_scope_confirmation",
+    "validate_scoping_practitioner_review",
     "validate_workbook_calculation_acceptance_payload",
     "validate_workbook_scope_evidence",
     "validate_workbook_content_plan_payload",
