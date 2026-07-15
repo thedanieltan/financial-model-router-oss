@@ -28,6 +28,10 @@ class ContractTests(unittest.TestCase):
         root = files("fmr.contracts")
         for name in (
             "model-job.v2.schema.json",
+            "model-intent.v1.schema.json",
+            "model-scope-candidate.v1.schema.json",
+            "model-scope-assessment.v1.schema.json",
+            "scope-confirmation.v1.schema.json",
             "canonical-financial-data.v2.schema.json",
             "model-family-definition.v1.schema.json",
             "provider-manifest.v1.schema.json",
@@ -235,7 +239,7 @@ class ContractTests(unittest.TestCase):
 
 def _validators() -> dict[str, Draft202012Validator]:
     root = files("fmr.contracts")
-    names = ("artifact-retention-result.v1.schema.json", "canonical-financial-data.v2.schema.json", "execution-ledger-backup.v1.schema.json", "execution-operations-status.v1.schema.json", "execution-recovery-result.v1.schema.json", "industry-vocabulary.v1.schema.json", "source-adapter-profile.v1.schema.json", "model-family-definition.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "provider-sdk-validation-result.v1.schema.json", "provider-sdk-package-result.v1.schema.json", "provider-registry.v1.schema.json", "provider-registry-audit.v1.schema.json", "provider-registry-reconciliation.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
+    names = ("artifact-retention-result.v1.schema.json", "canonical-financial-data.v2.schema.json", "execution-ledger-backup.v1.schema.json", "execution-operations-status.v1.schema.json", "execution-recovery-result.v1.schema.json", "industry-vocabulary.v1.schema.json", "source-adapter-profile.v1.schema.json", "model-family-definition.v1.schema.json", "model-intent.v1.schema.json", "model-scope-candidate.v1.schema.json", "model-scope-assessment.v1.schema.json", "scope-confirmation.v1.schema.json", "model-job.v2.schema.json", "model-package-manifest.v1.schema.json", "provider-conformance-result.v1.schema.json", "provider-manifest.v1.schema.json", "provider-sdk-validation-result.v1.schema.json", "provider-sdk-package-result.v1.schema.json", "provider-registry.v1.schema.json", "provider-registry-audit.v1.schema.json", "provider-registry-reconciliation.v1.schema.json", "route-decision.v2.schema.json", "provider-handoff.v1.schema.json", "execution-request.v1.schema.json", "execution-result.v1.schema.json")
     documents = {name: json.loads(root.joinpath(name).read_text(encoding="utf-8")) for name in names}
     registry = Registry().with_resources((document["$id"], Resource.from_contents(document)) for document in documents.values())
     return {name: Draft202012Validator(document, registry=registry) for name, document in documents.items()}

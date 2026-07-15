@@ -48,6 +48,10 @@ jobs:
           assert files("fmr.providers.native_xlsx.contracts").joinpath("workbook-map.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("organization-routing-policy.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("release-qualification.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("model-intent.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("model-scope-candidate.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("model-scope-assessment.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("scope-confirmation.v1.schema.json").is_file()
           assert files("fmr.fixtures").joinpath("acceptance/synthetic-dcf.v1.json").is_file()
           assert files("fmr.fixtures").joinpath("acceptance/synthetic-initial-families.v1.json").is_file()
           assert "fmr.providers.native_xlsx.provider" not in sys.modules

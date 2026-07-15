@@ -19,7 +19,8 @@
     "constraints": {"$ref": "#/$defs/constraints"},
     "privacy_constraints": {"$ref": "#/$defs/strings"},
     "licensing_constraints": {"$ref": "#/$defs/strings"},
-    "preferred_execution_mode": {"enum": ["local", "remote", "handoff_only", null]}
+    "preferred_execution_mode": {"enum": ["local", "remote", "handoff_only", null]},
+    "scope_confirmation": {"oneOf": [{"type": "null"}, {"$ref": "scope-confirmation.v1.schema.json"}]}
   },
   "additionalProperties": false,
   "$defs": {

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/scope-confirmation.v1.schema.json",
+  "title": "FMR scope confirmation v1",
+  "type": "object",
+  "required": ["contract_version", "confirmation_id", "confirmation_sha256", "assessment_id", "assessment_sha256", "selected_family", "acknowledged_limitations", "confirmation_method", "knowledge_base_version"],
+  "properties": {
+    "contract_version": {"const": "scope-confirmation.v1"},
+    "confirmation_id": {"type": "string", "pattern": "^fmrc_[a-f0-9]{24}$"},
+    "confirmation_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "assessment_id": {"type": "string", "pattern": "^fmrs_[a-f0-9]{24}$"},
+    "assessment_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "selected_family": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "acknowledged_limitations": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "confirmation_method": {"const": "explicit_user_confirmation"},
+    "knowledge_base_version": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

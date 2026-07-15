@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/model-scope-assessment.v1.schema.json",
+  "title": "FMR model scope assessment v1",
+  "type": "object",
+  "required": ["contract_version", "assessment_id", "assessment_sha256", "intent", "state", "candidates", "eliminated_candidates", "clarification_questions", "confirmed_family", "knowledge_base_version"],
+  "properties": {
+    "contract_version": {"const": "model-scope-assessment.v1"},
+    "assessment_id": {"type": "string", "pattern": "^fmrs_[a-f0-9]{24}$"},
+    "assessment_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "intent": {"$ref": "model-intent.v1.schema.json"},
+    "state": {"enum": ["collecting_intent", "clarification_required", "candidate_scopes", "scope_confirmed", "unsupported_scope", "contradictory_requirements"]},
+    "candidates": {"type": "array", "items": {"$ref": "model-scope-candidate.v1.schema.json"}},
+    "eliminated_candidates": {"type": "array", "items": {"$ref": "model-scope-candidate.v1.schema.json"}},
+    "clarification_questions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "confirmed_family": {"type": ["string", "null"], "minLength": 1},
+    "knowledge_base_version": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}
