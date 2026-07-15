@@ -15,6 +15,7 @@ from fmr.qualification import qualify_local_release
 from fmr.acceptance import run_acceptance_corpus
 from fmr.scoping_evidence import apply_workbook_scope_evidence, derive_workbook_scope_evidence
 from fmr.scoping_service import answer_scope_question, assess_model_intent, compile_confirmed_scope
+from fmr.scoping_acceptance import run_guided_scoping_acceptance_corpus
 
 PROVIDER_COMMANDS = {
     "backup-execution-ledger",
@@ -35,6 +36,7 @@ PROVIDER_COMMANDS = {
     "route-job",
     "validate-job-result",
     "run-acceptance-corpus",
+    "run-guided-scoping-acceptance",
 }
 
 
@@ -129,6 +131,10 @@ def _parser() -> argparse.ArgumentParser:
     acceptance.add_argument("corpus")
     acceptance.add_argument("--require-practitioner", action="store_true")
     acceptance.add_argument("--output")
+    scoping_acceptance = commands.add_parser("run-guided-scoping-acceptance")
+    scoping_acceptance.add_argument("corpus")
+    scoping_acceptance.add_argument("--require-practitioner", action="store_true")
+    scoping_acceptance.add_argument("--output")
     return parser
 
 
@@ -208,6 +214,11 @@ def run_provider_command(argv: list[str]) -> int:
             return 0 if accepted else 2
         if args.command == "run-acceptance-corpus":
             report = run_acceptance_corpus(_load(args.corpus))
+            _write(report, args.output)
+            accepted = report["production_status"] == "accepted" if args.require_practitioner else report["implementation_status"] == "passed"
+            return 0 if accepted else 2
+        if args.command == "run-guided-scoping-acceptance":
+            report = run_guided_scoping_acceptance_corpus(_load(args.corpus))
             _write(report, args.output)
             accepted = report["production_status"] == "accepted" if args.require_practitioner else report["implementation_status"] == "passed"
             return 0 if accepted else 2

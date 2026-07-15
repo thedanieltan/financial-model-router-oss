@@ -57,6 +57,14 @@ limitations, and requires explicit confirmation before it creates a
 provider-neutral job. The confirmed job is then handed to the existing provider
 routing panel; the interface cannot skip the confirmation hash chain.
 
+WP-GUX-28 publishes a versioned guided-scoping acceptance corpus. It covers
+clarification, candidate, contradictory and unsupported states; all four initial
+families; DCF prerequisite blocking; explicit confirmed job compilation; and the
+rule that workbook structure cannot infer intent. Results contain hashes and
+categorical outcomes rather than financial values. Practitioner reviews are
+separate, hash-pinned external-evidence references. The bundled synthetic corpus
+passes implementation acceptance but cannot produce production acceptance.
+
 Built-in playbooks are marked `synthetic_reviewed`, not
 `practitioner_accepted`. FAST and ICAEW materials inform modelling-quality
 provenance; they are not treated as automatic family-selection rules. SEC data

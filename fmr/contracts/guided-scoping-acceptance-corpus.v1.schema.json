@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/guided-scoping-acceptance-corpus.v1.schema.json",
+  "title": "FMR guided scoping acceptance corpus v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "corpus_id", "corpus_version", "cases", "practitioner_reviews"],
+  "properties": {
+    "contract_version": {"const": "guided-scoping-acceptance-corpus.v1"},
+    "corpus_id": {"$ref": "#/$defs/id"},
+    "corpus_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "cases": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/case"}},
+    "practitioner_reviews": {"type": "array", "items": {"$ref": "guided-scoping-practitioner-review.v1.schema.json"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "data_classification", "intent", "workbook_map", "expected"],
+      "properties": {
+        "case_id": {"$ref": "#/$defs/id"},
+        "data_classification": {"enum": ["synthetic", "anonymized"]},
+        "intent": {"type": "object"},
+        "workbook_map": {"type": ["object", "null"]},
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["state", "candidates", "required_questions", "selected_family"],
+          "properties": {
+            "state": {"enum": ["clarification_required", "candidate_scopes", "unsupported_scope", "contradictory_requirements"]},
+            "candidates": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["family_id", "suitability"], "properties": {"family_id": {"$ref": "#/$defs/id"}, "suitability": {"enum": ["eligible", "possible", "blocked", "unsupported"]}}}},
+            "required_questions": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+            "selected_family": {"type": ["string", "null"]}
+          }
+        }
+      }
+    }
+  }
+}
