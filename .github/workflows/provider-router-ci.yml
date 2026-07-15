@@ -55,6 +55,7 @@ jobs:
           assert files("fmr.contracts").joinpath("model-family-playbook.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("scope-question-set.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("knowledge-source-registry.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("model-scope-workbook-evidence.v1.schema.json").is_file()
           from fmr import KnowledgeRegistry
           knowledge = KnowledgeRegistry.builtins()
           assert len(knowledge.playbooks) == 4

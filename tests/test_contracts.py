@@ -35,6 +35,7 @@ class ContractTests(unittest.TestCase):
             "model-family-playbook.v1.schema.json",
             "scope-question-set.v1.schema.json",
             "knowledge-source-registry.v1.schema.json",
+            "model-scope-workbook-evidence.v1.schema.json",
             "canonical-financial-data.v2.schema.json",
             "model-family-definition.v1.schema.json",
             "provider-manifest.v1.schema.json",
