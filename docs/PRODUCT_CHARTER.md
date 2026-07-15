@@ -5,9 +5,11 @@ document describes FMR as a workbook generator, this charter takes precedence.
 
 ## Product purpose
 
-FMR accepts a provider-neutral financial-modelling job, identifies the required
-model family, discovers compatible model packages, applies explicit constraints
-and readiness rules, selects a provider deterministically, and produces a
+FMR accepts either a provider-neutral financial-modelling job or an incomplete
+statement of modelling intent. The guided path helps a user identify and confirm
+the scope before compiling a job. The router then identifies the required model
+family, discovers compatible packages, applies explicit constraints and
+readiness rules, selects a provider deterministically, and produces a
 version-pinned handoff. Execution and result validation occur only after routing.
 
 FMR is an industry-agnostic router. Industry knowledge belongs in vocabulary
@@ -20,6 +22,18 @@ they do not train or silently influence the deterministic router.
 **Financial-modelling job** — the provider-neutral statement of an objective,
 deliverables, context, available data and assumptions, constraints, requested
 outputs and preferred execution mode.
+
+**Model intent** — an incomplete, provider-neutral description of the business
+decision, desired outcomes, horizon, available evidence and unanswered questions.
+
+**Scope assessment** — a non-executing comparison of candidate model families,
+including supporting evidence, conflicts, missing information, prerequisites and
+limitations. It is not a provider route or financial recommendation.
+
+**Scope confirmation** — the user's explicit, hash-pinned selection of one
+candidate family after acknowledging its declared limitations. Guided scoping
+cannot compile an executable job without it; experts may still submit an explicit
+provider-neutral job directly.
 
 **Model family** — a provider-neutral analytical capability. A family declares
 its objective, deliverables, required data and assumptions, checks, supported
@@ -52,6 +66,7 @@ expected outputs, validation requirements, hashes and unresolved requirements.
 
 FMR core owns:
 
+- intent validation, guided scope contracts and deterministic scope evidence;
 - job validation and family classification;
 - provider and package discovery;
 - hard-constraint enforcement and readiness evaluation;
@@ -75,7 +90,8 @@ coordinate, mutation, recalculation and workbook-output acceptance behaviour.
 
 FMR does not provide accounting, tax, legal or investment advice; keep books;
 invent missing values or assumptions; train a generative model on submitted
-workbooks; guarantee that a recognized family has an executable package; execute
+workbooks; infer a user's business decision from workbook structure alone;
+guarantee that a recognized family has an executable package; execute
 provider code during discovery; silently relax job constraints; silently switch
 providers after execution starts; embed secrets or sensitive financial values in
 receipts; or make the router core responsible for provider formulas or layouts.

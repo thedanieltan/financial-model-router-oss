@@ -30,6 +30,8 @@ contract tests does not claim that an optional provider runtime is installed.
 | Executable family coverage | Python implementations for all four initial analytical families | Built in WP-MDL-20 |
 | Model acceptance framework | Deterministic cases, tolerances and value-free practitioner evidence ledger | Built in WP-ACC-21; live reviews pending |
 | Full-family acceptance corpus | All five executable Python packages exercised through the routed lifecycle | Built in WP-ACC-22; synthetic evidence only |
+| Guided scoping contracts | Intent, candidate, assessment and explicit confirmation hash chain | Built in WP-GUX-23 |
+| Modelling knowledge and guided scoping | Reviewed playbooks, questions, workbook evidence and user journeys | In progress |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -244,3 +246,15 @@ external review evidence remain pending.
 
 This closes synthetic implementation coverage. It does not replace anonymized
 representative cases, qualified practitioner review or deployment acceptance.
+
+## WP-GUX-23 — guided-scoping contracts
+
+- provider-neutral model-intent, scope-candidate, assessment and confirmation
+  contracts;
+- deterministic IDs and complete canonical hashes for intent and assessment;
+- explicit limitation acknowledgement before guided scope confirmation;
+- confirmation family equality enforced by `model-job.v2`; and
+- scope confirmation pinned into the existing job, route and handoff chain.
+
+This establishes the integrity boundary, not the financial-modelling knowledge
+base or guided questionnaire. Those remain WP-GUX-24 through WP-GUX-28.

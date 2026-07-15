@@ -16,7 +16,7 @@ from fmr.financial_data import (
     validate_mapping_result,
 )
 from fmr.plan import build_plan
-from fmr.core import FAMILIES, ModelJob, route_job, routing_policy
+from fmr.core import FAMILIES, ModelJob, create_model_intent, create_scope_assessment, create_scope_candidate, create_scope_confirmation, route_job, routing_policy, validate_model_intent, validate_scope_assessment, validate_scope_candidate, validate_scope_confirmation
 from fmr.core.receipts import validate_execution_result, validate_provider_handoff, validate_route_decision
 from fmr.execution import (
     EnvironmentSecretResolver,
@@ -99,6 +99,10 @@ __all__ = [
     "compile_workbook_input_set_from_csv",
     "compile_workbook_patch",
     "compile_workbook_write_plan",
+    "create_model_intent",
+    "create_scope_assessment",
+    "create_scope_candidate",
+    "create_scope_confirmation",
     "concept_registry_payload",
     "content_spec_registry_payload",
     "coordinate_rule_registry_payload",
@@ -131,6 +135,10 @@ __all__ = [
     "validate_input_population_calculation_link",
     "validate_mapping_profile",
     "validate_mapping_result",
+    "validate_model_intent",
+    "validate_scope_assessment",
+    "validate_scope_candidate",
+    "validate_scope_confirmation",
     "validate_workbook_calculation_acceptance_payload",
     "validate_workbook_content_plan_payload",
     "validate_workbook_coordinate_plan_payload",

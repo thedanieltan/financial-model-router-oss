@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/model-scope-candidate.v1.schema.json",
+  "title": "FMR model scope candidate v1",
+  "type": "object",
+  "required": ["contract_version", "family_id", "title", "purpose", "suitability", "supporting_evidence", "conflicting_evidence", "missing_information", "limitations", "prerequisites", "deliverables", "knowledge_references"],
+  "properties": {
+    "contract_version": {"const": "model-scope-candidate.v1"},
+    "family_id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "title": {"type": "string", "minLength": 1},
+    "purpose": {"type": "string", "minLength": 1},
+    "suitability": {"enum": ["eligible", "possible", "blocked", "unsupported"]},
+    "supporting_evidence": {"$ref": "#/$defs/strings"},
+    "conflicting_evidence": {"$ref": "#/$defs/strings"},
+    "missing_information": {"$ref": "#/$defs/strings"},
+    "limitations": {"$ref": "#/$defs/strings"},
+    "prerequisites": {"$ref": "#/$defs/strings"},
+    "deliverables": {"$ref": "#/$defs/nonEmptyStrings"},
+    "knowledge_references": {"$ref": "#/$defs/nonEmptyStrings"}
+  },
+  "additionalProperties": false,
+  "$defs": {"strings": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}, "nonEmptyStrings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true}}
+}

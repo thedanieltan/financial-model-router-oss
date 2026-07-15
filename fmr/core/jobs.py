@@ -83,6 +83,7 @@ class ModelJob:
     privacy_constraints: tuple[str, ...]
     licensing_constraints: tuple[str, ...]
     preferred_execution_mode: str | None
+    scope_confirmation: dict[str, Any] | None
     contract_version: str = "model-job.v2"
 
     @classmethod
@@ -95,6 +96,7 @@ class ModelJob:
             "contract_version", "objective", "requested_deliverables", "model_family", "industry", "context",
             "available_data", "available_assumptions", "input_references", "existing_model", "output_formats",
             "constraints", "privacy_constraints", "licensing_constraints", "preferred_execution_mode",
+            "scope_confirmation",
         }
         if set(data) - allowed:
             raise ValueError("model job contains unsupported fields")
@@ -127,6 +129,16 @@ class ModelJob:
         output_formats = _strings(data.get("output_formats"), "output_formats", required=True)
         if any(not re.fullmatch(r"[a-z0-9][a-z0-9._+-]*", item) for item in output_formats):
             raise ValueError("output_formats contains an invalid format identifier")
+        confirmation = data.get("scope_confirmation")
+        if confirmation is not None:
+            from fmr.core.scoping import validate_scope_confirmation
+            confirmation_issues = validate_scope_confirmation(confirmation)
+            if confirmation_issues:
+                raise ValueError("invalid scope_confirmation: " + "; ".join(confirmation_issues))
+            if not family:
+                raise ValueError("scope_confirmation requires an explicit model_family")
+            if confirmation.get("selected_family") != family.strip():
+                raise ValueError("scope_confirmation selected_family must match model_family")
         return cls(
             objective=objective.strip(),
             requested_deliverables=_strings(data.get("requested_deliverables"), "requested_deliverables", required=True),
@@ -142,6 +154,7 @@ class ModelJob:
             privacy_constraints=_strings(data.get("privacy_constraints"), "privacy_constraints"),
             licensing_constraints=_strings(data.get("licensing_constraints"), "licensing_constraints"),
             preferred_execution_mode=mode,
+            scope_confirmation=dict(confirmation) if confirmation else None,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -161,4 +174,5 @@ class ModelJob:
             "privacy_constraints": list(self.privacy_constraints),
             "licensing_constraints": list(self.licensing_constraints),
             "preferred_execution_mode": self.preferred_execution_mode,
+            "scope_confirmation": self.scope_confirmation,
         }
