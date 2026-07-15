@@ -21,6 +21,12 @@ Direct expert jobs remain supported. The confirmation requirement applies when
 the guided lifecycle is used; an unconfirmed assessment cannot be promoted by
 silently constructing a confirmation object.
 
-WP-GUX-23 establishes these contracts and integrity boundaries. Family
-playbooks, deterministic questions, workbook evidence and user interfaces are
-delivered in the subsequent guided-scoping work packages.
+WP-GUX-23 establishes these contracts and integrity boundaries. WP-GUX-24 adds
+the built-in `fmr.knowledge` registry with one provider-neutral playbook for each
+initial family, five plain-language questions and a provenance registry.
+
+Built-in playbooks are marked `synthetic_reviewed`, not
+`practitioner_accepted`. FAST and ICAEW materials inform modelling-quality
+provenance; they are not treated as automatic family-selection rules. SEC data
+is referenced only for representative statement shapes. No third-party
+workbooks are bundled.

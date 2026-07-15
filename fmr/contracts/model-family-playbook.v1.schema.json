@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/model-family-playbook.v1.schema.json",
+  "title": "FMR model family playbook v1",
+  "type": "object",
+  "required": ["contract_version", "playbook_id", "version", "family_id", "title", "purpose", "business_questions", "does_not_answer", "appropriate_uses", "inappropriate_uses", "decision_contexts", "outcome_terms", "required_decisions", "required_data", "required_assumptions", "expected_outputs", "prerequisites", "follow_on_analyses", "common_misunderstandings", "limitations", "question_ids", "source_references", "review_state"],
+  "properties": {
+    "contract_version": {"const": "model-family-playbook.v1"},
+    "playbook_id": {"$ref": "#/$defs/id"}, "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}, "family_id": {"$ref": "#/$defs/id"}, "title": {"$ref": "#/$defs/text"}, "purpose": {"$ref": "#/$defs/text"},
+    "business_questions": {"$ref": "#/$defs/nonEmptyStrings"}, "does_not_answer": {"$ref": "#/$defs/nonEmptyStrings"}, "appropriate_uses": {"$ref": "#/$defs/nonEmptyStrings"}, "inappropriate_uses": {"$ref": "#/$defs/nonEmptyStrings"}, "decision_contexts": {"$ref": "#/$defs/nonEmptyStrings"}, "outcome_terms": {"$ref": "#/$defs/nonEmptyStrings"}, "required_decisions": {"$ref": "#/$defs/nonEmptyStrings"}, "required_data": {"$ref": "#/$defs/nonEmptyStrings"}, "required_assumptions": {"$ref": "#/$defs/nonEmptyStrings"}, "expected_outputs": {"$ref": "#/$defs/nonEmptyStrings"}, "prerequisites": {"$ref": "#/$defs/strings"}, "follow_on_analyses": {"$ref": "#/$defs/strings"}, "common_misunderstandings": {"$ref": "#/$defs/nonEmptyStrings"}, "limitations": {"$ref": "#/$defs/nonEmptyStrings"}, "question_ids": {"$ref": "#/$defs/nonEmptyStrings"}, "source_references": {"$ref": "#/$defs/nonEmptyStrings"}, "review_state": {"enum": ["synthetic_reviewed", "practitioner_accepted"]}
+  },
+  "additionalProperties": false,
+  "$defs": {"id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}, "text": {"type": "string", "minLength": 1}, "strings": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true}, "nonEmptyStrings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true}}
+}

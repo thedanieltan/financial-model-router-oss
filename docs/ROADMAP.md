@@ -31,7 +31,8 @@ contract tests does not claim that an optional provider runtime is installed.
 | Model acceptance framework | Deterministic cases, tolerances and value-free practitioner evidence ledger | Built in WP-ACC-21; live reviews pending |
 | Full-family acceptance corpus | All five executable Python packages exercised through the routed lifecycle | Built in WP-ACC-22; synthetic evidence only |
 | Guided scoping contracts | Intent, candidate, assessment and explicit confirmation hash chain | Built in WP-GUX-23 |
-| Modelling knowledge and guided scoping | Reviewed playbooks, questions, workbook evidence and user journeys | In progress |
+| Modelling knowledge repository | Four initial family playbooks, questions and source provenance | Built in WP-GUX-24; practitioner review pending |
+| Guided-scoping engine and interfaces | Deterministic assessment, workbook evidence and user journeys | In progress |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages
@@ -258,3 +259,15 @@ representative cases, qualified practitioner review or deployment acceptance.
 
 This establishes the integrity boundary, not the financial-modelling knowledge
 base or guided questionnaire. Those remain WP-GUX-24 through WP-GUX-28.
+
+## WP-GUX-24 — modelling knowledge repository
+
+- exactly one provider-neutral playbook for every initial model family;
+- appropriate and inappropriate uses, questions answered and not answered,
+  prerequisites, misunderstandings and limitations;
+- five plain-language scoping questions with controlled answer options;
+- source provenance with explicit licence and permitted-use status; and
+- deterministic registry hashing and fail-closed cross-reference validation.
+
+The built-in knowledge is synthetic-review evidence. It is not practitioner
+acceptance, and no third-party workbook or proprietary template is included.

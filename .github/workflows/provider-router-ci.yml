@@ -52,6 +52,13 @@ jobs:
           assert files("fmr.contracts").joinpath("model-scope-candidate.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("model-scope-assessment.v1.schema.json").is_file()
           assert files("fmr.contracts").joinpath("scope-confirmation.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("model-family-playbook.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("scope-question-set.v1.schema.json").is_file()
+          assert files("fmr.contracts").joinpath("knowledge-source-registry.v1.schema.json").is_file()
+          from fmr import KnowledgeRegistry
+          knowledge = KnowledgeRegistry.builtins()
+          assert len(knowledge.playbooks) == 4
+          assert all(item.review_state == "synthetic_reviewed" for item in knowledge.playbooks)
           assert files("fmr.fixtures").joinpath("acceptance/synthetic-dcf.v1.json").is_file()
           assert files("fmr.fixtures").joinpath("acceptance/synthetic-initial-families.v1.json").is_file()
           assert "fmr.providers.native_xlsx.provider" not in sys.modules

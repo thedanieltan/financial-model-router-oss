@@ -1,0 +1,54 @@
+{
+  "contract_version": "scope-question-set.v1",
+  "version": "1.0.0",
+  "questions": [
+    {
+      "question_id": "primary-decision",
+      "prompt": "What decision should the model help you make?",
+      "answer_type": "single_select",
+      "intent_field": "decision_context",
+      "help_text": "Choose the business decision, not a spreadsheet technique.",
+      "options": [
+        {"value": "operating_plan", "label": "Plan future operations"},
+        {"value": "liquidity", "label": "Understand cash or liquidity"},
+        {"value": "valuation", "label": "Estimate business value"},
+        {"value": "financing", "label": "Assess borrowing capacity"},
+        {"value": "refinancing", "label": "Review existing debt or refinancing"},
+        {"value": "acquisition", "label": "Assess an acquisition"},
+        {"value": "other", "label": "Another decision"}
+      ]
+    },
+    {
+      "question_id": "linked-statements-needed",
+      "prompt": "Do you need profit, cash flow and the balance sheet to remain linked?",
+      "answer_type": "boolean",
+      "intent_field": "context.linked_statements_needed",
+      "help_text": "Select yes when changes in one statement must flow through the others.",
+      "options": [{"value": "yes", "label": "Yes"}, {"value": "no", "label": "No"}]
+    },
+    {
+      "question_id": "operating-forecast-available",
+      "prompt": "Do you already have a supported operating forecast?",
+      "answer_type": "boolean",
+      "intent_field": "context.operating_forecast_available",
+      "help_text": "A valuation normally needs explicit operating cash-flow assumptions.",
+      "options": [{"value": "yes", "label": "Yes"}, {"value": "no", "label": "No"}]
+    },
+    {
+      "question_id": "debt-decision-needed",
+      "prompt": "Does the decision involve borrowing, repayment terms or financial covenants?",
+      "answer_type": "boolean",
+      "intent_field": "context.debt_decision_needed",
+      "help_text": "This distinguishes operating planning from debt-capacity and refinancing work.",
+      "options": [{"value": "yes", "label": "Yes"}, {"value": "no", "label": "No"}]
+    },
+    {
+      "question_id": "forecast-horizon-known",
+      "prompt": "Do you know the period the model must cover?",
+      "answer_type": "boolean",
+      "intent_field": "context.forecast_horizon_known",
+      "help_text": "The exact horizon is collected before execution; this question establishes readiness.",
+      "options": [{"value": "yes", "label": "Yes"}, {"value": "no", "label": "No"}]
+    }
+  ]
+}
