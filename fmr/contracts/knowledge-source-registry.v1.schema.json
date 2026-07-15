@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/knowledge-source-registry.v1.schema.json",
+  "title": "FMR knowledge source registry v1",
+  "type": "object",
+  "required": ["contract_version", "knowledge_base_version", "sources"],
+  "properties": {
+    "contract_version": {"const": "knowledge-source-registry.v1"},
+    "knowledge_base_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "sources": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["source_id", "title", "publisher", "url", "retrieved_on", "usage", "license_status", "review_state"], "properties": {"source_id": {"$ref": "#/$defs/id"}, "title": {"$ref": "#/$defs/text"}, "publisher": {"$ref": "#/$defs/text"}, "url": {"type": "string", "format": "uri", "pattern": "^https://"}, "retrieved_on": {"type": "string", "format": "date"}, "usage": {"$ref": "#/$defs/text"}, "license_status": {"enum": ["cc-by-4.0", "internal", "public-data-reference", "reference-only"]}, "review_state": {"enum": ["accepted", "reference_only"]}}, "additionalProperties": false}}
+  },
+  "additionalProperties": false,
+  "$defs": {"id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}, "text": {"type": "string", "minLength": 1}}
+}

@@ -31,6 +31,7 @@ from fmr.vocabulary import VocabularyRegistry
 from fmr.organization import OrganizationPolicy, route_organization_job
 from fmr.qualification import qualify_local_release, validate_deployment_evidence
 from fmr.acceptance import run_acceptance_corpus, validate_acceptance_corpus
+from fmr.knowledge import KnowledgeRegistry
 from fmr.router import route_request
 from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
@@ -81,6 +82,7 @@ __all__ = [
     "ManagedArtifactRetention",
     "SqliteExecutionLedger",
     "ModelJob",
+    "KnowledgeRegistry",
     "ProviderRegistry",
     "VocabularyRegistry",
     "OrganizationPolicy",

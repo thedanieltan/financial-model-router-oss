@@ -1,0 +1,46 @@
+{
+  "contract_version": "knowledge-source-registry.v1",
+  "knowledge_base_version": "1.0.0",
+  "sources": [
+    {
+      "source_id": "fmr-product-charter",
+      "title": "FMR product charter and registered model-family definitions",
+      "publisher": "Financial Model Router",
+      "url": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/docs/PRODUCT_CHARTER.md",
+      "retrieved_on": "2026-07-15",
+      "usage": "Normative product boundary and independently authored initial family scope.",
+      "license_status": "internal",
+      "review_state": "accepted"
+    },
+    {
+      "source_id": "fast-standard-02c",
+      "title": "The FAST Standard",
+      "publisher": "FAST Standard Organisation",
+      "url": "https://fast-standard.org/the-fast-standard/",
+      "retrieved_on": "2026-07-15",
+      "usage": "Attribution-backed reference for transparent and structured spreadsheet-model design; not used to select a model family.",
+      "license_status": "cc-by-4.0",
+      "review_state": "accepted"
+    },
+    {
+      "source_id": "icaew-financial-modelling-code",
+      "title": "Financial Modelling Code",
+      "publisher": "Institute of Chartered Accountants in England and Wales",
+      "url": "https://www.icaew.com/-/media/corporate/files/technical/technology/excel/financial-modelling-code.ashx",
+      "retrieved_on": "2026-07-15",
+      "usage": "Reference-only provenance for robustness, transparency and review principles; no copied text or workbook assets.",
+      "license_status": "reference-only",
+      "review_state": "reference_only"
+    },
+    {
+      "source_id": "sec-financial-statement-data",
+      "title": "Financial Statement Data Sets",
+      "publisher": "United States Securities and Exchange Commission",
+      "url": "https://www.sec.gov/data-research/sec-markets-data/financial-statement-data-sets",
+      "retrieved_on": "2026-07-15",
+      "usage": "Public-data reference for representative statement shapes only; not a source of assumptions or model-family suitability.",
+      "license_status": "public-data-reference",
+      "review_state": "reference_only"
+    }
+  ]
+}

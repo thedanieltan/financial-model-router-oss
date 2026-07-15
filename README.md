@@ -5,7 +5,9 @@ Financial Model Router (FMR) is an open-source, deterministic router for financi
 When a user does not yet know the model family, FMR uses a separate guided scope
 lifecycle. Intent, candidate families, explicit limitations and user
 confirmation are hash-pinned before a guided request becomes a routable job. See
-the [guided-scoping boundary](docs/GUIDED_SCOPING.md).
+the [guided-scoping boundary](docs/GUIDED_SCOPING.md). Built-in, versioned family
+playbooks explain suitability, prerequisites and limitations without embedding
+provider logic or third-party workbook templates.
 
 FMR does not provide accounting, tax or investment advice. The deterministic core runs locally.
 
