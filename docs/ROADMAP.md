@@ -32,7 +32,8 @@ contract tests does not claim that an optional provider runtime is installed.
 | Full-family acceptance corpus | All five executable Python packages exercised through the routed lifecycle | Built in WP-ACC-22; synthetic evidence only |
 | Guided scoping contracts | Intent, candidate, assessment and explicit confirmation hash chain | Built in WP-GUX-23 |
 | Modelling knowledge repository | Four initial family playbooks, questions and source provenance | Built in WP-GUX-24; practitioner review pending |
-| Guided-scoping engine and interfaces | Deterministic assessment, workbook evidence and user journeys | In progress |
+| Guided-scoping engine | Deterministic assessment, controlled clarification and confirmed job compilation | Built in WP-GUX-25 |
+| Workbook-aware scope evidence and interfaces | Evidence extraction plus CLI, HTTP and workbench journeys | In progress |
 | 2.0 Distributed routing | Signed remote discovery and secure distributed execution | Deferred until local stability |
 
 ## Immediate work packages

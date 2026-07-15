@@ -32,6 +32,7 @@ from fmr.organization import OrganizationPolicy, route_organization_job
 from fmr.qualification import qualify_local_release, validate_deployment_evidence
 from fmr.acceptance import run_acceptance_corpus, validate_acceptance_corpus
 from fmr.knowledge import KnowledgeRegistry
+from fmr.scoping_service import answer_scope_question, assess_model_intent, compile_confirmed_scope
 from fmr.router import route_request
 from fmr.providers.native_xlsx.workbook import (
     accept_calculated_workbook_bytes,
@@ -90,6 +91,8 @@ __all__ = [
     "run_acceptance_corpus",
     "CONCEPTS",
     "accept_calculated_workbook_bytes",
+    "answer_scope_question",
+    "assess_model_intent",
     "analyse_workbook_map",
     "build_binding_profile",
     "build_mapping_profile",
@@ -98,6 +101,7 @@ __all__ = [
     "calculate_and_accept_workbook_file",
     "calculation_engine_status",
     "compile_input_set_from_binding_plan",
+    "compile_confirmed_scope",
     "compile_workbook_input_set_from_csv",
     "compile_workbook_patch",
     "compile_workbook_write_plan",

@@ -9,6 +9,11 @@ the [guided-scoping boundary](docs/GUIDED_SCOPING.md). Built-in, versioned famil
 playbooks explain suitability, prerequisites and limitations without embedding
 provider logic or third-party workbook templates.
 
+Python callers can use `create_model_intent`, `answer_scope_question`,
+`assess_model_intent`, `create_scope_confirmation` and
+`compile_confirmed_scope`. The assessment engine does not inspect provider
+availability and does not invent missing data or assumptions.
+
 FMR does not provide accounting, tax or investment advice. The deterministic core runs locally.
 
 FMR `1.0.0-alpha` is a provider-router integrity preview. It includes executable **Native XLSX** and **Python Forecast** providers plus a non-modelling **reference handoff provider**. It is not accepted as production FMR 1.0. Workbook formulas, layouts and calculation engines are owned by the Native XLSX provider; the historical `fmr.workbook` namespace remains a compatibility façade. See the normative [product charter](docs/PRODUCT_CHARTER.md), [provider-routing guide](docs/PROVIDER_ROUTING.md), [Provider SDK](docs/PROVIDER_SDK.md), [code inventory](docs/CODE_INVENTORY.md), [migration guide](docs/NATIVE_XLSX_MIGRATION.md) and [roadmap](docs/ROADMAP.md).
