@@ -65,6 +65,7 @@ class WorkflowRouterTests(unittest.TestCase):
         result = run_workflow_acceptance_corpus(corpus)
         self.assertEqual(result["implementation_status"], "passed")
         self.assertEqual(result["practitioner_status"], "pending")
+        self.assertEqual(result["deployment_status"], "not_run")
         self.assertEqual(result["production_status"], "not_accepted")
         self.assertEqual(validate_workflow_acceptance_result(result, corpus=corpus), ())
         self.assertEqual(
@@ -175,7 +176,8 @@ class WorkflowRouterTests(unittest.TestCase):
         ]
         accepted = run_workflow_acceptance_corpus(corpus)
         self.assertEqual(accepted["practitioner_status"], "accepted")
-        self.assertEqual(accepted["production_status"], "accepted")
+        self.assertEqual(accepted["deployment_status"], "not_run")
+        self.assertEqual(accepted["production_status"], "not_accepted")
         stale = copy.deepcopy(corpus)
         stale["cases"][0]["request"]["objective"] += " now"
         pending = run_workflow_acceptance_corpus(stale)
