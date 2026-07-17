@@ -6,7 +6,9 @@ from pathlib import Path
 from typing import Any
 
 from fmr.financial_data import WorkflowSourceStore, create_statement_csv_workflow_source
-from fmr.workflow import compile_workflow, execute_workflow
+from fmr.provider_service import prepare_handoff
+from fmr.providers.python_forecast.plugin import PythonForecastExecutor
+from fmr.workflow import compile_workflow
 
 
 _PERIODS = ("2023-12-31", "2024-12-31", "2025-12-31")
@@ -142,16 +144,37 @@ def _source(assumptions: dict[str, Any]) -> dict[str, Any]:
     )
 
 
-def _model_artifact(execution: dict[str, Any]) -> dict[str, Any] | None:
-    for step in execution.get("step_results", []):
-        result = step.get("execution_result")
-        if not isinstance(result, dict):
-            continue
-        for artifact in result.get("provider_receipt", {}).get("output_artifacts", []):
-            path = artifact.get("path")
-            if artifact.get("format") == "json" and isinstance(path, str):
-                return json.loads(Path(path).read_text(encoding="utf-8"))
-    return None
+def _execute_selected_model(plan: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    step = next(
+        item
+        for item in plan["steps"]
+        if item["kind"] == "model"
+        and item["status"] == "ready"
+        and item.get("route_decision", {}).get("selected", {}).get("provider_id") == "python-forecast"
+    )
+    handoff = prepare_handoff(
+        step["model_job"],
+        policy_name=plan["request"]["policy_name"],
+    )
+    output_dir = Path(f"/tmp/fmr-pages-output/{uuid.uuid4().hex}")
+    receipt = PythonForecastExecutor().execute(handoff, output_dir, {})
+    artifact_ref = next(
+        artifact
+        for artifact in receipt["output_artifacts"]
+        if artifact["format"] == "json"
+    )
+    artifact = json.loads(Path(artifact_ref["path"]).read_text(encoding="utf-8"))
+    return (
+        {
+            "state": "completed",
+            "step_id": step["step_id"],
+            "provider_id": handoff["provider"]["provider_id"],
+            "package_id": handoff["package"]["package_id"],
+            "handoff_sha256": handoff["handoff_sha256"],
+            "validation": receipt["validation"],
+        },
+        artifact,
+    )
 
 
 def _summary(plan: dict[str, Any]) -> dict[str, Any]:
@@ -227,33 +250,13 @@ def run_demo(payload: dict[str, Any], *, execute: bool) -> dict[str, Any]:
             "synthetic_data": True,
             "production_accepted": False,
             "workbook_execution_available": False,
+            "provider_subprocess_isolation": False,
         },
     }
     if execute and plan["status"] != "blocked":
-        approvals = {
-            step["step_id"]: True
-            for step in plan["steps"]
-            if step["kind"] == "human_gate"
-        }
-        execution = execute_workflow(
-            plan,
-            idempotency_key=f"pages-{case_id}-{uuid.uuid4().hex}",
-            output_dir=f"/tmp/fmr-pages-output/{uuid.uuid4().hex}",
-            approvals=approvals,
-        )
-        response["execution"] = {
-            "state": execution["state"],
-            "workflow_execution_id": execution["workflow_execution_id"],
-            "steps": [
-                {
-                    "step_id": step["step_id"],
-                    "state": step["state"],
-                    "details": step["details"],
-                }
-                for step in execution["step_results"]
-            ],
-        }
-        response["artifact"] = _model_artifact(execution)
+        execution, artifact = _execute_selected_model(plan)
+        response["execution"] = execution
+        response["artifact"] = artifact
     return response
 
 
