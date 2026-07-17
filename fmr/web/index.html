@@ -24,7 +24,7 @@
       <div class="panel-heading">
         <div>
           <h2>Practitioner workflow</h2>
-          <p>Describe the job in finance language. The workflow router selects an approved blueprint, sequences the work and shows exactly what is ready or blocked.</p>
+          <p>Describe the job in finance language. Add a statement source, confirm assumptions and let the workflow router sequence the work.</p>
         </div>
       </div>
       <div class="workbook-control">
@@ -50,11 +50,34 @@
       <textarea id="workflow-objective" spellcheck="false"></textarea>
       <label for="workflow-outputs">Required outputs</label>
       <textarea id="workflow-outputs" spellcheck="false" aria-label="Comma-separated workflow outputs"></textarea>
+
+      <div class="panel-heading">
+        <div>
+          <h3>Financial source</h3>
+          <p>Upload the standard statement CSV. FMR validates every row, applies exact mappings and creates an immutable local canonical source.</p>
+        </div>
+        <a href="/api/v2/workflow-sources/statement-csv-template" download>Download CSV template</a>
+      </div>
+      <div class="workbook-control">
+        <input id="workflow-source-file" type="file" accept=".csv,text/csv">
+        <button id="prepare-workflow-source-button" type="button" class="secondary">Prepare source</button>
+      </div>
+      <label for="workflow-assumption-values">Assumption values</label>
+      <textarea id="workflow-assumption-values" spellcheck="false" aria-label="Workflow assumption values JSON"></textarea>
       <details>
-        <summary>Available data and assumptions</summary>
-        <label for="workflow-data">Available data</label>
+        <summary>Optional source mapping and operating drivers</summary>
+        <label for="workflow-mapping-rules">Exact mapping overrides</label>
+        <textarea id="workflow-mapping-rules" spellcheck="false" aria-label="Workflow mapping rules JSON">[]</textarea>
+        <label for="workflow-operational-drivers">Operational driver series</label>
+        <textarea id="workflow-operational-drivers" spellcheck="false" aria-label="Workflow operational drivers JSON">{}</textarea>
+      </details>
+      <p id="workflow-source-status" class="status" aria-live="polite">No financial source prepared.</p>
+
+      <details>
+        <summary>Declared data and assumption coverage</summary>
+        <label for="workflow-data">Available data capabilities</label>
         <textarea id="workflow-data" spellcheck="false" aria-label="Comma-separated available data"></textarea>
-        <label for="workflow-assumptions">Available or approved assumptions</label>
+        <label for="workflow-assumptions">Available or approved assumption names</label>
         <textarea id="workflow-assumptions" spellcheck="false" aria-label="Comma-separated assumptions"></textarea>
       </details>
       <div class="actions">
@@ -184,7 +207,7 @@
 
     <section class="panel result-panel">
       <div class="panel-heading"><div><h2>Result</h2><p id="result-kind">No request has been run.</p></div><button id="copy-button" type="button" class="quiet" disabled>Copy JSON</button></div>
-      <div id="summary" class="summary empty">Build a practitioner workflow, run a request or inspect a workbook.</div>
+      <div id="summary" class="summary empty">Add a financial source, build a practitioner workflow, or use the technical tools below.</div>
       <pre id="result-output">{}</pre>
     </section>
   </main>
