@@ -1,0 +1,17 @@
+{
+  "company_name": "Example SaaS Company",
+  "currency": "SGD",
+  "forecast_months": 12,
+  "opening_arr": 1200000,
+  "monthly_new_arr": 50000,
+  "monthly_expansion_arr": 15000,
+  "monthly_contraction_arr": 5000,
+  "monthly_churned_arr": 10000,
+  "gross_margin_rate": 0.8,
+  "sales_marketing_monthly": 80000,
+  "rnd_monthly": 90000,
+  "ga_monthly": 50000,
+  "starting_cash": 1500000,
+  "headcount": 25,
+  "average_salary_per_head_monthly": 9000
+}
