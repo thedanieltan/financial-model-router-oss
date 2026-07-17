@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SaaS Budget & Forecast | FMR OSS</title>
+  <link rel="stylesheet" href="/assets/styles.css" />
+  <style>
+    body { max-width: 1120px; margin: 0 auto; padding: 24px; }
+    .hero { margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+    label { display: grid; gap: 6px; font-weight: 600; }
+    input { padding: 10px; border: 1px solid #c8c8c8; border-radius: 8px; }
+    .card { border: 1px solid #ddd; border-radius: 14px; padding: 18px; background: #fff; margin-bottom: 18px; }
+    .actions { display: flex; gap: 12px; align-items: center; margin-top: 16px; }
+    button { padding: 12px 18px; border-radius: 8px; border: 0; cursor: pointer; font-weight: 700; }
+    .primary { background: #174ea6; color: white; }
+    .muted { color: #555; }
+    .notice { background: #fff8df; border: 1px solid #ead79d; border-radius: 12px; padding: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <p><a href="/">← Back to FMR workbench</a></p>
+      <h1>SaaS Budget & Forecast Workbook</h1>
+      <p class="muted">A practitioner workflow: enter assumptions, generate a formula-driven Excel workbook, review checks, and continue in Excel.</p>
+      <div class="notice">FMR does not provide accounting, tax, investment, valuation or lending advice. Review all assumptions and formulas before use.</div>
+    </section>
+
+    <form id="saas-form">
+      <section class="card">
+        <h2>Company and horizon</h2>
+        <div class="grid">
+          <label>Company name <input name="company_name" value="Example SaaS Company" /></label>
+          <label>Currency <input name="currency" value="SGD" /></label>
+          <label>Forecast months <input name="forecast_months" type="number" value="12" min="1" max="60" /></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>ARR bridge</h2>
+        <div class="grid">
+          <label>Opening ARR <input name="opening_arr" type="number" value="1200000" /></label>
+          <label>Monthly new ARR <input name="monthly_new_arr" type="number" value="50000" /></label>
+          <label>Monthly expansion ARR <input name="monthly_expansion_arr" type="number" value="15000" /></label>
+          <label>Monthly contraction ARR <input name="monthly_contraction_arr" type="number" value="5000" /></label>
+          <label>Monthly churned ARR <input name="monthly_churned_arr" type="number" value="10000" /></label>
+          <label>Gross margin rate <input name="gross_margin_rate" type="number" value="0.80" min="0" max="1" step="0.01" /></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Opex, headcount and cash</h2>
+        <div class="grid">
+          <label>Sales & marketing monthly <input name="sales_marketing_monthly" type="number" value="80000" /></label>
+          <label>R&D monthly <input name="rnd_monthly" type="number" value="90000" /></label>
+          <label>G&A monthly <input name="ga_monthly" type="number" value="50000" /></label>
+          <label>Starting cash <input name="starting_cash" type="number" value="1500000" /></label>
+          <label>Headcount <input name="headcount" type="number" value="25" /></label>
+          <label>Average salary per head monthly <input name="average_salary_per_head_monthly" type="number" value="9000" /></label>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button class="primary" type="submit">Generate Excel workbook</button>
+        <span id="status" class="muted"></span>
+      </div>
+    </form>
+  </main>
+  <script src="/assets/practitioner_saas.js"></script>
+</body>
+</html>
