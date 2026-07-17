@@ -14,7 +14,21 @@ class McpServerTests(unittest.TestCase):
         initialized = handle_message({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": PROTOCOL_VERSION, "capabilities": {}, "clientInfo": {"name": "test", "version": "1"}}})
         self.assertEqual(initialized["result"]["protocolVersion"], PROTOCOL_VERSION)
         listed = handle_message({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})
-        self.assertEqual({item["name"] for item in listed["result"]["tools"]}, {"discover_providers", "route_job", "prepare_handoff", "execute_job", "validate_job_result", "get_execution_receipt"})
+        self.assertEqual(
+            {item["name"] for item in listed["result"]["tools"]},
+            {
+                "discover_providers",
+                "list_workflow_blueprints",
+                "compile_workflow",
+                "plan_workflow_rerun",
+                "execute_workflow",
+                "route_job",
+                "prepare_handoff",
+                "execute_job",
+                "validate_job_result",
+                "get_execution_receipt",
+            },
+        )
 
     def test_route_tool_matches_python_api(self) -> None:
         from fmr import route_job
