@@ -44,7 +44,9 @@ This is sufficient for a public implementation demo. It is not equivalent to the
 
 ## Acceptance
 
-- **Implementation:** pending CI.
+- **Implementation:** passed on the dedicated Pages wheel/runtime job and the full repository matrix.
 - **Pages deployment:** pending the first main-branch deployment.
 - **Practitioner acceptance:** pending representative external trials.
 - **Production acceptance:** not accepted.
+
+Implementation evidence covers clean wheel installation, static artifact assembly, supported workflow routing, real built-in DCF execution, unsupported project-finance blocking, Python 3.11–3.13 regression tests and all specialised repository workflows.
