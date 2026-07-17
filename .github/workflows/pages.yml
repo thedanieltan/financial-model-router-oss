@@ -1,0 +1,63 @@
+name: FMR GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/pages.yml"
+      - "fmr/**"
+      - "pages/**"
+      - "pyproject.toml"
+      - "scripts/build_pages_site.py"
+      - "tests/test_pages_demo.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Build FMR wheel
+        run: |
+          python -m pip install --upgrade build
+          python -m build --wheel --outdir .pages-wheel
+      - name: Test Pages source
+        run: python -m unittest tests.test_pages_demo
+      - name: Build Pages artifact
+        run: |
+          python scripts/build_pages_site.py \
+            --wheel "$(find .pages-wheel -name '*.whl' -print -quit)" \
+            --output _site \
+            --revision "${GITHUB_SHA}"
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
