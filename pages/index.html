@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Run synthetic Financial Model Router workflows directly in your browser.">
+  <title>FMR Live Demo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <nav>
+      <a class="brand" href="./">Financial Model Router</a>
+      <div class="nav-links">
+        <a href="https://github.com/thedanieltan/financial-model-router-oss">Source</a>
+        <a href="https://github.com/thedanieltan/financial-model-router-oss/blob/main/docs/WORKFLOW_ROUTER.md">Workflow guide</a>
+      </div>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">Public alpha · browser-only synthetic demo</p>
+      <h1>Test the router without installing anything.</h1>
+      <p class="lede">Choose a finance workflow, change the assumptions, inspect the actual FMR route decision, and run the selected JSON provider entirely in your browser.</p>
+      <div class="privacy-note"><strong>Privacy boundary:</strong> this page ships synthetic data only. Inputs stay in the browser and are not posted to GitHub or an FMR server.</div>
+    </div>
+  </header>
+
+  <main>
+    <section class="workspace" aria-labelledby="workspace-title">
+      <div class="control-panel">
+        <div class="section-heading">
+          <p class="eyebrow">Practitioner test</p>
+          <h2 id="workspace-title">Select the work to perform</h2>
+        </div>
+        <label class="field">
+          <span>Workflow</span>
+          <select id="case-select">
+            <option value="monthly_forecast">Monthly forecast update</option>
+            <option value="operating_valuation">Operating-company DCF</option>
+            <option value="debt_capacity">Debt-capacity refresh</option>
+            <option value="project_finance">Project-finance debt sculpting (blocked)</option>
+          </select>
+        </label>
+
+        <article class="case-summary">
+          <div>
+            <span id="case-role" class="role"></span>
+            <h3 id="case-title"></h3>
+            <p id="case-description"></p>
+          </div>
+          <div class="data-summary">
+            <strong>Synthetic source</strong>
+            <span>SGD · FY2023–FY2025</span>
+            <span>Income statement, balance sheet and cash flow</span>
+          </div>
+        </article>
+
+        <div id="assumption-fields" class="assumption-grid"></div>
+        <div class="actions">
+          <button id="compile-button" type="button" disabled>Compile workflow</button>
+          <button id="execute-button" type="button" class="primary" disabled>Run model</button>
+        </div>
+        <p id="runtime-status" class="runtime-status" data-tone="busy" aria-live="polite">Loading the FMR Python runtime in your browser…</p>
+      </div>
+
+      <div class="result-panel" aria-live="polite">
+        <div class="section-heading">
+          <p class="eyebrow">Router evidence</p>
+          <h2 id="result-title">No result yet</h2>
+        </div>
+        <div id="output" class="output-empty">
+          <p>The compiled blueprint, provider selection, blockers, execution state and model artifact will appear here.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="boundaries">
+      <div>
+        <p class="eyebrow">What this proves</p>
+        <h2>A real implementation demo, not production acceptance.</h2>
+      </div>
+      <div class="boundary-grid">
+        <article><h3>Included</h3><p>Actual packaged FMR workflow compilation, routing, handoff and Python Forecast JSON execution.</p></article>
+        <article><h3>Not included</h3><p>Native XLSX generation, server persistence, collaboration, authentication, or user-file uploads.</p></article>
+        <article><h3>Honest blocking</h3><p>Project-finance, LBO and cap-table workflows remain blocked until conformant provider packages exist.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Apache-2.0 · Financial Model Router</span>
+    <span>Not accounting, tax, lending, valuation or investment advice.</span>
+  </footer>
+  <script src="app.js" defer></script>
+</body>
+</html>
