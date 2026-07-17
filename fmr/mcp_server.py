@@ -11,6 +11,7 @@ from fmr.core.receipts import validate_execution_result
 from fmr.execution import ExecutionOrchestrator, SqliteExecutionLedger
 from fmr.provider_service import prepare_handoff
 from fmr.registry import ProviderRegistry
+from fmr.workflow import builtin_workflow_blueprints, compile_workflow, execute_workflow, workflow_rerun_plan
 
 PROTOCOL_VERSION = "2025-11-25"
 
@@ -21,6 +22,10 @@ def _tool(name: str, description: str, properties: dict[str, Any], required: lis
 
 TOOLS = (
     _tool("discover_providers", "List discoverable provider and package manifests without loading provider code.", {}, []),
+    _tool("list_workflow_blueprints", "List deterministic practitioner workflow blueprints without provider execution.", {}, []),
+    _tool("compile_workflow", "Compile a practitioner objective into an ordered, hash-pinned workflow with routed model steps and explicit blockers.", {"request": {"type": "object"}}, ["request"]),
+    _tool("plan_workflow_rerun", "Identify exactly which workflow steps are invalidated by changed data or assumptions.", {"plan": {"type": "object"}, "changed_inputs": {"type": "array", "items": {"type": "string"}}}, ["plan", "changed_inputs"]),
+    _tool("execute_workflow", "Execute dependency-ready workflow steps through the standard model router and provider lifecycle.", {"plan": {"type": "object"}, "idempotency_key": {"type": "string"}, "ledger_path": {"type": "string"}, "output_directory": {"type": "string"}, "approvals": {"type": "object"}}, ["plan", "idempotency_key", "ledger_path", "output_directory"]),
     _tool("route_job", "Simulate deterministic routing and return candidates, rejection reasons, privacy behavior and missing requirements.", {"job": {"type": "object"}, "policy": {"type": "string"}}, ["job"]),
     _tool("prepare_handoff", "Create a version- and hash-pinned provider handoff; unresolved requirements remain blocked.", {"job": {"type": "object"}, "policy": {"type": "string"}}, ["job"]),
     _tool("execute_job", "Execute an accepted handoff using the standard idempotent lifecycle.", {"handoff": {"type": "object"}, "idempotency_key": {"type": "string"}, "ledger_path": {"type": "string"}, "output_directory": {"type": "string"}}, ["handoff", "idempotency_key", "ledger_path", "output_directory"]),
@@ -32,6 +37,22 @@ TOOLS = (
 def call_tool(name: str, arguments: dict[str, Any]) -> Any:
     if name == "discover_providers":
         return {"providers": [item.to_dict() for item in ProviderRegistry.builtins().providers()]}
+    if name == "list_workflow_blueprints":
+        return {"blueprints": list(builtin_workflow_blueprints())}
+    if name == "compile_workflow":
+        return compile_workflow(arguments["request"])
+    if name == "plan_workflow_rerun":
+        return workflow_rerun_plan(arguments["plan"], arguments["changed_inputs"])
+    if name == "execute_workflow":
+        ledger = SqliteExecutionLedger(arguments["ledger_path"])
+        orchestrator = ExecutionOrchestrator(ledger=ledger, managed_output_root=arguments["output_directory"])
+        return execute_workflow(
+            arguments["plan"],
+            idempotency_key=arguments["idempotency_key"],
+            output_dir=Path(arguments["output_directory"]) / arguments["plan"]["workflow_id"],
+            approvals=arguments.get("approvals"),
+            orchestrator=orchestrator,
+        )
     if name == "route_job":
         return route_job(arguments["job"], policy=routing_policy(arguments.get("policy")))
     if name == "prepare_handoff":
@@ -66,7 +87,7 @@ def handle_message(message: dict[str, Any]) -> dict[str, Any] | None:
         if method == "initialize":
             requested = message.get("params", {}).get("protocolVersion")
             version = requested if requested == PROTOCOL_VERSION else PROTOCOL_VERSION
-            return _result(message["id"], {"protocolVersion": version, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "fmr", "version": __version__}, "instructions": "Deterministic financial-model routing. Missing inputs and constraints are never invented."})
+            return _result(message["id"], {"protocolVersion": version, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "fmr", "version": __version__}, "instructions": "Deterministic practitioner workflow and financial-model routing. Missing inputs, assumptions and unsupported capabilities are never invented."})
         if method == "ping":
             return _result(message["id"], {})
         if method == "tools/list":

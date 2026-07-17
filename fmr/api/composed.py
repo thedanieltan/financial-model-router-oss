@@ -59,10 +59,7 @@ def create_app() -> FastAPI:
 
     @application.get("/assets/input_population.js", include_in_schema=False)
     def input_population_javascript() -> Response:
-        return Response(
-            _asset("input_population.js"),
-            media_type="application/javascript",
-        )
+        return Response(_asset("input_population.js"), media_type="application/javascript")
 
     @application.get("/assets/calculation.js", include_in_schema=False)
     def calculation_javascript() -> Response:
@@ -70,10 +67,7 @@ def create_app() -> FastAPI:
 
     @application.get("/assets/financial_data.js", include_in_schema=False)
     def financial_data_javascript() -> Response:
-        return Response(
-            _asset("financial_data.js"),
-            media_type="application/javascript",
-        )
+        return Response(_asset("financial_data.js"), media_type="application/javascript")
 
     @application.get("/assets/provider-routing.js", include_in_schema=False)
     def provider_routing_javascript() -> Response:
@@ -82,6 +76,10 @@ def create_app() -> FastAPI:
     @application.get("/assets/scoping.js", include_in_schema=False)
     def scoping_javascript() -> Response:
         return Response(_asset("scoping.js"), media_type="application/javascript")
+
+    @application.get("/assets/workflow.js", include_in_schema=False)
+    def workflow_javascript() -> Response:
+        return Response(_asset("workflow.js"), media_type="application/javascript")
 
     return application
 

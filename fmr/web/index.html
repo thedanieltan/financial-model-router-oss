@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>FMR Developer Workbench</title>
+  <title>FMR Practitioner Workbench · Developer Workbench</title>
   <link rel="stylesheet" href="/assets/styles.css">
 </head>
 <body>
   <header>
     <div>
       <p class="eyebrow">Financial Model Router</p>
-      <h1>Developer Workbench</h1>
-      <p>Test routing, provider-neutral financial-data intake, workbook construction, governed population and calculated-output acceptance locally.</p>
+      <h1>Practitioner Workbench</h1>
+      <p>Start with the finance work you need completed. FMR compiles the required steps, identifies missing inputs, routes supported model work and preserves review gates.</p>
     </div>
     <nav>
       <a href="/docs">API docs</a>
@@ -23,8 +23,49 @@
     <section class="panel input-panel">
       <div class="panel-heading">
         <div>
+          <h2>Practitioner workflow</h2>
+          <p>Describe the job in finance language. The workflow router selects an approved blueprint, sequences the work and shows exactly what is ready or blocked.</p>
+        </div>
+      </div>
+      <div class="workbook-control">
+        <label for="workflow-template">Example</label>
+        <select id="workflow-template">
+          <option value="monthly_forecast">Monthly forecast update</option>
+          <option value="debt_capacity">Debt and covenant refresh</option>
+          <option value="operating_valuation">Operating-company valuation</option>
+          <option value="project_finance">Project-finance debt sizing</option>
+        </select>
+        <label for="workflow-role">Role</label>
+        <select id="workflow-role">
+          <option value="finance_manager">Finance manager</option>
+          <option value="fp_and_a">FP&amp;A</option>
+          <option value="project_finance">Project finance</option>
+          <option value="venture_capital">Venture capital</option>
+          <option value="growth_equity">Growth equity</option>
+          <option value="private_equity">Private equity</option>
+          <option value="portfolio_operations">Portfolio operations</option>
+        </select>
+      </div>
+      <label for="workflow-objective">What work needs to be completed?</label>
+      <textarea id="workflow-objective" spellcheck="false"></textarea>
+      <label for="workflow-outputs">Required outputs</label>
+      <textarea id="workflow-outputs" spellcheck="false" aria-label="Comma-separated workflow outputs"></textarea>
+      <details>
+        <summary>Available data and assumptions</summary>
+        <label for="workflow-data">Available data</label>
+        <textarea id="workflow-data" spellcheck="false" aria-label="Comma-separated available data"></textarea>
+        <label for="workflow-assumptions">Available or approved assumptions</label>
+        <textarea id="workflow-assumptions" spellcheck="false" aria-label="Comma-separated assumptions"></textarea>
+      </details>
+      <div class="actions">
+        <button id="compile-workflow-button" type="button">Build workflow</button>
+      </div>
+      <p id="workflow-status" class="status" aria-live="polite"></p>
+
+      <div class="panel-heading">
+        <div>
           <h2>Guided model scoping</h2>
-          <p>Start with the business decision. FMR will explain suitable model families, missing information and limitations before provider routing.</p>
+          <p>Scope one model family directly when a multi-step practitioner workflow is not required.</p>
         </div>
       </div>
       <label for="scope-objective">What should the model help you decide?</label>
@@ -57,7 +98,7 @@
       <div class="panel-heading">
         <div>
           <h2>Provider routing</h2>
-          <p>Route a provider-neutral model job, inspect every candidate and prepare a version-pinned provider handoff.</p>
+          <p>Inspect the lower-level model job, candidates and version-pinned provider handoff.</p>
         </div>
       </div>
       <label for="provider-job-editor">Model job v2</label>
@@ -68,7 +109,7 @@
   "industry": "logistics",
   "available_data": ["income_statement_history", "operating_cost_drivers", "revenue_drivers"],
   "available_assumptions": ["forecast_horizon"],
-  "input_references": {"canonical_financial_data": {"path": "/path/to/input.json", "sha256": "replace-with-sha256"}},
+  "input_references": {"canonical_financial_data": {"contract_version": "canonical-financial-data.v2", "path": "/path/to/input.json", "sha256": "replace-with-sha256"}},
   "output_formats": ["xlsx"],
   "constraints": {"local_only": false, "open_source_only": true}
 }</textarea>
@@ -80,13 +121,7 @@
       </div>
       <p id="provider-routing-status" class="status" aria-live="polite"></p>
 
-      <div class="panel-heading">
-        <div>
-          <h2>Workbook inspection</h2>
-          <p>Select an XLSX file. It is inspected in memory and not retained.</p>
-        </div>
-      </div>
-
+      <div class="panel-heading"><div><h2>Workbook inspection</h2><p>Select an XLSX file. It is inspected in memory and not retained.</p></div></div>
       <div class="workbook-control">
         <input id="workbook-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         <button id="inspect-button" type="button">Inspect workbook</button>
@@ -103,12 +138,7 @@
       </div>
       <p id="workbook-status" class="status" aria-live="polite"></p>
 
-      <div class="panel-heading">
-        <div>
-          <h2>Financial-data intake</h2>
-          <p>Normalize a provider-neutral statement CSV, review exact account mappings and bind concepts or constants to semantic workbook slots.</p>
-        </div>
-      </div>
+      <div class="panel-heading"><div><h2>Financial-data intake</h2><p>Normalize a provider-neutral statement CSV, review exact account mappings and bind concepts or constants to semantic workbook slots.</p></div></div>
       <div class="workbook-control">
         <input id="financial-data-file" type="file" accept=".csv,text/csv">
         <button id="import-financial-data-button" type="button">Import statement CSV</button>
@@ -122,12 +152,7 @@
       <textarea id="financial-binding-profile-editor" spellcheck="false" aria-label="Financial binding profile JSON">[]</textarea>
       <p id="financial-data-status" class="status" aria-live="polite"></p>
 
-      <div class="panel-heading">
-        <div>
-          <h2>Governed input population</h2>
-          <p>Compile explicit numeric or boolean CSV rows—or use a ready financial binding plan—then populate only reserved input cells in the executed copy.</p>
-        </div>
-      </div>
+      <div class="panel-heading"><div><h2>Governed input population</h2><p>Compile explicit numeric or boolean CSV rows—or use a ready financial binding plan—then populate only reserved input cells in the executed copy.</p></div></div>
       <div class="workbook-control">
         <input id="input-csv-file" type="file" accept=".csv,text/csv">
         <button id="compile-input-csv-button" type="button" class="secondary" disabled>Compile input CSV</button>
@@ -136,12 +161,7 @@
       <textarea id="input-set-editor" spellcheck="false" aria-label="Workbook input set JSON"></textarea>
       <p id="input-population-status" class="status" aria-live="polite"></p>
 
-      <div class="panel-heading">
-        <div>
-          <h2>Calculated-output acceptance</h2>
-          <p>The governed populated copy is used automatically. A separately selected workbook takes precedence for external-engine acceptance.</p>
-        </div>
-      </div>
+      <div class="panel-heading"><div><h2>Calculated-output acceptance</h2><p>The governed populated copy is used automatically. A separately selected workbook takes precedence for external-engine acceptance.</p></div></div>
       <div class="workbook-control">
         <input id="calculation-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
         <button id="calculate-output-button" type="button" disabled>Recalculate and validate</button>
@@ -151,12 +171,8 @@
       <div class="panel-heading"><div><h2>Write context</h2><p>Supply period labels and explicit source or validation bindings. Formula strings are not accepted.</p></div></div>
       <textarea id="write-context-editor" spellcheck="false" aria-label="Workbook write context JSON"></textarea>
 
-      <div class="panel-heading">
-        <div><h2>Model request</h2><p>Edit JSON or load a bundled synthetic fixture.</p></div>
-        <div class="fixture-control"><label for="fixture-select">Fixture</label><select id="fixture-select"></select></div>
-      </div>
+      <div class="panel-heading"><div><h2>Model request</h2><p>Edit JSON or load a bundled synthetic fixture.</p></div><div class="fixture-control"><label for="fixture-select">Fixture</label><select id="fixture-select"></select></div></div>
       <textarea id="request-editor" spellcheck="false" aria-label="Model request JSON"></textarea>
-
       <div class="actions">
         <button id="route-button" type="button">Route</button>
         <button id="plan-button" type="button">Build plan</button>
@@ -167,21 +183,19 @@
     </section>
 
     <section class="panel result-panel">
-      <div class="panel-heading">
-        <div><h2>Result</h2><p id="result-kind">No request has been run.</p></div>
-        <button id="copy-button" type="button" class="quiet" disabled>Copy JSON</button>
-      </div>
-      <div id="summary" class="summary empty">Run a request or inspect a workbook.</div>
+      <div class="panel-heading"><div><h2>Result</h2><p id="result-kind">No request has been run.</p></div><button id="copy-button" type="button" class="quiet" disabled>Copy JSON</button></div>
+      <div id="summary" class="summary empty">Build a practitioner workflow, run a request or inspect a workbook.</div>
       <pre id="result-output">{}</pre>
     </section>
   </main>
 
   <footer>
     <span id="health-indicator">Checking local service…</span>
-    <span>Patch execution is not included in planning. Exact mappings and explicit bindings only. The selected source is never overwritten, and input or calculated values are not written to receipts.</span>
+    <span>Patch execution is not included in planning. Exact mappings and explicit bindings only. The selected source is never overwritten, and input or calculated values are not written to receipts. FMR does not invent missing data or material assumptions. Unsupported practitioner workflows remain blocked until a conformant package exists.</span>
   </footer>
 
   <script src="/assets/app.js" defer></script>
+  <script src="/assets/workflow.js" defer></script>
   <script src="/assets/provider-routing.js" defer></script>
   <script src="/assets/scoping.js" defer></script>
   <script src="/assets/realization.js" defer></script>

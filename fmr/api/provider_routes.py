@@ -13,6 +13,8 @@ from fmr.knowledge import KnowledgeRegistry
 from fmr.scoping_evidence import apply_workbook_scope_evidence, derive_workbook_scope_evidence
 from fmr.scoping_service import answer_scope_question, assess_model_intent, compile_confirmed_scope
 from fmr.scoping_acceptance import run_guided_scoping_acceptance_corpus
+from fmr.workflow import builtin_workflow_blueprints, compile_workflow, execute_workflow, workflow_rerun_plan
+from fmr.workflow_acceptance import run_workflow_acceptance_corpus
 
 router = APIRouter(prefix="/api/v2", tags=["provider routing"])
 
@@ -29,6 +31,54 @@ def model_families_v2() -> list[dict[str, Any]]:
 @router.get("/providers")
 def providers_v2() -> list[dict[str, Any]]:
     return [item.to_dict() for item in ProviderRegistry.builtins().providers()]
+
+
+@router.get("/workflows/blueprints")
+def workflow_blueprints() -> list[dict[str, Any]]:
+    return list(builtin_workflow_blueprints())
+
+
+@router.post("/workflows/plans")
+def compile_finance_workflow(payload: dict[str, Any]) -> dict[str, Any]:
+    try:
+        return compile_workflow(payload)
+    except ValueError as exc:
+        raise _invalid(exc) from exc
+
+
+@router.post("/workflows/reruns")
+def plan_finance_workflow_rerun(payload: dict[str, Any]) -> dict[str, Any]:
+    try:
+        if set(payload) != {"plan", "changed_inputs"}:
+            raise ValueError("workflow rerun request must contain plan and changed_inputs")
+        return workflow_rerun_plan(payload["plan"], payload["changed_inputs"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise _invalid(ValueError(str(exc))) from exc
+
+
+@router.post("/workflows/executions")
+def execute_finance_workflow(payload: dict[str, Any]) -> dict[str, Any]:
+    try:
+        if set(payload) - {"plan", "idempotency_key", "approvals"} or not {"plan", "idempotency_key"}.issubset(payload):
+            raise ValueError("workflow execution request must contain plan and idempotency_key, with optional approvals")
+        plan = payload["plan"]
+        return execute_workflow(
+            plan,
+            idempotency_key=payload["idempotency_key"],
+            output_dir=DEFAULT_ORCHESTRATOR.managed_output_root / plan["workflow_id"],
+            approvals=payload.get("approvals"),
+            orchestrator=DEFAULT_ORCHESTRATOR,
+        )
+    except (KeyError, TypeError, ValueError, RuntimeError) as exc:
+        raise _invalid(ValueError(str(exc))) from exc
+
+
+@router.post("/workflows/acceptance")
+def run_finance_workflow_acceptance(payload: dict[str, Any]) -> dict[str, Any]:
+    try:
+        return run_workflow_acceptance_corpus(payload)
+    except ValueError as exc:
+        raise _invalid(exc) from exc
 
 
 @router.get("/scoping/knowledge")
