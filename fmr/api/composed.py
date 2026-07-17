@@ -11,6 +11,7 @@ from fmr.api.execution_routes import router as execution_router
 from fmr.api.financial_data_routes import router as financial_data_router
 from fmr.api.input_population_routes import router as input_population_router
 from fmr.api.provider_routes import router as provider_router
+from fmr.api.workflow_project_routes import router as workflow_project_router
 from fmr.api.workflow_source_routes import router as workflow_source_router
 from fmr.api.write_routes import router as write_router
 
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
     application.include_router(financial_data_router)
     application.include_router(provider_router)
     application.include_router(workflow_source_router)
+    application.include_router(workflow_project_router)
 
     @application.middleware("http")
     async def large_request_limit_override(request: Request, call_next):  # type: ignore[no-untyped-def]
