@@ -18,7 +18,7 @@ const workflowExamples = {
     objective: "Update the full year forecast using June actuals",
     role: "fp_and_a",
     requested_outputs: ["rolling_forecast", "cash_outlook", "management_pack"],
-    available_data: ["balance_sheet_history", "capital_expenditure", "cash_flow_history", "debt_schedule", "income_statement_history", "operating_cost_drivers", "revenue_drivers", "working_capital"],
+    available_data: ["operating_cost_drivers", "revenue_drivers"],
     assumptions: {
       capital_expenditure_rate: "0.05",
       depreciation_rate: "0.03",
@@ -36,7 +36,7 @@ const workflowExamples = {
     objective: "Refresh debt capacity, leverage and covenant headroom",
     role: "finance_manager",
     requested_outputs: ["debt_capacity", "refinancing_analysis", "covenant_headroom"],
-    available_data: ["cash_flow_history", "debt_schedule", "income_statement_history", "liquidity_position"],
+    available_data: ["debt_schedule"],
     assumptions: {
       annual_repayment: "50000",
       covenant_thresholds: {},
@@ -53,7 +53,7 @@ const workflowExamples = {
     objective: "Value the operating company using a DCF and show enterprise and equity value",
     role: "private_equity",
     requested_outputs: ["enterprise_value", "equity_value", "operating_company_dcf"],
-    available_data: ["capital_expenditure", "cash_flow_history", "income_statement_history", "net_debt", "revenue_drivers", "working_capital"],
+    available_data: ["net_debt", "revenue_drivers"],
     assumptions: {
       capital_expenditure_rate: "0.05",
       depreciation_rate: "0.03",
