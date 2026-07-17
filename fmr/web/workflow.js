@@ -12,6 +12,8 @@ const workflowSourceStatus = document.querySelector("#workflow-source-status");
 const workflowStatus = document.querySelector("#workflow-status");
 
 let workflowSource = null;
+let workflowPlan = null;
+let workflowProject = null;
 
 const workflowExamples = {
   monthly_forecast: {
@@ -115,9 +117,169 @@ async function fileBase64(file) {
   return btoa(binary);
 }
 
+function createProjectControls() {
+  const wrapper = document.createElement("div");
+  wrapper.id = "workflow-project-controls";
+  wrapper.innerHTML = `
+    <div class="panel-heading">
+      <div>
+        <h3>Save, run and review</h3>
+        <p>Projects retain the workflow plan, approval decisions and value-free receipts locally so work can be reopened.</p>
+      </div>
+    </div>
+    <div class="workbook-control">
+      <label for="workflow-project-name">Project name</label>
+      <input id="workflow-project-name" type="text" maxlength="160" placeholder="FY2027 rolling forecast">
+      <button id="save-workflow-project-button" type="button" class="secondary" disabled>Save project</button>
+      <button id="run-workflow-project-button" type="button" disabled>Run ready steps</button>
+    </div>
+    <div class="workbook-control">
+      <label for="workflow-project-select">Reopen project</label>
+      <select id="workflow-project-select"><option value="">No saved project selected</option></select>
+      <button id="refresh-workflow-projects-button" type="button" class="quiet">Refresh</button>
+    </div>
+    <div id="workflow-approval-gates"></div>
+    <div class="actions">
+      <button id="approve-workflow-project-button" type="button" class="secondary" disabled>Approve selected gates and continue</button>
+    </div>
+    <p id="workflow-project-status" class="status" aria-live="polite"></p>
+  `;
+  workflowStatus.insertAdjacentElement("afterend", wrapper);
+  document.querySelector("#save-workflow-project-button").addEventListener("click", saveWorkflowProject);
+  document.querySelector("#run-workflow-project-button").addEventListener("click", runWorkflowProject);
+  document.querySelector("#approve-workflow-project-button").addEventListener("click", approveWorkflowProject);
+  document.querySelector("#refresh-workflow-projects-button").addEventListener("click", refreshWorkflowProjects);
+  document.querySelector("#workflow-project-select").addEventListener("change", loadSelectedWorkflowProject);
+}
+
+function projectStatus(message) {
+  document.querySelector("#workflow-project-status").textContent = message;
+}
+
+function renderApprovalGates(project) {
+  const container = document.querySelector("#workflow-approval-gates");
+  const gates = project.plan.steps.filter((step) => step.kind === "human_gate");
+  if (!gates.length) {
+    container.innerHTML = "";
+    document.querySelector("#approve-workflow-project-button").disabled = true;
+    return;
+  }
+  container.innerHTML = `<p><strong>Approval gates</strong></p>${gates.map((gate) => {
+    const checked = project.approvals[gate.step_id] === true ? " checked" : "";
+    return `<label><input type="checkbox" data-workflow-gate="${gate.step_id}"${checked}> Approve ${gate.capability.replaceAll("_", " ")}</label>`;
+  }).join("<br>")}`;
+  document.querySelector("#approve-workflow-project-button").disabled = false;
+}
+
+function renderWorkflowProject(project) {
+  workflowProject = project;
+  workflowPlan = project.plan;
+  document.querySelector("#workflow-project-name").value = project.name;
+  document.querySelector("#save-workflow-project-button").disabled = false;
+  document.querySelector("#run-workflow-project-button").disabled = false;
+  renderApprovalGates(project);
+  const latest = project.latest_execution;
+  const suffix = latest ? ` Latest run: ${latest.state}.` : " No run has been recorded.";
+  projectStatus(`${project.name} · ${project.status} · version ${project.version}.${suffix}`);
+  showResult("Workflow project", project);
+}
+
+async function refreshWorkflowProjects() {
+  try {
+    const result = await requestJson("/api/v2/workflow-projects");
+    const select = document.querySelector("#workflow-project-select");
+    const selected = workflowProject ? workflowProject.project_id : select.value;
+    select.innerHTML = '<option value="">No saved project selected</option>' + result.projects.map((project) =>
+      `<option value="${project.project_id}">${project.name} · ${project.status}</option>`
+    ).join("");
+    select.value = result.projects.some((project) => project.project_id === selected) ? selected : "";
+  } catch (error) {
+    projectStatus(error.message);
+  }
+}
+
+async function loadSelectedWorkflowProject() {
+  const projectId = document.querySelector("#workflow-project-select").value;
+  if (!projectId) return;
+  try {
+    renderWorkflowProject(await requestJson(`/api/v2/workflow-projects/${projectId}`));
+  } catch (error) {
+    projectStatus(error.message);
+  }
+}
+
+async function saveWorkflowProject() {
+  try {
+    if (!workflowPlan) throw new Error("Build a workflow before saving a project.");
+    const name = document.querySelector("#workflow-project-name").value.trim() || workflowObjective.value.trim();
+    const project = await requestJson("/api/v2/workflow-projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, plan: workflowPlan }),
+    });
+    renderWorkflowProject(project);
+    await refreshWorkflowProjects();
+    document.querySelector("#workflow-project-select").value = project.project_id;
+  } catch (error) {
+    projectStatus(error.message);
+  }
+}
+
+async function ensureWorkflowProject() {
+  if (workflowProject && workflowPlan && workflowProject.workflow_sha256 === workflowPlan.workflow_sha256) return workflowProject;
+  await saveWorkflowProject();
+  if (!workflowProject) throw new Error("The workflow project could not be saved.");
+  return workflowProject;
+}
+
+async function runWorkflowProject() {
+  try {
+    const project = await ensureWorkflowProject();
+    projectStatus("Executing dependency-ready steps…");
+    const updated = await requestJson(`/api/v2/workflow-projects/${project.project_id}/executions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ expected_version: project.version }),
+    });
+    renderWorkflowProject(updated);
+    await refreshWorkflowProjects();
+  } catch (error) {
+    projectStatus(error.message);
+  }
+}
+
+async function approveWorkflowProject() {
+  try {
+    const project = await ensureWorkflowProject();
+    const decisions = {};
+    document.querySelectorAll("[data-workflow-gate]").forEach((input) => {
+      if (input.checked) decisions[input.dataset.workflowGate] = true;
+    });
+    if (!Object.keys(decisions).length) throw new Error("Select at least one approval gate.");
+    const approved = await requestJson(`/api/v2/workflow-projects/${project.project_id}/approvals`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decisions, expected_version: project.version }),
+    });
+    workflowProject = approved;
+    projectStatus("Approval recorded. Completing the workflow with accepted provider results…");
+    const completed = await requestJson(`/api/v2/workflow-projects/${project.project_id}/executions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ expected_version: approved.version }),
+    });
+    renderWorkflowProject(completed);
+    await refreshWorkflowProjects();
+  } catch (error) {
+    projectStatus(error.message);
+  }
+}
+
 function applyWorkflowExample() {
   const example = workflowExamples[workflowTemplate.value];
   workflowSource = null;
+  workflowPlan = null;
+  workflowProject = null;
   workflowSourceFile.value = "";
   workflowSourceStatus.textContent = "No financial source prepared.";
   workflowObjective.value = example.objective;
@@ -129,6 +291,12 @@ function applyWorkflowExample() {
   workflowOperationalDrivers.value = "{}";
   workflowMappingRules.value = "[]";
   workflowStatus.textContent = "";
+  document.querySelector("#workflow-project-name").value = example.objective;
+  document.querySelector("#save-workflow-project-button").disabled = true;
+  document.querySelector("#run-workflow-project-button").disabled = true;
+  document.querySelector("#approve-workflow-project-button").disabled = true;
+  document.querySelector("#workflow-approval-gates").innerHTML = "";
+  projectStatus("");
 }
 
 async function prepareWorkflowSource() {
@@ -153,6 +321,8 @@ async function prepareWorkflowSource() {
       }),
     });
     workflowSource = source;
+    workflowPlan = null;
+    workflowProject = null;
     workflowData.value = unionValues(splitValues(workflowData.value), source.available_data).join(", ");
     workflowAssumptions.value = unionValues(splitValues(workflowAssumptions.value), source.available_assumptions).join(", ");
     const warningText = source.warnings.length ? ` ${source.warnings.length} unmapped row warning(s) remain visible in the result.` : "";
@@ -197,6 +367,8 @@ async function compilePractitionerWorkflow() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(buildWorkflowRequest()),
     });
+    workflowPlan = plan;
+    workflowProject = null;
     showResult("Practitioner workflow plan", plan);
     const blocked = plan.steps.filter((step) => step.status === "blocked");
     const approvals = plan.steps.filter((step) => step.status === "awaiting_approval");
@@ -205,12 +377,18 @@ async function compilePractitionerWorkflow() {
     if (approvals.length) parts.push(`${approvals.length} approval gate${approvals.length === 1 ? "" : "s"}`);
     const sourceText = workflowSource ? ` Source ${workflowSource.source_id} is pinned.` : " No source is pinned, so source-dependent steps remain blocked.";
     workflowStatus.textContent = `Compiled ${plan.blueprint.blueprint_id}: ${parts.join(", ")}.${sourceText}`;
+    document.querySelector("#workflow-project-name").value = workflowObjective.value.trim();
+    document.querySelector("#save-workflow-project-button").disabled = false;
+    document.querySelector("#run-workflow-project-button").disabled = false;
+    renderApprovalGates({ plan, approvals: {} });
   } catch (error) {
     workflowStatus.textContent = error.message;
   }
 }
 
+createProjectControls();
 workflowTemplate.addEventListener("change", applyWorkflowExample);
 document.querySelector("#prepare-workflow-source-button").addEventListener("click", prepareWorkflowSource);
 document.querySelector("#compile-workflow-button").addEventListener("click", compilePractitionerWorkflow);
 applyWorkflowExample();
+refreshWorkflowProjects();
