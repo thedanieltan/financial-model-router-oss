@@ -190,7 +190,9 @@ def run_workflow_acceptance_corpus(corpus: dict[str, Any]) -> dict[str, Any]:
         blockers.append("practitioner_review_incomplete")
     if stale_review:
         blockers.append("stale_practitioner_review_reference")
-    production_status = "accepted" if implementation_status == "passed" and practitioner_status == "accepted" else "not_accepted"
+    deployment_status = "not_run"
+    blockers.append("deployment_acceptance_not_run")
+    production_status = "not_accepted"
     provisional = {
         "contract_version": "workflow-acceptance-result.v1",
         "corpus_id": corpus["corpus_id"],
@@ -198,6 +200,7 @@ def run_workflow_acceptance_corpus(corpus: dict[str, Any]) -> dict[str, Any]:
         "corpus_sha256": _digest(corpus),
         "implementation_status": implementation_status,
         "practitioner_status": practitioner_status,
+        "deployment_status": deployment_status,
         "production_status": production_status,
         "case_results": case_results,
         "review_references": sorted(set(review_references)),
@@ -213,7 +216,7 @@ def run_workflow_acceptance_corpus(corpus: dict[str, Any]) -> dict[str, Any]:
 def validate_workflow_acceptance_result(value: Any, *, corpus: dict[str, Any] | None = None) -> tuple[str, ...]:
     if not isinstance(value, dict) or value.get("contract_version") != "workflow-acceptance-result.v1":
         return ("workflow-acceptance-result.v1 is required",)
-    required = {"contract_version", "acceptance_id", "acceptance_sha256", "corpus_id", "corpus_version", "corpus_sha256", "implementation_status", "practitioner_status", "production_status", "case_results", "review_references", "blockers"}
+    required = {"contract_version", "acceptance_id", "acceptance_sha256", "corpus_id", "corpus_version", "corpus_sha256", "implementation_status", "practitioner_status", "deployment_status", "production_status", "case_results", "review_references", "blockers"}
     issues: list[str] = []
     if set(value) != required:
         issues.append("workflow acceptance result fields do not match the contract")
