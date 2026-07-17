@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sqlite3
 import time
 from pathlib import Path
 from typing import Any
 
 from fmr.workflow import execute_workflow, validate_workflow_plan
+
+
+_DISPLAY_TOKEN = re.compile(r"^[a-z0-9]+(?:_[a-z0-9]+)*$")
 
 
 def _digest(value: Any) -> str:
@@ -27,7 +31,19 @@ def _name(value: Any) -> str:
     cleaned = " ".join(value.split())
     if len(cleaned) > 160:
         raise ValueError("project name must not exceed 160 characters")
+    if "<" in cleaned or ">" in cleaned:
+        raise ValueError("project name contains unsupported markup characters")
     return cleaned
+
+
+def _validate_display_fields(plan: dict[str, Any]) -> None:
+    for step in plan["steps"]:
+        for field in ("step_id", "capability"):
+            value = step[field]
+            if not isinstance(value, str) or not _DISPLAY_TOKEN.fullmatch(value):
+                raise ValueError(
+                    f"workflow project {field} must use lowercase underscore tokens"
+                )
 
 
 def _decisions(value: Any, *, allowed: set[str]) -> dict[str, bool]:
@@ -40,6 +56,32 @@ def _decisions(value: Any, *, allowed: set[str]) -> dict[str, bool]:
     if unknown:
         raise ValueError("approval decisions contain unknown gates: " + ",".join(unknown))
     return {key: value[key] for key in sorted(value)}
+
+
+def _normalize_project_execution(
+    plan: dict[str, Any], result: dict[str, Any]
+) -> dict[str, Any]:
+    """Report an approval wait ahead of derivative dependency blocks."""
+    if result["state"] != "blocked":
+        return result
+    mandatory = {
+        step["step_id"] for step in plan["steps"] if step["mandatory"]
+    }
+    if not any(
+        step["step_id"] in mandatory and step["state"] == "awaiting_approval"
+        for step in result["step_results"]
+    ):
+        return result
+    provisional = {
+        key: value
+        for key, value in result.items()
+        if key != "workflow_execution_id"
+    }
+    provisional["state"] = "awaiting_approval"
+    return {
+        **provisional,
+        "workflow_execution_id": f"fmrwx_{_digest(provisional)[:24]}",
+    }
 
 
 class WorkflowProjectStore:
@@ -81,6 +123,7 @@ class WorkflowProjectStore:
         issues = validate_workflow_plan(plan)
         if issues:
             raise ValueError("invalid workflow plan: " + "; ".join(issues))
+        _validate_display_fields(plan)
         project_name = _name(name)
         seed = {
             "name": project_name,
@@ -198,11 +241,14 @@ class WorkflowProjectStore:
         with self._connect() as connection:
             project = self._read(connection, identifier)
             self._check_version(project, expected_version)
-        result = execute_workflow(
+        result = _normalize_project_execution(
             project["plan"],
-            idempotency_key=f"{identifier}:{project['workflow_sha256']}",
-            output_dir=self.output_root / identifier,
-            approvals=project["approvals"],
+            execute_workflow(
+                project["plan"],
+                idempotency_key=f"{identifier}:{project['workflow_sha256']}",
+                output_dir=self.output_root / identifier,
+                approvals=project["approvals"],
+            ),
         )
         with self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
