@@ -16,6 +16,32 @@ The workflow router owns:
 
 The existing model router still owns provider and package selection. Providers still own model execution and artifacts. The workflow router does not invent financial assumptions, override provider controls or silently substitute another model family.
 
+## Direct financial source intake
+
+The practitioner workbench can prepare a workflow source from the controlled statement CSV format:
+
+1. download the statement CSV template;
+2. upload completed statements;
+3. supply explicit assumption values;
+4. optionally add exact account mapping rules and operating-driver series;
+5. review unmapped-row warnings; and
+6. build the workflow with the resulting immutable canonical reference.
+
+The source pipeline is:
+
+```text
+statement CSV
+→ strict row and entity validation
+→ exact built-in aliases plus explicit mapping rules
+→ canonical-financial-data.v2
+→ immutable local file named by SHA-256
+→ finance-workflow-request.v1
+```
+
+FMR never fuzzy-maps an account, fills a missing mapped period with zero, or includes unmapped rows in canonical concepts. Unmapped rows remain warnings. Ambiguous, shape-invalid and incomplete mapped series fail closed.
+
+The workflow-source response contains entity, period, mapping and readiness metadata, but not financial values. The canonical values remain in the local hash-pinned source file used by providers.
+
 ## Built-in workflows
 
 The initial registry contains:
@@ -33,8 +59,21 @@ The first four route to currently implemented model families when their data and
 ## Python
 
 ```python
+from fmr.financial_data import create_statement_csv_workflow_source
 from fmr.workflow import compile_workflow, execute_workflow, workflow_rerun_plan
 
+source = create_statement_csv_workflow_source(
+    open("statements.csv", "rb").read(),
+    source_name="statements.csv",
+    mapping_rules=[],
+    assumptions={"forecast_horizon": 3},
+)
+
+request["input_references"] = {
+    "canonical_financial_data": source["canonical_reference"]
+}
+request["available_data"] = source["available_data"]
+request["available_assumptions"] = source["available_assumptions"]
 plan = compile_workflow(request)
 rerun = workflow_rerun_plan(plan, ["revenue_growth_rate"])
 result = execute_workflow(
@@ -61,18 +100,23 @@ fmr execute-workflow workflow-plan.json \
 
 ## HTTP
 
+- `GET /api/v2/workflow-sources/statement-csv-template`
+- `POST /api/v2/workflow-sources/statement-csv`
 - `GET /api/v2/workflows/blueprints`
 - `POST /api/v2/workflows/plans`
 - `POST /api/v2/workflows/reruns`
 - `POST /api/v2/workflows/executions`
 - `POST /api/v2/workflows/acceptance`
 
-The browser workbench provides role and objective fields plus practitioner examples. The compiled result shows the selected blueprint, ordered steps, route decisions, blockers and approval gates.
+The browser workbench provides role, objective, statement-source and assumption fields. The compiled result shows the selected blueprint, ordered steps, route decisions, blockers and approval gates.
 
 ## Testing and acceptance
 
 The bundled workflow corpus covers supported and intentionally unsupported practitioner workflows. Tests verify:
 
+- deterministic source compilation and immutable storage;
+- exact mappings and visible unmapped rows;
+- source-to-workflow-to-provider continuity;
 - deterministic plans and hashes;
 - acyclic dependency graphs;
 - exact step order;
@@ -80,7 +124,7 @@ The bundled workflow corpus covers supported and intentionally unsupported pract
 - honest blocking for absent model families;
 - dependency-based partial reruns;
 - Python, CLI and HTTP parity;
-- a real DCF provider execution inside the workflow; and
-- separate implementation and practitioner acceptance gates.
+- real Python Forecast execution inside workflows; and
+- separate implementation, practitioner, deployment and production acceptance gates.
 
 Synthetic acceptance proves implementation behaviour only. Representative anonymized cases and external practitioner reviews remain required before production acceptance.
