@@ -24,7 +24,7 @@ def main() -> None:
     if output.exists():
         shutil.rmtree(output)
     shutil.copytree(source, output)
-    shutil.copy2(wheel, output / "financial_model_router.whl")
+    shutil.copy2(wheel, output / wheel.name)
     (output / ".nojekyll").write_text("", encoding="utf-8")
     (output / "version.json").write_text(
         json.dumps(
@@ -32,6 +32,7 @@ def main() -> None:
                 "contract_version": "fmr-pages-build.v1",
                 "revision": args.revision,
                 "wheel": wheel.name,
+                "wheel_asset": wheel.name,
             },
             indent=2,
             sort_keys=True,
@@ -45,10 +46,11 @@ def main() -> None:
         "app.js",
         "worker.js",
         "demo_runtime.py",
-        "financial_model_router.whl",
         "version.json",
     )
     missing = [name for name in required if not (output / name).is_file()]
+    if not (output / wheel.name).is_file():
+        missing.append(wheel.name)
     if missing:
         raise SystemExit("pages build is incomplete: " + ",".join(missing))
 
