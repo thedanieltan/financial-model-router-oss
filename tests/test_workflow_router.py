@@ -44,7 +44,7 @@ def _dcf_request(root: Path) -> dict:
         "available_data": case["job"]["available_data"],
         "available_assumptions": case["job"]["available_assumptions"],
         "input_references": {
-            "canonical": {
+            "canonical_financial_data": {
                 "contract_version": "canonical-financial-data.v2",
                 "sha256": hashlib.sha256(payload).hexdigest(),
                 "path": str(source),
