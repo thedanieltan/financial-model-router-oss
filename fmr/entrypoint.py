@@ -9,10 +9,13 @@ from fmr.financial_data_dispatch import (
 )
 from fmr.input_dispatch import INPUT_COMMANDS, run_input_command
 from fmr.provider_dispatch import PROVIDER_COMMANDS, run_provider_command
+from fmr.workflow_dispatch import WORKFLOW_COMMANDS, run_workflow_command
 
 
 def main(argv: list[str] | None = None) -> int:
     arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments and arguments[0] in WORKFLOW_COMMANDS:
+        return run_workflow_command(arguments)
     if arguments and arguments[0] in PROVIDER_COMMANDS:
         return run_provider_command(arguments)
     if arguments and arguments[0] in FINANCIAL_DATA_COMMANDS:
