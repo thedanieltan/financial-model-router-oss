@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Financial Model Router OSS</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #f7f7f4; color: #17202a; }
+    main { max-width: 960px; margin: 0 auto; padding: 48px 24px; }
+    .card { background: #fff; border: 1px solid #ddd; border-radius: 16px; padding: 28px; margin: 20px 0; }
+    h1 { font-size: 42px; margin: 0 0 12px; }
+    h2 { margin-top: 0; }
+    code { background: #f0f0ec; padding: 2px 6px; border-radius: 6px; }
+    .status { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #fff4cc; font-weight: bold; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    a { color: #0b5cad; }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="status">Practitioner test page: foundation live, workflow in progress</p>
+    <h1>Financial Model Router OSS</h1>
+    <p>Open-source financial modelling router and workbook-generation foundation.</p>
+
+    <div class="card">
+      <h2>What this is</h2>
+      <p>FMR OSS is being refocused around practitioner workflows: choose the right model, collect the right inputs, generate a usable workbook, and run checks.</p>
+      <p>The first practitioner workflow will be <strong>SaaS Budget &amp; Forecast Workbook</strong>.</p>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>For practitioners</h2>
+        <p>The target experience is a local browser app: enter assumptions in forms, generate an Excel workbook, review checks, and export.</p>
+      </div>
+      <div class="card">
+        <h2>For developers</h2>
+        <p>The deterministic core runs locally and should not require API keys for core workflows.</p>
+      </div>
+      <div class="card">
+        <h2>Boundary</h2>
+        <p>FMR does not provide accounting, tax, investment, valuation, or lending advice.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Current test path</h2>
+      <p>Until the hosted demo is ready, practitioners should test from a local checkout.</p>
+      <pre><code>python -m pip install -e .
+fmr serve</code></pre>
+      <p>Open the local URL shown in the terminal.</p>
+    </div>
+
+    <div class="card">
+      <h2>Next milestone</h2>
+      <p><strong>FMR OSS Practitioner Slice 1:</strong> SaaS Budget &amp; Forecast Workbook.</p>
+      <p>Acceptance: no JSON required, form-driven assumptions, Excel output, summary checks, and clear export.</p>
+    </div>
+  </main>
+</body>
+</html>
