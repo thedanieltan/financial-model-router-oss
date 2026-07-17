@@ -119,7 +119,7 @@ class WorkflowSourceTests(unittest.TestCase):
                 },
                 "industry": None,
                 "output_formats": ["json"],
-                "policy_name": "local-only",
+                "policy_name": "json-first",
                 "constraints": {
                     "local_only": True,
                     "open_source_only": True,
