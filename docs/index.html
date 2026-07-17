@@ -33,8 +33,9 @@
         <p>Use FMR locally to structure modelling tasks, prepare inputs, generate workbooks, and review checks.</p>
       </div>
       <div class="card">
-        <h2>For developers</h2>
-        <p>The deterministic core runs locally and should not require API keys for core workflows.</p>
+        <h2>SaaS Budget & Forecast</h2>
+        <p>The first practitioner workflow generates a formula-driven SaaS planning workbook from plain assumptions.</p>
+        <p><a href="https://github.com/thedanieltan/financial-model-router-oss/blob/main/docs/practitioner-saas-budget.md">Read the usage guide</a></p>
       </div>
       <div class="card">
         <h2>Boundary</h2>
@@ -44,9 +45,9 @@
 
     <div class="card">
       <h2>Local use</h2>
-      <pre><code>python -m pip install -e .
+      <pre><code>python -m pip install -e ".[dev-ui,executor]"
 fmr serve</code></pre>
-      <p>Open the local URL shown in the terminal.</p>
+      <p>Then open <code>http://127.0.0.1:8000/practitioner/saas</code>.</p>
     </div>
   </main>
 </body>
