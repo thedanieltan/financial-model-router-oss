@@ -183,7 +183,7 @@ function buildWorkflowRequest() {
     input_references: workflowSource ? { canonical_financial_data: workflowSource.canonical_reference } : {},
     industry: null,
     output_formats: ["json"],
-    policy_name: "local-only",
+    policy_name: "json-first",
     constraints: { local_only: true, open_source_only: true, network_allowed: false },
     context: workflowSource ? { workflow_source_id: workflowSource.source_id } : {},
   };
