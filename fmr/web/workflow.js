@@ -1,7 +1,9 @@
 const workflowObjective = document.querySelector("#workflow-objective");
 const workflowRole = document.querySelector("#workflow-role");
-const workflowExample = document.querySelector("#workflow-example");
-const workflowRequestEditor = document.querySelector("#workflow-request-editor");
+const workflowTemplate = document.querySelector("#workflow-template");
+const workflowOutputs = document.querySelector("#workflow-outputs");
+const workflowData = document.querySelector("#workflow-data");
+const workflowAssumptions = document.querySelector("#workflow-assumptions");
 const workflowStatus = document.querySelector("#workflow-status");
 
 const workflowExamples = {
@@ -19,7 +21,7 @@ const workflowExamples = {
     available_data: ["cash_flow_history", "debt_schedule", "income_statement_history", "liquidity_position"],
     available_assumptions: ["annual_repayment", "covenant_thresholds", "ebitda_growth_rate", "forecast_horizon", "interest_rate_assumption", "maximum_leverage_ratio", "minimum_debt_service_coverage", "opening_debt", "repayment_terms"],
   },
-  valuation: {
+  operating_valuation: {
     objective: "Value the operating company using a DCF and show enterprise and equity value",
     role: "private_equity",
     requested_outputs: ["enterprise_value", "equity_value", "operating_company_dcf"],
@@ -35,16 +37,34 @@ const workflowExamples = {
   },
 };
 
-function workflowRequestFromExample(example) {
+function splitValues(value) {
+  return value.split(/[\n,]/).map((item) => item.trim()).filter(Boolean);
+}
+
+function applyWorkflowExample() {
+  const example = workflowExamples[workflowTemplate.value];
+  workflowObjective.value = example.objective;
+  workflowRole.value = example.role;
+  workflowOutputs.value = example.requested_outputs.join(", ");
+  workflowData.value = example.available_data.join(", ");
+  workflowAssumptions.value = example.available_assumptions.join(", ");
+  workflowStatus.textContent = "";
+}
+
+function buildWorkflowRequest() {
+  const objective = workflowObjective.value.trim();
+  if (!objective) throw new Error("Describe the finance work that needs to be completed.");
+  const requestedOutputs = splitValues(workflowOutputs.value);
+  if (!requestedOutputs.length) throw new Error("Provide at least one required output.");
   return {
     contract_version: "finance-workflow-request.v1",
-    objective: example.objective,
-    role: example.role,
+    objective,
+    role: workflowRole.value,
     entity_id: "company-a",
     reporting_period: "2026-06",
-    requested_outputs: example.requested_outputs,
-    available_data: example.available_data,
-    available_assumptions: example.available_assumptions,
+    requested_outputs: requestedOutputs,
+    available_data: splitValues(workflowData.value),
+    available_assumptions: splitValues(workflowAssumptions.value),
     input_references: {},
     industry: null,
     output_formats: ["json"],
@@ -54,49 +74,26 @@ function workflowRequestFromExample(example) {
   };
 }
 
-function applyWorkflowExample() {
-  const example = workflowExamples[workflowExample.value];
-  const request = workflowRequestFromExample(example);
-  workflowObjective.value = request.objective;
-  workflowRole.value = request.role;
-  workflowRequestEditor.value = JSON.stringify(request, null, 2);
-}
-
-function synchronizeWorkflowFields() {
-  try {
-    const request = JSON.parse(workflowRequestEditor.value);
-    request.objective = workflowObjective.value.trim();
-    request.role = workflowRole.value;
-    workflowRequestEditor.value = JSON.stringify(request, null, 2);
-  } catch (_error) {
-    workflowStatus.textContent = "Workflow request JSON must be valid before fields can be synchronized.";
-  }
-}
-
 async function compilePractitionerWorkflow() {
   workflowStatus.textContent = "";
   try {
-    synchronizeWorkflowFields();
-    const request = JSON.parse(workflowRequestEditor.value);
     const plan = await requestJson("/api/v2/workflows/plans", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(request),
+      body: JSON.stringify(buildWorkflowRequest()),
     });
     showResult("Practitioner workflow plan", plan);
     const blocked = plan.steps.filter((step) => step.status === "blocked");
-    const approval = plan.steps.filter((step) => step.status === "awaiting_approval");
-    const summaryParts = [`${plan.steps.length} ordered steps`];
-    if (blocked.length) summaryParts.push(`${blocked.length} blocked`);
-    if (approval.length) summaryParts.push(`${approval.length} approval gate${approval.length === 1 ? "" : "s"}`);
-    workflowStatus.textContent = `Compiled ${plan.blueprint.blueprint_id}: ${summaryParts.join(", ")}.`;
+    const approvals = plan.steps.filter((step) => step.status === "awaiting_approval");
+    const parts = [`${plan.steps.length} ordered steps`];
+    if (blocked.length) parts.push(`${blocked.length} blocked`);
+    if (approvals.length) parts.push(`${approvals.length} approval gate${approvals.length === 1 ? "" : "s"}`);
+    workflowStatus.textContent = `Compiled ${plan.blueprint.blueprint_id}: ${parts.join(", ")}. Upload or connect a governed financial source to clear source-validation blockers.`;
   } catch (error) {
     workflowStatus.textContent = error.message;
   }
 }
 
-workflowExample.addEventListener("change", applyWorkflowExample);
-workflowObjective.addEventListener("change", synchronizeWorkflowFields);
-workflowRole.addEventListener("change", synchronizeWorkflowFields);
+workflowTemplate.addEventListener("change", applyWorkflowExample);
 document.querySelector("#compile-workflow-button").addEventListener("click", compilePractitionerWorkflow);
 applyWorkflowExample();
