@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/fmr/contracts/workbook-semantic-map.v1.schema.json",
+  "title": "Financial Model Router workbook semantic map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["contract_version", "source", "structural_map_sha256", "sheets", "cross_sheet_dependencies", "findings", "limitations"],
+  "properties": {
+    "contract_version": {"const": "workbook-semantic-map.v1"},
+    "source": {"$ref": "#/$defs/source"},
+    "structural_map_sha256": {"$ref": "#/$defs/sha256"},
+    "sheets": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/sheet"}
+    },
+    "cross_sheet_dependencies": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/crossSheetDependency"}
+    },
+    "findings": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "limitations": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "coordinate": {"type": "string", "pattern": "^[A-Z]+[1-9][0-9]*$"},
+    "range": {"type": "string", "pattern": "^[A-Z]+[1-9][0-9]*(?::[A-Z]+[1-9][0-9]*)?$"},
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "confidence", "evidence"],
+      "properties": {
+        "value": {"type": "string", "minLength": 1},
+        "confidence": {"enum": ["low", "medium", "high"]},
+        "evidence": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filename", "sha256", "size_bytes"],
+      "properties": {
+        "filename": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "periodColumn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["coordinate", "column", "label", "classification"],
+      "properties": {
+        "coordinate": {"$ref": "#/$defs/coordinate"},
+        "column": {"type": "integer", "minimum": 1},
+        "label": {"type": "string", "minLength": 1},
+        "classification": {"$ref": "#/$defs/classification"}
+      }
+    },
+    "periodCell": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["coordinate", "period_label", "period_kind", "cell_kind"],
+      "properties": {
+        "coordinate": {"$ref": "#/$defs/coordinate"},
+        "period_label": {"type": "string", "minLength": 1},
+        "period_kind": {"enum": ["actual", "budget", "forecast", "unspecified", "unknown"]},
+        "cell_kind": {"enum": ["value", "formula", "blank"]}
+      }
+    },
+    "metricRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["row", "label_cell", "label", "metric", "period_cells"],
+      "properties": {
+        "row": {"type": "integer", "minimum": 1},
+        "label_cell": {"$ref": "#/$defs/coordinate"},
+        "label": {"type": "string", "minLength": 1},
+        "metric": {"$ref": "#/$defs/classification"},
+        "period_cells": {"type": "array", "items": {"$ref": "#/$defs/periodCell"}}
+      }
+    },
+    "textEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "confidence", "evidence"],
+      "properties": {
+        "value": {"type": "string", "minLength": 1},
+        "confidence": {"enum": ["low", "medium", "high"]},
+        "evidence": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "formulaReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sheet", "range", "external"],
+      "properties": {
+        "sheet": {"type": ["string", "null"]},
+        "range": {"$ref": "#/$defs/range"},
+        "external": {"type": "boolean"}
+      }
+    },
+    "formulaDependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formula_cell", "formula_sha256", "references"],
+      "properties": {
+        "formula_cell": {"$ref": "#/$defs/coordinate"},
+        "formula_sha256": {"$ref": "#/$defs/sha256"},
+        "references": {"type": "array", "items": {"$ref": "#/$defs/formulaReference"}}
+      }
+    },
+    "sheet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "role", "period_columns", "metric_rows", "currency_evidence", "scale_evidence", "formula_dependencies"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "role": {"$ref": "#/$defs/classification"},
+        "period_columns": {"type": "array", "items": {"$ref": "#/$defs/periodColumn"}},
+        "metric_rows": {"type": "array", "items": {"$ref": "#/$defs/metricRow"}},
+        "currency_evidence": {"type": "array", "items": {"$ref": "#/$defs/textEvidence"}},
+        "scale_evidence": {"type": "array", "items": {"$ref": "#/$defs/textEvidence"}},
+        "formula_dependencies": {"type": "array", "items": {"$ref": "#/$defs/formulaDependency"}}
+      }
+    },
+    "crossSheetDependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from_sheet", "formula_cell", "to_sheet", "target_range", "external"],
+      "properties": {
+        "from_sheet": {"type": "string", "minLength": 1},
+        "formula_cell": {"$ref": "#/$defs/coordinate"},
+        "to_sheet": {"type": "string", "minLength": 1},
+        "target_range": {"$ref": "#/$defs/range"},
+        "external": {"type": "boolean"}
+      }
+    }
+  }
+}
