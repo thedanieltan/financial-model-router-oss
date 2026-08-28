@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/monthly-fpa-commentary-evidence.v1.schema.json",
+  "title": "FMR monthly FP&A commentary evidence v1",
+  "type": "object",
+  "required": ["contract_version", "entity_id", "currency", "reporting_period", "sources", "forecast", "materiality_policy", "statement_variances", "driver_variances", "checks", "limitations"],
+  "properties": {
+    "contract_version": {"const": "monthly-fpa-commentary-evidence.v1"},
+    "entity_id": {"$ref": "#/$defs/text"},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+    "reporting_period": {"$ref": "#/$defs/text"},
+    "sources": {
+      "type": "object",
+      "required": ["actuals", "budget"],
+      "properties": {
+        "actuals": {"$ref": "#/$defs/source"},
+        "budget": {"$ref": "#/$defs/source"}
+      },
+      "additionalProperties": false
+    },
+    "forecast": {
+      "type": "object",
+      "required": ["execution_id", "provider_id", "provider_version", "package_id", "package_version", "artifact"],
+      "properties": {
+        "execution_id": {"type": "string", "pattern": "^fmrx_[a-f0-9]{24}$"},
+        "provider_id": {"$ref": "#/$defs/text"},
+        "provider_version": {"$ref": "#/$defs/text"},
+        "package_id": {"$ref": "#/$defs/text"},
+        "package_version": {"$ref": "#/$defs/text"},
+        "artifact": {"$ref": "#/$defs/artifact"}
+      },
+      "additionalProperties": false
+    },
+    "materiality_policy": {
+      "oneOf": [
+        {"type": "object", "required": ["mode"], "properties": {"mode": {"const": "report_all"}}, "additionalProperties": false},
+        {"type": "object", "required": ["mode", "absolute_threshold"], "properties": {"mode": {"const": "threshold"}, "absolute_threshold": {"$ref": "#/$defs/decimal"}, "percentage_threshold": {"$ref": "#/$defs/nonNegativeDecimal"}}, "additionalProperties": false}
+      ]
+    },
+    "statement_variances": {"type": "array", "items": {"$ref": "#/$defs/variance"}},
+    "driver_variances": {"type": "array", "items": {"$ref": "#/$defs/driverVariance"}},
+    "checks": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["check_id", "status"], "properties": {"check_id": {"$ref": "#/$defs/id"}, "status": {"const": "passed"}}, "additionalProperties": false}, "uniqueItems": true},
+    "limitations": {"type": "array", "items": {"$ref": "#/$defs/text"}, "uniqueItems": true}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "text": {"type": "string", "minLength": 1},
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "decimal": {"type": "string", "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$"},
+    "nonNegativeDecimal": {"type": "string", "pattern": "^(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$"},
+    "source": {"type": "object", "required": ["contract_version", "sha256", "path"], "properties": {"contract_version": {"const": "canonical-financial-data.v2"}, "sha256": {"$ref": "#/$defs/sha256"}, "path": {"$ref": "#/$defs/text"}}, "additionalProperties": false},
+    "artifact": {"type": "object", "required": ["kind", "format", "path", "sha256", "size_bytes"], "properties": {"kind": {"$ref": "#/$defs/text"}, "format": {"$ref": "#/$defs/text"}, "path": {"$ref": "#/$defs/text"}, "sha256": {"$ref": "#/$defs/sha256"}, "size_bytes": {"type": "integer", "minimum": 1}}, "additionalProperties": false},
+    "variance": {"type": "object", "required": ["statement", "concept", "actual", "budget", "absolute_variance", "percentage_variance", "material"], "properties": {"statement": {"enum": ["income_statement", "balance_sheet", "cash_flow"]}, "concept": {"$ref": "#/$defs/id"}, "actual": {"$ref": "#/$defs/decimal"}, "budget": {"$ref": "#/$defs/decimal"}, "absolute_variance": {"$ref": "#/$defs/decimal"}, "percentage_variance": {"oneOf": [{"$ref": "#/$defs/decimal"}, {"type": "null"}]}, "material": {"type": "boolean"}}, "additionalProperties": false},
+    "driverVariance": {"type": "object", "required": ["driver", "actual", "budget", "absolute_variance", "percentage_variance", "material"], "properties": {"driver": {"$ref": "#/$defs/id"}, "actual": {"$ref": "#/$defs/decimal"}, "budget": {"$ref": "#/$defs/decimal"}, "absolute_variance": {"$ref": "#/$defs/decimal"}, "percentage_variance": {"oneOf": [{"$ref": "#/$defs/decimal"}, {"type": "null"}]}, "material": {"type": "boolean"}}, "additionalProperties": false}
+  }
+}
