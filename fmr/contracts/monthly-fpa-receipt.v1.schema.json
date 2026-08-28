@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/monthly-fpa-receipt.v1.schema.json",
+  "title": "FMR monthly FP&A receipt v1",
+  "type": "object",
+  "required": ["contract_version", "workflow_id", "workflow_version", "state", "entity_id", "reporting_period", "source_references", "forecast_execution", "materiality_policy_sha256", "evidence_artifact", "checks"],
+  "properties": {
+    "contract_version": {"const": "monthly-fpa-receipt.v1"},
+    "workflow_id": {"const": "monthly_forecast_update"},
+    "workflow_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "state": {"const": "completed"},
+    "entity_id": {"$ref": "#/$defs/text"},
+    "reporting_period": {"$ref": "#/$defs/text"},
+    "source_references": {"type": "array", "minItems": 2, "items": {"type": "object", "required": ["name", "contract_version", "sha256"], "properties": {"name": {"enum": ["canonical_financial_data", "budget_financial_data"]}, "contract_version": {"const": "canonical-financial-data.v2"}, "sha256": {"$ref": "#/$defs/sha256"}}, "additionalProperties": false}, "uniqueItems": true},
+    "forecast_execution": {"type": "object", "required": ["execution_id", "provider_id", "provider_version", "package_id", "package_version", "artifact_sha256"], "properties": {"execution_id": {"type": "string", "pattern": "^fmrx_[a-f0-9]{24}$"}, "provider_id": {"$ref": "#/$defs/text"}, "provider_version": {"$ref": "#/$defs/text"}, "package_id": {"$ref": "#/$defs/text"}, "package_version": {"$ref": "#/$defs/text"}, "artifact_sha256": {"$ref": "#/$defs/sha256"}}, "additionalProperties": false},
+    "materiality_policy_sha256": {"$ref": "#/$defs/sha256"},
+    "evidence_artifact": {"type": "object", "required": ["path", "sha256", "size_bytes"], "properties": {"path": {"$ref": "#/$defs/text"}, "sha256": {"$ref": "#/$defs/sha256"}, "size_bytes": {"type": "integer", "minimum": 1}}, "additionalProperties": false},
+    "checks": {"type": "array", "minItems": 1, "items": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}, "uniqueItems": true}
+  },
+  "additionalProperties": false,
+  "$defs": {"text": {"type": "string", "minLength": 1}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}
+}
