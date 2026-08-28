@@ -3,7 +3,7 @@
   "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/monthly-fpa-commentary-evidence.v1.schema.json",
   "title": "FMR monthly FP&A commentary evidence v1",
   "type": "object",
-  "required": ["contract_version", "entity_id", "currency", "reporting_period", "sources", "forecast", "materiality_policy", "statement_variances", "driver_variances", "checks", "limitations"],
+  "required": ["contract_version", "entity_id", "currency", "reporting_period", "sources", "forecast", "materiality_policy", "statement_variances", "driver_variances", "forecast_outlook", "checks", "limitations"],
   "properties": {
     "contract_version": {"const": "monthly-fpa-commentary-evidence.v1"},
     "entity_id": {"$ref": "#/$defs/text"},
@@ -39,6 +39,7 @@
     },
     "statement_variances": {"type": "array", "items": {"$ref": "#/$defs/variance"}},
     "driver_variances": {"type": "array", "items": {"$ref": "#/$defs/driverVariance"}},
+    "forecast_outlook": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["period", "revenue", "operating_costs", "operating_profit"], "properties": {"period": {"$ref": "#/$defs/text"}, "revenue": {"$ref": "#/$defs/decimal"}, "operating_costs": {"$ref": "#/$defs/decimal"}, "operating_profit": {"$ref": "#/$defs/decimal"}}, "additionalProperties": false}},
     "checks": {"type": "array", "minItems": 1, "items": {"type": "object", "required": ["check_id", "status"], "properties": {"check_id": {"$ref": "#/$defs/id"}, "status": {"const": "passed"}}, "additionalProperties": false}, "uniqueItems": true},
     "limitations": {"type": "array", "items": {"$ref": "#/$defs/text"}, "uniqueItems": true}
   },
