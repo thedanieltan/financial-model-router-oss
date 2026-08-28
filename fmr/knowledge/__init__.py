@@ -1,3 +1,3 @@
-from fmr.knowledge.registry import FamilyPlaybook, KnowledgeRegistry, KnowledgeSource, ScopeQuestion
+from fmr.knowledge.registry import AnalystWorkflowMethod, FamilyPlaybook, KnowledgeRegistry, KnowledgeSource, ScopeQuestion, WorkflowStep
 
-__all__ = ["FamilyPlaybook", "KnowledgeRegistry", "KnowledgeSource", "ScopeQuestion"]
+__all__ = ["AnalystWorkflowMethod", "FamilyPlaybook", "KnowledgeRegistry", "KnowledgeSource", "ScopeQuestion", "WorkflowStep"]
