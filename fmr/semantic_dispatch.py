@@ -1,0 +1,38 @@
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+
+from fmr.providers.native_xlsx.workbook import map_workbook_semantics
+
+
+SEMANTIC_COMMANDS = {"semantic-map"}
+
+
+def run_semantic_command(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(prog="fmr")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    semantic = subparsers.add_parser(
+        "semantic-map",
+        help="Map financial meaning and formula lineage in an XLSX workbook without modifying it",
+    )
+    semantic.add_argument("workbook")
+    semantic.add_argument("--output")
+    args = parser.parse_args(argv)
+    try:
+        payload = map_workbook_semantics(args.workbook)
+        rendered = json.dumps(payload, indent=2, sort_keys=True) + "\n"
+        if args.output:
+            target = Path(args.output)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(rendered, encoding="utf-8")
+        else:
+            print(rendered, end="")
+        return 0
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(json.dumps({"valid": False, "error": str(exc)}, indent=2, sort_keys=True))
+        return 2
+
+
+__all__ = ["SEMANTIC_COMMANDS", "run_semantic_command"]
