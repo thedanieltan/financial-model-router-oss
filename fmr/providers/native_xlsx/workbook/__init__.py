@@ -1,4 +1,4 @@
-"""Deterministic XLSX inspection, planning, execution, input population and calculated acceptance."""
+"""Deterministic XLSX inspection, semantic mapping, planning, execution, input population and calculated acceptance."""
 
 from fmr.providers.native_xlsx.workbook.analyse import WorkbookAnalysis, analyse_workbook_map
 from fmr.providers.native_xlsx.workbook.calculation_public import (
@@ -74,6 +74,7 @@ from fmr.providers.native_xlsx.workbook.realization_plan import plan_workbook_re
 from fmr.providers.native_xlsx.workbook.realization_validation import (
     validate_workbook_realization_plan_payload,
 )
+from fmr.providers.native_xlsx.workbook.semantic import map_workbook_semantics, map_workbook_semantics_bytes
 from fmr.providers.native_xlsx.workbook.style_specs import (
     IDENTIFIER_SEMANTIC_TYPES,
     NUMBER_FORMAT_SPECS,
@@ -149,6 +150,8 @@ __all__ = [
     "formula_spec_registry_payload",
     "inspect_workbook",
     "inspect_workbook_bytes",
+    "map_workbook_semantics",
+    "map_workbook_semantics_bytes",
     "operation_spec_registry_payload",
     "plan_workbook_content",
     "plan_workbook_coordinates",
