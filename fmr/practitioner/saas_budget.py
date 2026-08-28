@@ -247,8 +247,8 @@ def build_saas_budget_workbook_bytes(inputs: SaasBudgetInputs) -> bytes:
         ws.freeze_panes = "B2"
         for column in range(1, ws.max_column + 1):
             ws.column_dimensions[get_column_letter(column)].width = 18 if column > 1 else 30
-        for row in range(1, ws.max_row + 1):
-            ws.cell(row=row, column=1).font = bold if row > 1 else ws.cell(row=row, column=1).font
+        for row in range(2, ws.max_row + 1):
+            ws.cell(row=row, column=1).font = bold
         if ws.title in money_sheets:
             for row in ws.iter_rows(min_row=2):
                 for cell in row[1:]:
