@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/thedanieltan/financial-model-router-oss/blob/main/fmr/contracts/analyst-workflow-method.v1.schema.json",
+  "title": "FMR analyst workflow method v1",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "method_id",
+    "version",
+    "family_id",
+    "title",
+    "objective",
+    "steps",
+    "source_references",
+    "review_state"
+  ],
+  "properties": {
+    "contract_version": {"const": "analyst-workflow-method.v1"},
+    "method_id": {"$ref": "#/$defs/id"},
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "family_id": {"$ref": "#/$defs/id"},
+    "title": {"$ref": "#/$defs/text"},
+    "objective": {"$ref": "#/$defs/text"},
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["step_id", "sequence", "stage", "purpose", "execution_class", "requirement_class", "inputs", "outputs", "checks", "conditions", "source_references"],
+        "properties": {
+          "step_id": {"$ref": "#/$defs/id"},
+          "sequence": {"type": "integer", "minimum": 1},
+          "stage": {"enum": ["scope_decision", "source_history", "normalize_reconcile", "assumptions_drivers", "model_structure", "supporting_schedules", "core_model", "validation", "scenario_sensitivity", "outputs_kpis", "variance_driver_analysis", "commentary_evidence"]},
+          "purpose": {"$ref": "#/$defs/text"},
+          "execution_class": {"enum": ["source", "deterministic", "governed_rule", "judgment"]},
+          "requirement_class": {"enum": ["universal", "common_default", "conditional", "method_variant"]},
+          "inputs": {"$ref": "#/$defs/strings"},
+          "outputs": {"$ref": "#/$defs/strings"},
+          "checks": {"$ref": "#/$defs/strings"},
+          "conditions": {"$ref": "#/$defs/strings"},
+          "source_references": {"$ref": "#/$defs/nonEmptyStrings"}
+        },
+        "additionalProperties": false
+      }
+    },
+    "source_references": {"$ref": "#/$defs/nonEmptyStrings"},
+    "review_state": {"enum": ["reference_grounded", "practitioner_accepted"]}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+    "text": {"type": "string", "minLength": 1},
+    "strings": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "nonEmptyStrings": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}, "uniqueItems": true}
+  }
+}
