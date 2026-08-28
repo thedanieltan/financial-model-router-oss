@@ -106,7 +106,7 @@ class ModelKnowledgeTests(unittest.TestCase):
 
         method = KnowledgeRegistry.builtins().methods[0].to_dict()
         method["steps"][0]["formula"] = "=A1"
-        with self.assertRaisesRegex(ValueError, "fields do not match"):
+        with self.assertRaisesRegex(ValueError, "provider-specific field is forbidden"):
             AnalystWorkflowMethod.from_mapping(method)
 
 
