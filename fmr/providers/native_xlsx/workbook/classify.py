@@ -41,7 +41,7 @@ _ROLE_RULES: dict[str, dict[str, tuple[str, ...]]] = {
         "metrics": ("headcount", "fte", "salary", "payroll", "new hires", "hires", "employees"),
     },
     "revenue_schedule": {
-        "names": ("revenue schedule", "sales plan", "sales forecast", "revenue build", "revenue drivers"),
+        "names": ("revenue schedule", "sales plan", "sales forecast", "sales drivers", "revenue build", "revenue drivers"),
         "metrics": ("customers", "units", "volume", "price", "arr", "mrr", "churn", "bookings"),
     },
     "capex_schedule": {
