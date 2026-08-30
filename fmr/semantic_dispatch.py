@@ -4,10 +4,11 @@ import argparse
 import json
 from pathlib import Path
 
-from fmr.providers.native_xlsx.workbook import map_workbook_semantics
+from fmr.providers.native_xlsx.workbook.formula_plan import plan_monthly_fpa_formula_file
+from fmr.providers.native_xlsx.workbook.semantic import map_workbook_semantics
 
 
-SEMANTIC_COMMANDS = {"semantic-map"}
+SEMANTIC_COMMANDS = {"semantic-map", "formula-plan"}
 
 
 def run_semantic_command(argv: list[str]) -> int:
@@ -19,9 +20,20 @@ def run_semantic_command(argv: list[str]) -> int:
     )
     semantic.add_argument("workbook")
     semantic.add_argument("--output")
+
+    formula_plan = subparsers.add_parser(
+        "formula-plan",
+        help="Create a dry-run monthly FP&A formula-extension plan without modifying the workbook",
+    )
+    formula_plan.add_argument("workbook")
+    formula_plan.add_argument("--output")
+
     args = parser.parse_args(argv)
     try:
-        payload = map_workbook_semantics(args.workbook)
+        if args.command == "semantic-map":
+            payload = map_workbook_semantics(args.workbook)
+        else:
+            payload = plan_monthly_fpa_formula_file(args.workbook)
         rendered = json.dumps(payload, indent=2, sort_keys=True) + "\n"
         if args.output:
             target = Path(args.output)
